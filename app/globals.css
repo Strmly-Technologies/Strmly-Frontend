@@ -1,0 +1,323 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 0 84.2% 60.2%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 0 84.2% 60.2%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 84.2% 60.2%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 0 84.2% 60.2%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  button, a, [role="button"] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary rounded-full;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.video-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  padding: 2rem 1rem 1rem;
+  color: white;
+}
+
+.video-actions {
+  position: absolute;
+  right: 1rem;
+  bottom: 20vh;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  z-index: 10;
+}
+
+.long-video-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+  padding: 3rem 1rem 1rem;
+  color: white;
+}
+
+.video-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.video-progress-bar {
+  height: 100%;
+  background: #ffd700;
+  transition: width 0.1s ease;
+}
+
+.fullscreen-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  background: black;
+}
+
+.comments-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70vh;
+  background: white;
+  border-radius: 20px 20px 0 0;
+  z-index: 1000;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.comments-section.open {
+  transform: translateY(0);
+}
+
+.dark .comments-section {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+}
+
+.emoji-picker {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1001;
+}
+
+.dark .emoji-picker {
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+
+/*Responsive breakpoint*/
+@media (max-width: 640px) {
+  .mobile-layout {
+    margin-left: 0 !important;
+  }
+
+  .desktop-sidebar {
+    display: none;
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
+  .video-actions {
+    bottom: 18vh;
+    right: 0.75rem;
+    gap: 0.5rem;
+  }
+  
+  .video-overlay {
+    padding: 1.5rem 0.75rem 0.75rem;
+  }
+  
+  .long-video-overlay {
+    padding: 2rem 0.75rem 0.75rem;
+  }
+  
+  .comments-section {
+    height: 80vh;
+  }
+}
+
+@media (max-width: 475px) {
+  .video-actions {
+    bottom: 16vh;
+    right: 0.5rem;
+    gap: 0.4rem;
+  }
+  
+  .video-overlay {
+    padding: 1rem 0.5rem 0.5rem;
+  }
+  
+  .long-video-overlay {
+    padding: 1.5rem 0.5rem 0.5rem;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .mobile-layout {
+    margin-left: 0 !important;
+  }
+
+  .desktop-sidebar {
+    display: none;
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
+  .video-actions {
+    bottom: 10rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-bottom-nav {
+    display: none;
+  }
+  
+  .desktop-sidebar {
+    display: block;
+  }
+
+  .video-actions {
+    bottom: 8rem;
+    right: 1.5rem;
+    gap: 2rem;
+  }
+}
+
+@supports (padding: max(0px)) {
+  .mobile-bottom-nav {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .video-actions {
+    bottom: max(18vh, calc(18vh + env(safe-area-inset-bottom)));
+  }
+  
+  .video-overlay {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .long-video-overlay {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+  .video-actions {
+    bottom: 6rem;
+    gap: 1rem;
+  }
+  
+  .video-overlay {
+    padding: 1rem 1rem 0.5rem;
+  }
+  
+  .long-video-overlay {
+    padding: 1.5rem 1rem 0.5rem;
+  }
+  
+  .comments-section {
+    height: 90vh;
+  }
+}
