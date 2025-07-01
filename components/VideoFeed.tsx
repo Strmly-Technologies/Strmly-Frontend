@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Heart, MessageCircle, Share, Bookmark, Play, Pause, Maximize, Users, MoreVertical, ChevronDown, Link as LinkIcon } from "lucide-react"
+import { Heart, MessageCircle, Bookmark, Play, Pause, Maximize, Users, MoreVertical, ChevronDown, Link as LinkIcon, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -12,64 +12,64 @@ import { useAuthStore } from "@/store/useAuthStore"
 import { api } from "@/lib/api"
 import { FaWhatsapp, FaInstagram, FaTelegram, FaSnapchat, FaTwitter, FaFacebook } from "react-icons/fa"
 
-// const mockVideos = [
-//   {
-//     id: 1,
-//     type: "long",
-//     user: {
-//       name: "Tech Creator",
-//       username: "@techcreator",
-//       avatar: "/placeholder.svg?height=40&width=40",
-//     },
-//     title: "Building a Startup from Scratch - Complete Guide",
-//     description: "Learn how to build a successful startup from the ground up, covering everything from idea validation to funding and scaling. This comprehensive guide will walk you through every step of the process, from ideation to launch.",
-//     community: "Startup Community",
-//     series: "Entrepreneur Series",
-//     episodes: [
-//       { id: 1, title: "Episode 1: Getting Started", duration: "15:42" },
-//       { id: 2, title: "Episode 2: Market Research", duration: "18:30" },
-//       { id: 3, title: "Episode 3: Building MVP", duration: "22:15" },
-//       { id: 4, title: "Episode 4: Funding", duration: "19:45" },
-//     ],
-//     currentEpisode: 1,
-//     duration: "15:42",
-//     progress: 35,
-//     likes: 89500,
-//     comments: 892,
-//     shares: 234,
-//     saves: 1200,
-//     videoUrl: "/placeholder.svg?height=800&width=450",
-//   },
-//   {
-//     id: 2,
-//     type: "long",
-//     user: {
-//       name: "Code Master",
-//       username: "@codemaster",
-//       avatar: "/placeholder.svg?height=40&width=40",
-//     },
-//     title: "React vs Next.js - Which Should You Choose?",
-//     description: "Complete comparison of React and Next.js frameworks, diving deep into their features, performance, and best use cases for modern web development. This is a very comprehensive guide, perfect for developers looking to make informed decisions.",
-//     community: "Developer Community",
-//     series: "Web Dev Masterclass",
-//     episodes: [
-//       { id: 1, title: "Episode 1: Introduction", duration: "12:30" },
-//       { id: 2, title: "Episode 2: React Basics", duration: "20:15" },
-//       { id: 3, title: "Episode 3: Next.js Features", duration: "22:15" },
-//       { id: 4: "Episode 4: Performance", duration: "18:45" },
-//       { id: 5, title: "Episode 5: Deployment", duration: "16:30" },
-//     ],
-//     currentEpisode: 3,
-//     duration: "22:15",
-//     progress: 60,
-//     likes: 67000,
-//     comments: 445,
-//     shares: 123,
-//     saves: 890,
-//     videoUrl: "/placeholder.svg?height=800&width=450",
-//   },
-// ]
 
+const mockVideos = [
+   {
+     id: 1,
+     type: "long",
+     user: {
+       name: "Tech Creator",
+       username: "@techcreator",
+       avatar: "/placeholder.svg?height=40&width=40",
+     },
+     title: "Building a Startup from Scratch - Complete Guide",
+     description: "Learn how to build a successful startup from the ground up, covering everything from idea validation to funding and scaling. This comprehensive guide will walk you through every step of the process, from ideation to launch.",
+     community: "Startup Community",
+     series: "Entrepreneur Series",
+     episodes: [
+       { id: 1, title: "Episode 1: Getting Started", duration: "15:42" },
+       { id: 2, title: "Episode 2: Market Research", duration: "18:30" },
+       { id: 3, title: "Episode 3: Building MVP", duration: "22:15" },
+       { id: 4, title: "Episode 4: Funding", duration: "19:45" },
+     ],
+     currentEpisode: 1,
+     duration: "15:42",
+     progress: 35,
+     likes: 89500,
+     comments: 892,
+     shares: 234,
+     saves: 1200,
+     videoUrl: "/MockVideos/video.mp4",
+   },
+   {
+     id: 2,
+     type: "long",
+     user: {
+       name: "Code Master",
+       username: "@codemaster",
+       avatar: "/placeholder.svg?height=40&width=40",
+     },
+     title: "React vs Next.js - Which Should You Choose?",
+     description: "Complete comparison of React and Next.js frameworks, diving deep into their features, performance, and best use cases for modern web development. This is a very comprehensive guide, perfect for developers looking to make informed decisions.",
+     community: "Developer Community",
+     series: "Web Dev Masterclass",
+     episodes: [
+       { id: 1, title: "Episode 1: Introduction", duration: "12:30" },
+       { id: 2, title: "Episode 2: React Basics", duration: "20:15" },
+       { id: 3, title: "Episode 3: Next.js Features", duration: "22:15" },
+       { id: 4, title: "Episode 4: Performance", duration: "18:45" },
+       { id: 5, title: "Episode 5: Deployment", duration: "16:30" },
+     ],
+     currentEpisode: 3,
+     duration: "22:15",
+     progress: 60,
+     likes: 67000,
+     comments: 445,
+     shares: 123,
+     saves: 890,
+     videoUrl: "/MockVideos/video.mp4",
+   },
+ ]
 interface VideoFeedProps {
   showMixedContent?: boolean
   longVideoOnly?: boolean
@@ -90,7 +90,7 @@ interface Video {
   description: string
   videoUrl: string
   thumbnailUrl: string
-  type: "SHORT" | "LONG"
+  type: "SHORT" | "long"
   status: "DRAFT" | "PROCESSING" | "PUBLISHED" | "FAILED" | "PRIVATE"
   user: {
     id: string
@@ -160,25 +160,26 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
       try {
         if (!token) {
           console.error("No authentication token found")
-          return
+          //return
         }
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos`, {
-          credentials: "include",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-        })
-        if (!response.ok) {
-          throw new Error(`Failed to fetch videos: ${response.status} ${response.statusText}`)
-        }
-        const data = await response.json()
-        console.log("Raw API response data:", data) // <<<--- CHECK THIS IN CONSOLE
+        //const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos`, {
+        //  credentials: "include",
+        //  headers: {
+        //    "Authorization": `Bearer ${token}`,
+        //   "Content-Type": "application/json"
+        //  },
+        //})
+        //if (!response.ok) {
+        //  throw new Error(`Failed to fetch videos: ${response.status} ${response.statusText}`)
+        //}
+        //const data = await response.json()
+        //console.log("Raw API response data:", data) // <<<--- CHECK THIS IN CONSOLE
 
         // Transform the data to match the Video interface
-        const transformedVideos = data.map((video: any) => ({
-          _id: video._id,
+        //const transformedVideos = data.map((video: any) => ({
+        const transformedVideos = mockVideos.map((video: any) => ({
+          _id: video.id,
           title: video.title || "Untitled Video", // This line tries to get the title
           description: video.description || "",   // This line tries to get the description
           videoUrl: video.videoUrl,
@@ -191,11 +192,11 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
             username: video.user?.username || "@anonymous",
             avatar: video.user?.avatar || "/placeholder.svg"
           },
-          likes: video.likesCount || 0,
-          comments: video.commentsCount || 0,
-          shares: video.sharesCount || 0,
-          views: video.viewsCount || 0,
-          saves: video.savesCount || 0,
+          likes: video.likes || 0,
+          comments: video.comments || 0,
+          shares: video.shares || 0,
+          views: video.views || 0,
+          saves: video.saves || 0,
           progress: 0,
           isLiked: video.isLiked || false,
           tags: video.tags || [],
@@ -207,7 +208,6 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
         }))
         console.log("Transformed videos data (check title/description here):", transformedVideos) // <<<--- CHECK THIS IN CONSOLE
         setVideos(transformedVideos)
-
         // Check following status for each user
         const followingStatuses = await Promise.all(
           transformedVideos.map(async (v: Video) => {
@@ -225,18 +225,17 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
         console.error("Error fetching videos:", error)
       }
     }
-
     fetchVideos()
   }, [token, user?.id])
 
   const filteredVideos = longVideoOnly
-    ? videos.filter(video => video.type === "LONG" && video.status === "PUBLISHED")
+    ? videos.filter(video => video.type === "long" && video.status === "PUBLISHED")
     : videos.filter(video => video.status === "PUBLISHED")
 
   const handleVideoAction = async (action: string, videoId: string) => {
     if (!token) {
       console.error("No authentication token found")
-      return
+      //return
     }
 
     if (action === "like") {
@@ -476,28 +475,36 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
   }
 
   // Modified togglePlay to handle pausing other videos
-  const togglePlay = (videoId: string, index: number) => {
-    const videoRef = videoRefs.current[index]; // Get the ref object for the clicked video
-    if (videoRef?.element) {
-      if (playingStates[videoId]) {
-        // If it's currently playing, pause it
-        videoRef.element.pause();
-        setPlayingStates(prev => ({ ...prev, [videoId]: false }));
-      } else {
-        // If it's paused, play it and pause others
-        videoRefs.current.forEach((ref) => {
-          if (ref.element && ref.id !== videoId && playingStates[ref.id]) {
-            ref.element.pause();
-            setPlayingStates(prev => ({ ...prev, [ref.id]: false }));
-          }
-        });
-        videoRef.element.play().catch((error) => {
-          console.log('Play prevented:', error)
-        });
-        setPlayingStates(prev => ({ ...prev, [videoId]: true }));
+const togglePlay = (videoId: string, index: number) => {
+  const videoRef = videoRefs.current[index];
+  if (!videoRef?.element) return;
+
+  const video = videoRef.element;
+
+  if (!video.paused) {
+    console.log("PAUSE", index);
+    videoRef.element.pause();
+    setPlayingStates(prev => ({ ...prev, [videoId]: false }));
+  } else {
+    // Pause all others
+    videoRefs.current.forEach(ref => {
+      if (ref.element && ref.id !== videoId && !ref.element.paused) {
+        ref.element.pause();
+        setPlayingStates(prev => ({ ...prev, [ref.id]: false }));
       }
-    }
+    });
+
+    console.log("PLAY", index);
+    video.play().catch(err => {
+      console.warn("Autoplay failed:", err);
+    });
+
+    setPlayingStates(prev => ({ ...prev, [videoId]: true }));
   }
+};
+
+
+
 
   // Add click outside handler for comments, share options, AND description
   useEffect(() => {
@@ -553,8 +560,9 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
 
   return (
     <>
-      {/* Increased padding-bottom to account for mobile nav */}
+      {/* Increased padding-bottom to account for mobile nav */} 
       <div className={`h-screen overflow-y-scroll snap-y snap-mandatory ${isFullscreen ? "fullscreen-video" : ""} pt-14 pb-16`}>
+       
         {filteredVideos.map((video, index) => (
           <div key={video._id} className="h-screen snap-start relative bg-black">
             {/* Video Background */}
@@ -570,6 +578,8 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                 className={`w-full h-full object-cover ${isFullscreen ? 'object-contain' : ''}`}
                 loop
                 playsInline
+                autoPlay
+                muted
                 onPlay={() => setPlayingStates(prev => ({ ...prev, [video._id]: true }))}
                 onPause={() => setPlayingStates(prev => ({ ...prev, [video._id]: false }))}
                 onClick={(e) => {
@@ -609,7 +619,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                         e.stopPropagation(); // Prevent event from bubbling to video element's onClick
                         togglePlay(video._id, index);
                       }}
-                    >
+                    > 
                       <Pause size={48} />
                     </Button>
                  </div>
@@ -651,7 +661,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                   }}
                   className="bg-transparent text-white hover:text-primary rounded-full hover:bg-transparent p-1"
                 >
-                  <Share size={36} />
+                  <Send size={36} />
                 </Button>
                 <span className="text-white text-xs font-medium mt-1">{video.shares}</span>
               </div>
@@ -679,7 +689,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
               </div>
 
               {/* Fullscreen button for long videos */}
-              {video.type === "LONG" && (
+              {video.type === "long" && (
                 <div className="flex flex-col items-center">
                   <Button
                     onClick={handleFullscreen}
