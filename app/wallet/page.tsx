@@ -20,7 +20,10 @@ import {
   Upload,
   Repeat,
   Settings,
+  MoreHorizontal,
+  ChevronLeft,
 } from "lucide-react"
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -113,6 +116,7 @@ export default function WalletPage() {
   const [showBalance, setShowBalance] = useState(true)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("1")
   const [activeTab, setActiveTab] = useState("overview")
+   const router = useRouter();
 
   const totalEarnings = mockEarningsSources.reduce((sum, source) => sum + source.amount, 0)
 
@@ -135,45 +139,56 @@ export default function WalletPage() {
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "completed":
-        return (
-          <Badge className="bg-green-100 text-green-800">
-            <CheckCircle size={12} className="mr-1" />
-            Completed
-          </Badge>
-        )
-      case "pending":
-        return (
-          <Badge className="bg-yellow-100 text-yellow-800">
-            <Clock size={12} className="mr-1" />
-            Pending
-          </Badge>
-        )
-      case "failed":
-        return (
-          <Badge className="bg-red-100 text-red-800">
-            <XCircle size={12} className="mr-1" />
-            Failed
-          </Badge>
-        )
-      default:
-        return <Badge variant="secondary">{status}</Badge>
-    }
+ const getStatusBadge = (status: string) => {
+  const baseClasses =
+    "inline-flex items-center gap-1 text-[10px] font-medium px-2 py-[2px] rounded-full border select-none";
+
+  switch (status) {
+    case "completed":
+      return (
+        <Badge className={`${baseClasses} bg-green-500/10 text-green-400 border-green-500/20`}>
+          <CheckCircle size={12} className="mr-1" />
+          Completed
+        </Badge>
+      );
+    case "pending":
+      return (
+        <Badge className={`${baseClasses} bg-yellow-500/10 text-yellow-400 border-yellow-500/20`}>
+          <Clock size={12} className="mr-1" />
+          Pending
+        </Badge>
+      );
+    case "failed":
+      return (
+        <Badge className={`${baseClasses} bg-red-500/10 text-red-400 border-red-500/20`}>
+          <XCircle size={12} className="mr-1" />
+          Failed
+        </Badge>
+      );
+    default:
+      return (
+        <Badge className={`${baseClasses} bg-gray-500/10 text-white border-gray-600/20`}>
+          {status}
+        </Badge>
+      );
   }
+};
+
 
   return (
+    <>
+    {/* Desktop version */}
+    <div className="hidden md:block">
     <div className="p-4 pb-20 md:pb-4 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-3">
           <Wallet size={32} className="text-primary" />
           <h1 className="text-3xl font-bold">Wallet</h1>
         </div>
-        <Button variant="outline" size="sm">
-          <Settings size={16} className="mr-2" />
-          Settings
-        </Button>
+        <Button variant="outline" size="icon" className="border-gray-600">
+       <Settings size={16} className="text-white" />
+       </Button>
+
       </div>
 
       {/* Balance Cards */}
@@ -666,5 +681,127 @@ export default function WalletPage() {
         </TabsContent>
       </Tabs>
     </div>
+    { /* Mobile version */ }
+    </div>
+    {/* mobile version */}
+<div className="block md:hidden bg-black text-white h-screen flex flex-col">
+  {/*Top Section */}
+  <div className="sticky top-0 z-20 bg-black px-4 pt-4 pb-2 space-y-4">
+    {/* Header */}
+    <div className="relative flex items-center justify-center font-poppins">
+      <div className="mr-auto">
+        <button onClick={() => router.back()}>
+          <ChevronLeft size={28} />
+        </button>
+      </div>
+      <h1 className="text-xl absolute left-1/2 -translate-x-1/2 ">My Wallet</h1>
+      <div className="ml-auto">
+        <button>
+          <MoreHorizontal size={22} />
+        </button>
+      </div>
+    </div>
+
+    {/* Balance Card */}
+    <Card className="bg-black/80 backdrop-blur-md border border-gray-500/30 rounded-xl shadow">
+      <CardContent className="pt-4">
+        <p className="text-sm text-gray-400">Available Balance</p>
+        <div className="flex items-center justify-between mt-1">
+          <h3 className="text-2xl font-bold text-white">
+            {showBalance ? `₹${balance.toFixed(2)}` : "₹****"}
+          </h3>
+          <button
+            onClick={() => setShowBalance(!showBalance)}
+            className="p-1 h-6 text-white hover:text-gray-300 active:scale-95 transition-transform"
+          >
+            {showBalance ? <Eye size={14} /> : <EyeOff size={14} />}
+          </button>
+        </div>
+        <p className="text-xs text-gray-400 mt-1">
+          Pending: ₹{pendingBalance.toFixed(2)}
+        </p>
+      </CardContent>
+    </Card>
+
+    {/* Tabs */}
+    <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <TabsList className="grid grid-cols-2 w-full bg-[#1f2937] rounded-xl overflow-hidden h-12 p-1 shadow-inner mt-2">
+        <TabsTrigger
+          value="overview"
+          className="h-full w-full flex items-center justify-center font-semibold text-sm text-white rounded-lg data-[state=active]:bg-white data-[state=active]:text-black transition-all"
+        >
+          Overview
+        </TabsTrigger>
+        <TabsTrigger
+          value="transactions"
+          className="h-full w-full flex items-center justify-center font-semibold text-sm text-white rounded-lg data-[state=active]:bg-white data-[state=active]:text-black transition-all"
+        >
+          Transactions
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
+  </div>
+
+
+  <div className="flex-1 overflow-y-auto px-4 pb-28 space-y-3 no-scrollbar">
+    {activeTab === "transactions" && (
+      <div className="space-y-4 mt-4">
+        {mockTransactions.slice(0).map((transaction) => (
+          <div
+            key={transaction.id}
+            className="bg-[#1E1E1E] text-white rounded-xl px-4 py-3 shadow-md border border-gray-700/40"
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-base font-semibold mb-4">
+                  {transaction.description}
+                </p>
+                <p className="text-xs text-gray-400">{transaction.date}</p>
+              </div>
+              <div className="text-right">
+                <p
+                  className={`text-sm font-bold ${
+                    transaction.type === "earning"
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {transaction.type === "earning" ? "+" : "-"}₹
+                  {Math.abs(transaction.amount).toFixed(2)}
+                </p>
+                <div className="text-[10px] mt-2 pt-6">
+                  {getStatusBadge(transaction.status)}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+
+
+  {activeTab === "overview" && (
+    <div className="fixed bottom-20 left-0 right-0 px-4 z-50">
+      <div className="flex flex-col gap-3 bg-black py-3 rounded-xl shadow-md">
+        <Button
+          className="w-full text-black font-medium h-11 rounded-xl"
+          style={{ backgroundColor: "#F1C40F" }}
+        >
+          Add credit
+        </Button>
+        <Button
+          className="w-full text-black font-medium h-11 rounded-xl"
+          style={{ backgroundColor: "#F1C40F" }}
+        >
+          Withdraw now
+        </Button>
+      </div>
+    </div>
+  )}
+</div>
+
+    </>
   )
 }
+  

@@ -33,7 +33,7 @@ export const useAuthStore = create<AuthStore>()(
     (set) => ({
       user: null,
       token: null,
-      isLoggedIn: false,
+      isLoggedIn: true,
       login: async (token: string) => {
         set({ token, isLoggedIn: true })
       },
