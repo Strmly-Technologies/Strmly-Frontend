@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { X, Settings, Gauge, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -9,11 +9,19 @@ interface VideoMoreMenuProps {
   isOpen: boolean
   onClose: () => void
   videoId: string | null
+  videoRefs: React.MutableRefObject<{ [id: string]: HTMLVideoElement | null }>
 }
 
-export default function VideoMoreMenu({ isOpen, onClose, videoId }: VideoMoreMenuProps) {
+export default function VideoMoreMenu({ isOpen, onClose, videoId, videoRefs }: VideoMoreMenuProps) {
   const [quality, setQuality] = useState("720p")
-  const [speed, setSpeed] = useState("1x")
+  const [speed, setSpeed] = useState("1")
+
+  useEffect(() => {
+    if (videoId && videoRefs.current[videoId]) {
+      videoRefs.current[videoId]!.playbackRate = parseFloat(speed);
+    }
+  }, [speed, videoId]);
+
   if (!isOpen) return null
 
   return (
@@ -57,13 +65,13 @@ export default function VideoMoreMenu({ isOpen, onClose, videoId }: VideoMoreMen
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="0.25x">0.25x</SelectItem>
-              <SelectItem value="0.5x">0.5x</SelectItem>
-              <SelectItem value="0.75x">0.75x</SelectItem>
-              <SelectItem value="1x">Normal</SelectItem>
-              <SelectItem value="1.25x">1.25x</SelectItem>
-              <SelectItem value="1.5x">1.5x</SelectItem>
-              <SelectItem value="2x">2x</SelectItem>
+              <SelectItem value="0.25">0.25x</SelectItem>
+              <SelectItem value="0.5">0.5x</SelectItem>
+              <SelectItem value="0.75">0.75x</SelectItem>
+              <SelectItem value="1">Normal</SelectItem>
+              <SelectItem value="1.25">1.25x</SelectItem>
+              <SelectItem value="1.5">1.5x</SelectItem>
+              <SelectItem value="2">2x</SelectItem>
             </SelectContent>
           </Select>
         </div>

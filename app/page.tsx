@@ -2,6 +2,9 @@
 
 import { useAuthStore } from "@/store/useAuthStore"
 import VideoFeed from "@/components/VideoFeed"
+import MobileBottomNav from "@/components/MobileBottomNav"
+import TopHeader from "@/components/TopHeader"
+import { fa } from "zod/v4/locales"
 
 export default function Home() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
@@ -12,8 +15,9 @@ export default function Home() {
 
   return (
     <div className="h-screen">
-        
-        <VideoFeed longVideoOnly={true} />
+        <MobileBottomNav/>
+        <TopHeader/>
+        <VideoFeed longVideoOnly={false} />
       </div>
 
     

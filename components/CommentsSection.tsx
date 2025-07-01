@@ -115,7 +115,7 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
   }, [])
 
   const fetchComments = async () => {
-    if (!token || !videoId) return
+    //if (!token || !videoId) return
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}/comments`, {
@@ -212,11 +212,9 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
   return (
     <div className="comments-section open">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 lg:p-4 border-b border-border">
-        <h3 className="text-base lg:text-lg font-semibold">Comments</h3>
-        <Button variant="ghost" size="sm" onClick={onClose} className="p-2 lg:p-3">
-          <X size={18} className="lg:w-5 lg:h-5" />
-        </Button>
+      <div className="flex items-center justify-center p-3 lg:p-4 border-b border-border flex-col">
+        <div className="w-20 h-1 bg-white/80 rounded-full mx-auto my-2 hover:bg-white/60 transition-colors" />
+        <h3 className="text-base text-[24px] font-semibold">Comments</h3>
       </div>
 
       {/* Comments List */}
