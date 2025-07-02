@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import {
   Settings,
   Grid,
@@ -17,17 +17,18 @@ import {
   LogOut,
   Heart,
   Eye,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent } from "@/components/ui/card"
-import Image from "next/image"
-import Link from "next/link"
-import { useAuthStore } from "@/store/useAuthStore"
-import { useRouter } from "next/navigation"
-import { api } from "@/lib/api"
-import UserList from "@/components/UserList"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import Image from "next/image";
+import Link from "next/link";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
+import UserList from "@/components/UserList";
+import ProfileTopbar from "./_components/ProfileTopbar";
 
 const mockPosts = [
   { id: 1, image: "/placeholder.svg?height=300&width=300", type: "image" },
@@ -36,27 +37,27 @@ const mockPosts = [
   { id: 4, image: "/placeholder.svg?height=300&width=300", type: "video" },
   { id: 5, image: "/placeholder.svg?height=300&width=300", type: "image" },
   { id: 6, image: "/placeholder.svg?height=300&width=300", type: "video" },
-]
+];
 
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState("posts")
-  const [userData, setUserData] = useState<any>(null)
-  const [videos, setVideos] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isLoadingVideos, setIsLoadingVideos] = useState(false)
-  const { user, isLoggedIn, token, logout } = useAuthStore()
-  const router = useRouter()
+  const [activeTab, setActiveTab] = useState("posts");
+  const [userData, setUserData] = useState<any>(null);
+  const [videos, setVideos] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingVideos, setIsLoadingVideos] = useState(false);
+  const { user, isLoggedIn, token, logout } = useAuthStore();
+  const router = useRouter();
 
   const handleLogout = async () => {
-    logout()
-    router.push("/auth")
-  }
+    logout();
+    router.push("/auth");
+  };
 
   const fetchUserVideos = async () => {
-    if (!userData?.id) return
-    setIsLoadingVideos(true)
+    if (!userData?.id) return;
+    setIsLoadingVideos(true);
     try {
-      const data = await api.getUserVideos(userData.id)
+      const data = await api.getUserVideos(userData.id);
       const transformedVideos = data.map((video: any) => ({
         _id: video._id,
         title: video.title,
@@ -64,106 +65,116 @@ export default function ProfilePage() {
         thumbnail: video.thumbnailUrl || "/placeholder.svg",
         likes: video.likesCount || 0,
         views: video.viewsCount || 0,
-        createdAt: video.createdAt
-      }))
-      setVideos(transformedVideos)
+        createdAt: video.createdAt,
+      }));
+      setVideos(transformedVideos);
     } catch (err) {
-      console.error("Error fetching user videos:", err)
+      console.error("Error fetching user videos:", err);
     } finally {
-      setIsLoadingVideos(false)
+      setIsLoadingVideos(false);
     }
-  }
+  };
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      router.push("/auth")
-      return
-    }
+  // useEffect(() => {
+  //   if (!isLoggedIn) {
+  //     router.push("/auth")
+  //     return
+  //   }
 
-    const fetchUserData = async () => {
-      try {
-        const data = await api.getUserProfile()
-        setUserData(data)
-      } catch (err) {
-        console.error("Error fetching user data:", err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+  //   const fetchUserData = async () => {
+  //     try {
+  //       const data = await api.getUserProfile()
+  //       setUserData(data)
+  //     } catch (err) {
+  //       console.error("Error fetching user data:", err)
+  //     } finally {
+  //       setIsLoading(false)
+  //     }
+  //   }
 
-    if (token) {
-      fetchUserData()
-    }
-  }, [isLoggedIn, router, token])
+  //   if (token) {
+  //     fetchUserData()
+  //   }
+  // }, [isLoggedIn, router, token])
 
-  useEffect(() => {
-    if (userData?.id) {
-      fetchUserVideos()
-    }
-  }, [userData?.id])
+  // useEffect(() => {
+  //   if (userData?.id) {
+  //     fetchUserVideos()
+  //   }
+  // }, [userData?.id])
 
-  if (isLoading || !userData) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
+  // if (isLoading || !userData) {
+  //   return (
+  //     <div className="min-h-screen bg-background flex items-center justify-center">
+  //       <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+  //     </div>
+  //   )
+  // }
 
   const profileData = {
-    name: userData.name || "User",
-    email: userData.email || "",
-    image: userData.avatar || userData.image || "https://api.dicebear.com/7.x/avataaars/svg?seed=default",
-    username: userData.username || userData.email?.split("@")[0] || "user",
-    bio: userData.bio || "Welcome to my profile! 👋",
-    location: userData.location || "Not specified",
-    website: userData.website || "",
-    joinedDate: new Date(userData.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-    coverImage: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&h=200&fit=crop",
-    followers: userData.stats?.followersCount || 0,
-    following: userData.stats?.followingCount || 0,
-    posts: userData.stats?.videosCount || 0,
-    isVerified: userData.isVerified || false,
-  }
+    name: userData?.name || "User",
+    email: userData?.email || "",
+    image:
+      userData?.avatar ||
+      userData?.image ||
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=default",
+    username: userData?.username || userData?.email?.split("@")[0] || "user",
+    bio: userData?.bio || "Welcome to my profile! 👋",
+    location: userData?.location || "Not specified",
+    website: userData?.website || "",
+    joinedDate: new Date(userData?.createdAt).toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    }),
+    coverImage:
+      "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&h=200&fit=crop",
+    followers: userData?.stats?.followersCount || 0,
+    following: userData?.stats?.followingCount || 0,
+    posts: userData?.stats?.videosCount || 0,
+    isVerified: userData?.isVerified || false,
+  };
+
+  // setUserData(profileData);
 
   return (
     <div className="min-h-screen bg-background">
       {/* Cover Image */}
-      <div className="h-48 bg-muted relative">
-        <img
-          src={profileData.coverImage}
-          alt="Cover"
-          className="w-full h-full object-cover"
-        />
-        {/* Add Sign Out button for mobile */}
-        <div className="absolute top-4 right-4 md:hidden">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="bg-[#f62000] hover:bg-[#f62000]/90 rounded-full p-2"
-          >
-            <LogOut size={20} className="text-white" />
-          </Button>
-        </div>
-        {/* Add Sign Out button for desktop */}
-        <div className="absolute top-4 right-4 hidden md:block">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="bg-[#f62000] hover:bg-[#f62000]/90 rounded-full p-2"
-          >
-            <LogOut size={20} className="text-white" />
-          </Button>
+      <div className="h-48 relative">
+
+        <ProfileTopbar/>
+
+        {/* Logout in more option */}
+        <div>
+          {/* Add Sign Out button for mobile */}
+          <div className="absolute top-4 right-4 md:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="bg-[#f62000] hover:bg-[#f62000]/90 rounded-full p-2"
+            >
+              <LogOut size={20} className="text-white" />
+            </Button>
+          </div>
+          {/* Add Sign Out button for desktop */}
+          <div className="absolute top-4 right-4 hidden md:block">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="bg-[#f62000] hover:bg-[#f62000]/90 rounded-full p-2"
+            >
+              <LogOut size={20} className="text-white" />
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Profile Info */}
-      <div className="max-w-4xl mx-auto px-4 -mt-16 relative">
-        <div className="flex flex-col md:flex-row items-start md:items-end space-y-4 md:space-y-0 md:space-x-4">
+      <div className="max-w-4xl px-6 -mt-20 relative">
+        <div className="flex flex-col items-center md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4">
           <div className="relative">
-            <Avatar className="w-32 h-32 border-4 border-background">
+            <Avatar className="w-28 h-28 border-4 border-background">
               <AvatarImage src={profileData.image} alt={profileData.name} />
               <AvatarFallback>{profileData.name[0]}</AvatarFallback>
             </Avatar>
@@ -171,7 +182,6 @@ export default function ProfilePage() {
           <div className="flex-1">
             <div className="flex flex-col md:flex-row md:items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold">{profileData.name}</h1>
                 <p className="text-muted-foreground">@{profileData.username}</p>
                 {profileData.isVerified && (
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -179,17 +189,70 @@ export default function ProfilePage() {
                   </span>
                 )}
               </div>
-              <div className="flex gap-2 mt-4 md:mt-0">
-                <button className="px-4 py-2 bg-primary text-primary-foreground rounded-full" onClick={()=>{router.push("/profile/edit")}}>
-                  Edit Profile
-                </button>
-              </div>
             </div>
           </div>
         </div>
 
+        {/* Stats */}
+        <div className="mt-6 grid grid-cols-3 items-center">
+          <div
+            className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
+            onClick={() => setActiveTab("followers")}
+          >
+            {/* <span className="font-bold text-lg">{profileData.followers}</span>{" "} */}
+            <span className="font-bold text-lg">3.4M</span>{" "}
+            <span className="text-muted-foreground text-lg">Followers</span>
+          </div>
+          <div
+            className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
+            onClick={() => setActiveTab("following")}
+          >
+            {/* <span className="font-bold text-lg">{profileData.following}</span>{" "} */}
+            <span className="font-bold text-lg">102</span>{" "}
+            <span className="text-muted-foreground text-lg">Community</span>
+          </div>
+          <div
+            className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
+            onClick={() => setActiveTab("posts")}
+          >
+            {/* <span className="font-bold text-lg">{profileData.posts}</span>{" "} */}
+            <span className="font-bold text-lg">800</span>{" "}
+            <span className="text-muted-foreground text-lg">Posts</span>
+          </div>
+        </div>
+
+        <div className="flex w-full items-center justify-center gap-2 mt-5 md:mt-0">
+          <Button className="px-4 bg-[#F1C40F] py-2 text-primary-foreground rounded-md">
+            My Community
+          </Button>
+          <Button className="px-4 bg-[#F1C40F] py-2 text-primary-foreground rounded-md">
+            Dashboard
+          </Button>
+        </div>
+
+        <div className="flex w-full items-center justify-center gap-2 mt-5 md:mt-0">
+          <Button
+            variant={"outline"}
+            className="px-4 border-black py-2 text-black rounded-md"
+          >
+            Edit Profile
+          </Button>
+          <Button
+            variant={"outline"}
+            className="px-4  border-black py-2 text-black rounded-md"
+          >
+            Playlist
+          </Button>
+          <Button
+            variant={"outline"}
+            className="px-4 border-black py-2 text-black rounded-md"
+          >
+            History
+          </Button>
+        </div>
+
         {/* Bio */}
-        <div className="mt-6">
+        <div className="mt-6 flex flex-col items-center justify-center">
           <p className="text-muted-foreground">{profileData.bio}</p>
           <div className="mt-2 flex flex-wrap gap-4 text-muted-foreground">
             {profileData.location && (
@@ -199,7 +262,12 @@ export default function ProfilePage() {
               </span>
             )}
             {profileData.website && (
-              <a href={profileData.website} target="_blank" rel="noopener noreferrer" className="text-primary flex items-center">
+              <a
+                href={profileData.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary flex items-center"
+              >
                 <LinkIcon className="w-4 h-4 mr-1" />
                 {profileData.website}
               </a>
@@ -211,25 +279,9 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="mt-6 flex space-x-6">
-          <div className="cursor-pointer hover:text-primary" onClick={() => setActiveTab("followers")}>
-            <span className="font-bold">{profileData.followers}</span>{" "}
-            <span className="text-muted-foreground">Followers</span>
-          </div>
-          <div className="cursor-pointer hover:text-primary" onClick={() => setActiveTab("following")}>
-            <span className="font-bold">{profileData.following}</span>{" "}
-            <span className="text-muted-foreground">Following</span>
-          </div>
-          <div className="cursor-pointer hover:text-primary" onClick={() => setActiveTab("posts")}>
-            <span className="font-bold">{profileData.posts}</span>{" "}
-            <span className="text-muted-foreground">Posts</span>
-          </div>
-        </div>
-
         {/* Tabs */}
         <div className="mt-8 border-b">
-          <div className="flex space-x-8">
+          <div className="flex space-x-8 items-center justify-between">
             <button
               className={`pb-4 ${
                 activeTab === "posts"
@@ -239,6 +291,16 @@ export default function ProfilePage() {
               onClick={() => setActiveTab("posts")}
             >
               Posts
+            </button>
+            <button
+              className={`pb-4 ${
+                activeTab === "clips"
+                  ? "border-b-2 border-primary font-medium"
+                  : "text-muted-foreground"
+              }`}
+              onClick={() => setActiveTab("clips")}
+            >
+              Clips
             </button>
             <button
               className={`pb-4 ${
@@ -264,7 +326,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Content */}
-        <div className="mt-8">
+        {/* <div className="mt-8">
           {activeTab === "posts" && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {isLoadingVideos ? (
@@ -369,8 +431,8 @@ export default function ProfilePage() {
               )}
             </div>
           )}
-        </div>
+        </div> */}
       </div>
     </div>
-  )
+  );
 }

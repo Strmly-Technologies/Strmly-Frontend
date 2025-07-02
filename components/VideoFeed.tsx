@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Heart, MessageCircle, Share, Bookmark, Play, Pause, Maximize, Users, MoreVertical, ChevronDown, Link as LinkIcon } from "lucide-react"
+import { Heart, MessageCircle, Bookmark, Play, Pause, Maximize, Users, MoreVertical, ChevronDown, Link as LinkIcon, Send, IndianRupee, PauseCircleIcon, HashIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -12,64 +12,64 @@ import { useAuthStore } from "@/store/useAuthStore"
 import { api } from "@/lib/api"
 import { FaWhatsapp, FaInstagram, FaTelegram, FaSnapchat, FaTwitter, FaFacebook } from "react-icons/fa"
 
-// const mockVideos = [
-//   {
-//     id: 1,
-//     type: "long",
-//     user: {
-//       name: "Tech Creator",
-//       username: "@techcreator",
-//       avatar: "/placeholder.svg?height=40&width=40",
-//     },
-//     title: "Building a Startup from Scratch - Complete Guide",
-//     description: "Learn how to build a successful startup from the ground up, covering everything from idea validation to funding and scaling. This comprehensive guide will walk you through every step of the process, from ideation to launch.",
-//     community: "Startup Community",
-//     series: "Entrepreneur Series",
-//     episodes: [
-//       { id: 1, title: "Episode 1: Getting Started", duration: "15:42" },
-//       { id: 2, title: "Episode 2: Market Research", duration: "18:30" },
-//       { id: 3, title: "Episode 3: Building MVP", duration: "22:15" },
-//       { id: 4, title: "Episode 4: Funding", duration: "19:45" },
-//     ],
-//     currentEpisode: 1,
-//     duration: "15:42",
-//     progress: 35,
-//     likes: 89500,
-//     comments: 892,
-//     shares: 234,
-//     saves: 1200,
-//     videoUrl: "/placeholder.svg?height=800&width=450",
-//   },
-//   {
-//     id: 2,
-//     type: "long",
-//     user: {
-//       name: "Code Master",
-//       username: "@codemaster",
-//       avatar: "/placeholder.svg?height=40&width=40",
-//     },
-//     title: "React vs Next.js - Which Should You Choose?",
-//     description: "Complete comparison of React and Next.js frameworks, diving deep into their features, performance, and best use cases for modern web development. This is a very comprehensive guide, perfect for developers looking to make informed decisions.",
-//     community: "Developer Community",
-//     series: "Web Dev Masterclass",
-//     episodes: [
-//       { id: 1, title: "Episode 1: Introduction", duration: "12:30" },
-//       { id: 2, title: "Episode 2: React Basics", duration: "20:15" },
-//       { id: 3, title: "Episode 3: Next.js Features", duration: "22:15" },
-//       { id: 4: "Episode 4: Performance", duration: "18:45" },
-//       { id: 5, title: "Episode 5: Deployment", duration: "16:30" },
-//     ],
-//     currentEpisode: 3,
-//     duration: "22:15",
-//     progress: 60,
-//     likes: 67000,
-//     comments: 445,
-//     shares: 123,
-//     saves: 890,
-//     videoUrl: "/placeholder.svg?height=800&width=450",
-//   },
-// ]
 
+const mockVideos = [
+  {
+    id: 1,
+    type: "long",
+    user: {
+      name: "Tech Creator",
+      username: "@techcreator",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    title: "Building a Startup from Scratch - Complete Guide",
+    description: "Learn how to build a successful startup from the ground up, covering everything from idea validation to funding and scaling. This comprehensive guide will walk you through every step of the process, from ideation to launch.",
+    community: "Startup Community",
+    series: "Entrepreneur Series",
+    episodes: [
+      { id: 1, title: "Episode 1: Getting Started", duration: "15:42" },
+      { id: 2, title: "Episode 2: Market Research", duration: "18:30" },
+      { id: 3, title: "Episode 3: Building MVP", duration: "22:15" },
+      { id: 4, title: "Episode 4: Funding", duration: "19:45" },
+    ],
+    currentEpisode: 1,
+    duration: "15:42",
+    progress: 35,
+    likes: 89500,
+    comments: 892,
+    shares: 234,
+    earnings: 1200,
+    videoUrl: "/MockVideos/video.mp4",
+  },
+  {
+    id: 2,
+    type: "short",
+    user: {
+      name: "Code Master",
+      username: "@codemaster",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    title: "React vs Next.js - Which Should You Choose?",
+    description: "Complete comparison of React and Next.js frameworks, diving deep into their features, performance, and best use cases for modern web development. This is a very comprehensive guide, perfect for developers looking to make informed decisions.",
+    community: "Developer Community",
+    series: "Web Dev Masterclass",
+    episodes: [
+      { id: 1, title: "Episode 1: Introduction", duration: "12:30" },
+      { id: 2, title: "Episode 2: React Basics", duration: "20:15" },
+      { id: 3, title: "Episode 3: Next.js Features", duration: "22:15" },
+      { id: 4, title: "Episode 4: Performance", duration: "18:45" },
+      { id: 5, title: "Episode 5: Deployment", duration: "16:30" },
+    ],
+    currentEpisode: 3,
+    duration: "22:15",
+    progress: 60,
+    likes: 67000,
+    comments: 445,
+    shares: 123,
+    earnings: 890,
+    videoUrl: "/MockVideos/video.mp4",
+  },
+]
 interface VideoFeedProps {
   showMixedContent?: boolean
   longVideoOnly?: boolean
@@ -90,7 +90,7 @@ interface Video {
   description: string
   videoUrl: string
   thumbnailUrl: string
-  type: "SHORT" | "LONG"
+  type: "short" | "long"
   status: "DRAFT" | "PROCESSING" | "PUBLISHED" | "FAILED" | "PRIVATE"
   user: {
     id: string
@@ -102,7 +102,7 @@ interface Video {
   comments: number
   shares: number
   views: number
-  saves: number
+  earnings: number
   progress?: number
   community?: string
   series?: string
@@ -133,6 +133,8 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
   // currentVideo is no longer directly used for playback logic but can be for other UI purposes.
   const [currentVideo, setCurrentVideo] = useState(0) // Still present, but not used in fullscreen logic anymore
   const [playingStates, setPlayingStates] = useState<{ [key: string]: boolean }>({})
+  const manuallyPausedRef = useRef<Record<string, boolean>>({});
+  const [progressMap, setProgressMap] = useState<Record<string, number>>({});
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showComments, setShowComments] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
@@ -160,25 +162,26 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
       try {
         if (!token) {
           console.error("No authentication token found")
-          return
+          //return
         }
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos`, {
-          credentials: "include",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-        })
-        if (!response.ok) {
-          throw new Error(`Failed to fetch videos: ${response.status} ${response.statusText}`)
-        }
-        const data = await response.json()
-        console.log("Raw API response data:", data) // <<<--- CHECK THIS IN CONSOLE
+        //const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos`, {
+        //  credentials: "include",
+        //  headers: {
+        //    "Authorization": `Bearer ${token}`,
+        //   "Content-Type": "application/json"
+        //  },
+        //})
+        //if (!response.ok) {
+        //  throw new Error(`Failed to fetch videos: ${response.status} ${response.statusText}`)
+        //}
+        //const data = await response.json()
+        //console.log("Raw API response data:", data) // <<<--- CHECK THIS IN CONSOLE
 
         // Transform the data to match the Video interface
-        const transformedVideos = data.map((video: any) => ({
-          _id: video._id,
+        //const transformedVideos = data.map((video: any) => ({
+        const transformedVideos = mockVideos.map((video: any) => ({
+          _id: video.id,
           title: video.title || "Untitled Video", // This line tries to get the title
           description: video.description || "",   // This line tries to get the description
           videoUrl: video.videoUrl,
@@ -191,11 +194,11 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
             username: video.user?.username || "@anonymous",
             avatar: video.user?.avatar || "/placeholder.svg"
           },
-          likes: video.likesCount || 0,
-          comments: video.commentsCount || 0,
-          shares: video.sharesCount || 0,
-          views: video.viewsCount || 0,
-          saves: video.savesCount || 0,
+          likes: video.likes || 0,
+          comments: video.comments || 0,
+          shares: video.shares || 0,
+          views: video.views || 0,
+          earnings: video.earnings || 0,
           progress: 0,
           isLiked: video.isLiked || false,
           tags: video.tags || [],
@@ -207,7 +210,6 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
         }))
         console.log("Transformed videos data (check title/description here):", transformedVideos) // <<<--- CHECK THIS IN CONSOLE
         setVideos(transformedVideos)
-
         // Check following status for each user
         const followingStatuses = await Promise.all(
           transformedVideos.map(async (v: Video) => {
@@ -225,18 +227,17 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
         console.error("Error fetching videos:", error)
       }
     }
-
     fetchVideos()
   }, [token, user?.id])
 
   const filteredVideos = longVideoOnly
-    ? videos.filter(video => video.type === "LONG" && video.status === "PUBLISHED")
+    ? videos.filter(video => video.type === "long" && video.status === "PUBLISHED")
     : videos.filter(video => video.status === "PUBLISHED")
 
   const handleVideoAction = async (action: string, videoId: string) => {
     if (!token) {
       console.error("No authentication token found")
-      return
+      //return
     }
 
     if (action === "like") {
@@ -392,24 +393,27 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
       const videoRef = videoRefs.current.find(ref => ref.element === entry.target)
       if (videoRef?.element) {
         if (entry.isIntersecting) {
-          // Pause all other currently playing videos before playing the current one
+          // Don't auto-play if manually paused
+          if (manuallyPausedRef.current[videoRef.id]) return;
+
+          // Pause others
           videoRefs.current.forEach(otherRef => {
             if (otherRef.element && otherRef.id !== videoRef.id && playingStatesRef.current[otherRef.id]) {
               otherRef.element.pause();
               setPlayingStates(prev => ({ ...prev, [otherRef.id]: false }));
             }
           });
-
           videoRef.element.play().catch(error => {
-            // Handle potential autoplay blocking (e.g., if muted attribute is not present)
             console.log('Autoplay prevented:', error);
           });
           setPlayingStates(prev => ({ ...prev, [videoRef.id]: true }));
         } else {
-          // Video is no longer intersecting, pause it
+          // When scrolled out, pause and reset manual pause status
           videoRef.element.pause();
+          manuallyPausedRef.current[videoRef.id] = false;
           setPlayingStates(prev => ({ ...prev, [videoRef.id]: false }));
         }
+
       }
     });
   }, [setPlayingStates]); // setPlayingStates is a stable reference
@@ -477,27 +481,47 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
 
   // Modified togglePlay to handle pausing other videos
   const togglePlay = (videoId: string, index: number) => {
-    const videoRef = videoRefs.current[index]; // Get the ref object for the clicked video
-    if (videoRef?.element) {
-      if (playingStates[videoId]) {
-        // If it's currently playing, pause it
-        videoRef.element.pause();
-        setPlayingStates(prev => ({ ...prev, [videoId]: false }));
-      } else {
-        // If it's paused, play it and pause others
-        videoRefs.current.forEach((ref) => {
-          if (ref.element && ref.id !== videoId && playingStates[ref.id]) {
-            ref.element.pause();
-            setPlayingStates(prev => ({ ...prev, [ref.id]: false }));
-          }
-        });
-        videoRef.element.play().catch((error) => {
-          console.log('Play prevented:', error)
-        });
-        setPlayingStates(prev => ({ ...prev, [videoId]: true }));
-      }
+    const videoRef = videoRefs.current[index];
+    if (!videoRef?.element) return;
+
+    const video = videoRef.element;
+
+    if (!video.paused) {
+      video.pause();
+      setPlayingStates(prev => ({ ...prev, [videoId]: false }));
+    } else {
+      videoRefs.current.forEach(ref => {
+        if (ref.element && ref.id !== videoId && !ref.element.paused) {
+          ref.element.pause();
+          setPlayingStates(prev => ({ ...prev, [ref.id]: false }));
+        }
+      });
+      video.play().catch(err => {
+        console.warn("Autoplay failed:", err);
+      });
+
+      setPlayingStates(prev => ({ ...prev, [videoId]: true }));
     }
-  }
+  };
+
+  const PauseAndPlay = (videoId: string, index: number) => {
+    const videoRef = videoRefs.current[index];
+    if (!videoRef?.element) return;
+
+    const video = videoRef.element;
+
+    if (video.paused) {
+      manuallyPausedRef.current[videoId] = false; // not paused by user anymore
+      video.play();
+      setPlayingStates(prev => ({ ...prev, [videoId]: true }));
+    } else {
+      manuallyPausedRef.current[videoId] = true; // user paused manually
+      video.pause();
+      setPlayingStates(prev => ({ ...prev, [videoId]: false }));
+    }
+  };
+
+
 
   // Add click outside handler for comments, share options, AND description
   useEffect(() => {
@@ -555,6 +579,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
     <>
       {/* Increased padding-bottom to account for mobile nav */}
       <div className={`h-screen overflow-y-scroll snap-y snap-mandatory ${isFullscreen ? "fullscreen-video" : ""} pt-14 pb-16`}>
+
         {filteredVideos.map((video, index) => (
           <div key={video._id} className="h-screen snap-start relative bg-black">
             {/* Video Background */}
@@ -570,49 +595,36 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                 className={`w-full h-full object-cover ${isFullscreen ? 'object-contain' : ''}`}
                 loop
                 playsInline
+                muted
                 onPlay={() => setPlayingStates(prev => ({ ...prev, [video._id]: true }))}
                 onPause={() => setPlayingStates(prev => ({ ...prev, [video._id]: false }))}
                 onClick={(e) => {
                   e.preventDefault(); // Prevent default video controls if any
-                  togglePlay(video._id, index);
+                  PauseAndPlay(video._id, index);
+                }}
+                onTimeUpdate={(e) => {
+                  const videoEl = e.currentTarget;
+                  const percent = (videoEl.currentTime / videoEl.duration) * 100;
+                  setProgressMap(prev => ({
+                    ...prev,
+                    [video._id]: percent
+                  }));
                 }}
               />
 
               {/* Video Progress Bar */}
-              <div className="video-progress">
-                <div className="video-progress-bar" style={{ width: `${video.progress || 0}%` }}></div>
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gray-700/40 z-40">
+                <div
+                  className="h-full bg-[#F1C40F] transition-all duration-300"
+                  style={{ width: `${progressMap[video._id] || 0}%` }}
+                />
               </div>
 
               {/* Play/Pause overlay buttons */}
               {!playingStates[video._id] && (
-                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <Button
-                      variant="ghost"
-                      size="lg"
-                      className="text-white/80 hover:text-white hover:bg-black/20 pointer-events-auto"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent event from bubbling to video element's onClick
-                        togglePlay(video._id, index);
-                      }}
-                    >
-                      <Play size={48} />
-                    </Button>
-                 </div>
-              )}
-              {playingStates[video._id] && ( // Added this block for Pause icon
-                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <Button
-                      variant="ghost"
-                      size="lg"
-                      className="text-white/80 hover:text-white hover:bg-black/20 pointer-events-auto"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent event from bubbling to video element's onClick
-                        togglePlay(video._id, index);
-                      }}
-                    >
-                      <Pause size={48} />
-                    </Button>
-                 </div>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <PauseCircleIcon size={48} />
+                </div>
               )}
             </div>
 
@@ -651,7 +663,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                   }}
                   className="bg-transparent text-white hover:text-primary rounded-full hover:bg-transparent p-1"
                 >
-                  <Share size={36} />
+                  <Send size={36} />
                 </Button>
                 <span className="text-white text-xs font-medium mt-1">{video.shares}</span>
               </div>
@@ -661,10 +673,10 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                   onClick={() => handleVideoAction("save", video._id)}
                   className="bg-transparent text-white hover:text-primary rounded-full hover:bg-transparent p-1"
                 >
-                  <Bookmark size={36} />
+                  <IndianRupee size={36} />
                 </Button>
                 <span className="text-white text-xs font-medium mt-1">
-                  {video.saves > 1000 ? `${(video.saves / 1000).toFixed(1)}K` : video.saves}
+                  {video.earnings > 1000 ? `${(video.earnings / 1000).toFixed(1)}K` : video.earnings}
                 </span>
               </div>
 
@@ -679,7 +691,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
               </div>
 
               {/* Fullscreen button for long videos */}
-              {video.type === "LONG" && (
+              {video.type === "long" && (
                 <div className="flex flex-col items-center">
                   <Button
                     onClick={handleFullscreen}
@@ -690,74 +702,209 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                 </div>
               )}
 
-              {/* Profile Avatar */}
-              <div className="relative mt-4">
-                <Avatar className="w-10 h-10 border-2 border-white">
-                  <AvatarImage src={video.user?.avatar || "/placeholder.svg"} />
-                  <AvatarFallback className="text-xs">{video.user?.name[0]}</AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-black text-xs font-bold">+</span>
-                </div>
-              </div>
+
             </div>
 
             {/* Bottom Info */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 pb-32 sm:pb-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent max-h-[50vh] overflow-y-auto">
+            <div className="absolute bottom-0 left-0 right-0 p-2 pb-18 sm:pb-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent max-h-[50vh] overflow-y-auto">
               {/* Community and Series Info */}
-              <div className="mb-2">
+              <div className="mb-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     {video.community && (
-                      <Badge variant="secondary" className="bg-primary/20 text-primary border-primary">
-                        <Users size={12} className="mr-1" />
-                        {video.community}
+                      <Badge variant="secondary" className="bg-transparent text-white text-[20px] flex gap-3">
+                        <div className="flex">
+                          <HashIcon size={24} color="yellow" />
+                          {video.community}
+                        </div><img src='/assets/MiscIcons/FollowButton.svg' />
                       </Badge>
                     )}
+
                   </div>
                 </div>
 
+
                 <div className="flex items-center space-x-2">
-                  {video.series && (
+                  {/*{video.series && (
                     <Badge variant="secondary" className="bg-white/20 text-white border-white">
                       <Users size={12} className="mr-1" />
                       {video.series}
                     </Badge>
+                  )}*/}
+
+                  {video.type === "long" && video.episodes && video.episodes.length > 0 && (
+                    <>
+                      <div className="flex items-start gap-3 mt-4 w-full">
+                        {/* Avatar + Add Button */}
+                        <div className="relative">
+                          <Avatar className="w-10 h-10 border-2 border-white">
+                            <AvatarImage src={video.user?.avatar || "/placeholder.svg"} />
+                            <AvatarFallback className="text-xs">{video.user?.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full flex items-center justify-center border border-black">
+                            <span className="text-black text-xs font-bold leading-none">+</span>
+                          </div>
+                        </div>
+
+                        {/* Main Info */}
+                        <div className="flex flex-col flex-1 w-full">
+                          {/* Name + Follow */}
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-white font-semibold text-[20px]">{video.user?.name}</h3>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-white border border-white rounded-half px-2 py-0.5 text-[16px] font-medium hover:bg-white/10 h-auto min-h-0"
+                            >
+                              Follow
+                            </Button>
+                          </div>
+
+                          {/* Title + Episode + Paid (left + right) */}
+                          <div className="w-full flex items-center justify-between mt-1">
+                            {/* Left: DEATH + Ep Dropdown */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-white text-xs uppercase tracking-wider font-bold">{video.title.substring(0,20)}{video.title.length > 20 ? "..." : ""}</span>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-white border border-white rounded-full px-2 py-0 text-xs font-medium hover:bg-white/10 h-auto min-h-0"
+                                  >
+                                    Ep: {video.currentEpisode}
+                                    <ChevronDown size={12} />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent side="top" className="w-64">
+                                  {video.episodes?.map((episode) => (
+                                    <DropdownMenuItem key={episode.id} className="flex justify-between">
+                                      <span>{episode.title}</span>
+                                      <span className="text-muted-foreground">{episode.duration}</span>
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+
+                            {/* Right: Paid Badge */}
+                            {true && (
+                              <Badge
+                                variant="secondary"
+                                className="bg-transparent text-[#F1C40F] text-[16px] font-bold px-2 border-white rounded-md"
+                              >
+                                Paid
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </>
                   )}
-                  {/* Episode Dropdown (re-enabled if needed) */}
-                  {/* {video.type === "LONG" && video.episodes && video.episodes.length > 0 && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/10">
-                          Ep - {video.currentEpisode}
-                          <ChevronDown size={12} className="ml-1" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent side="top" className="w-64">
-                        {video.episodes?.map((episode) => (
-                          <DropdownMenuItem key={episode.id} className="flex justify-between">
-                            <span>{episode.title}</span>
-                            <span className="text-muted-foreground">{episode.duration}</span>
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )} */}
+
+                  {video.type === "long" && !video.episodes && (
+                    <>
+                      <div className="flex items-start gap-3 mt-4 w-full">
+                        {/* Avatar + Add Button */}
+                        <div className="relative">
+                          <Avatar className="w-10 h-10 border-2 border-white">
+                            <AvatarImage src={video.user?.avatar || "/placeholder.svg"} />
+                            <AvatarFallback className="text-xs">{video.user?.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full flex items-center justify-center border border-black">
+                            <span className="text-black text-xs font-bold leading-none">+</span>
+                          </div>
+                        </div>
+
+                        {/* Main Info */}
+                        <div className="flex flex-col flex-1 w-full">
+                          {/* Name + Follow */}
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-white font-semibold text-[20px]">{video.user?.name}</h3>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-white border border-white rounded-half px-2 py-0.5 text-[16px] font-medium hover:bg-white/10 h-auto min-h-0"
+                            >
+                              Follow
+                            </Button>
+                          </div>
+
+                          {/* Title + Paid (left + right) */}
+                          <div className="w-full flex items-center justify-between mt-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-white text-xs uppercase tracking-wider font-bold">{video.title.substring(0,20)}{video.title.length > 20 ? "..." : ""}</span>
+                            </div>
+
+                            {/* Right: Paid Badge */}
+                            {true && (
+                              <Badge
+                                variant="secondary"
+                                className="bg-transparent text-[#F1C40F] text-[16px] font-bold px-2 border-white rounded-md"
+                              >
+                                Paid
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {video.type === "short" && (
+                    <>
+                      <div className="flex items-start gap-3 mt-4 w-full">
+                        {/* Avatar + Add Button */}
+                        <div className="relative">
+                          <Avatar className="w-10 h-10 border-2 border-white">
+                            <AvatarImage src={video.user?.avatar || "/placeholder.svg"} />
+                            <AvatarFallback className="text-xs">{video.user?.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full flex items-center justify-center border border-black">
+                            <span className="text-black text-xs font-bold leading-none">+</span>
+                          </div>
+                        </div>
+
+                        {/* Main Info */}
+                        <div className="flex flex-col flex-1 w-full">
+                          {/* Name + Follow */}
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-white font-semibold text-[20px]">{video.user?.name}</h3>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-white border border-white rounded-half px-2 py-0.5 text-[16px] font-medium hover:bg-white/10 h-auto min-h-0"
+                            >
+                              Follow
+                            </Button>
+                          </div>
+
+                          {/* Title + Paid (left + right) */}
+                          <div className="w-full flex items-center justify-between mt-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-white text-xs uppercase tracking-wider font-bold">{video.title.substring(0,20)}{video.title.length > 20 ? "..." : ""}</span>
+                            </div>
+
+                            {/* Right: Paid Badge */}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
-              {/* User Info */}
+
               <div className="flex items-center space-x-2 mb-1">
-                <span className="font-semibold text-white text-sm">{video.user.name}</span>
+
                 {video.user.id && video.user.id !== user?.id && (
                   <Button
                     size="sm"
                     variant={followingMap[video.user.id] ? "outline" : "default"}
-                    className={`text-xs px-2 py-1 ${
-                      followingMap[video.user.id]
-                        ? "bg-transparent border border-white text-white hover:bg-white hover:text-black"
-                        : "bg-white text-black hover:bg-white/90"
-                    }`}
+                    className={`text-xs px-0 py-0 ${followingMap[video.user.id]
+                      ? "bg-transparent border border-white text-white hover:bg-white hover:text-black"
+                      : "bg-white text-black hover:bg-white/90"
+                      }`}
                     onClick={() => handleFollow(video.user.id)}
                   >
                     {followingMap[video.user.id] ? "Following" : "Follow"}
@@ -765,19 +912,16 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                 )}
               </div>
 
-              {/* Title and Description */}
-              <h3 className="text-sm font-bold mb-1 text-white">{video.title}</h3>
-              <div className="mb-1" ref={descriptionRef}>
-                <p className="text-white/90 text-xs">
-                  {showFullDescriptionMap[video._id] ? video.description : truncateWords(video.description, DEFAULT_WORD_LIMIT)}
-                </p>
+              <div className="mb-1 text-left" ref={descriptionRef}>
+
                 {/* Show more button if the number of words exceeds the actual limit*/}
                 {video.description && video.description.split(/\s+/).length > DEFAULT_WORD_LIMIT && (
                   <button
                     onClick={() => toggleFullDescription(video._id)}
                     className="text-xs text-white/80 hover:text-white mt-1"
-                  >
-                    {showFullDescriptionMap[video._id] ? 'Show less' : 'more'}
+                  ><p className="text-white/90 text-xs text-left">
+                      {showFullDescriptionMap[video._id] ? video.description : truncateWords(video.description, DEFAULT_WORD_LIMIT)}
+                    </p>
                   </button>
                 )}
               </div>
@@ -833,7 +977,11 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
       )}
 
       {/* Video More Menu */}
-      <VideoMoreMenu isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} videoId={selectedVideoId} />
+      <VideoMoreMenu isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} videoId={selectedVideoId} videoRefs={{
+        current: Object.fromEntries(
+          videoRefs.current.map(({ id, element }) => [id, element])
+        ),
+      }} />
     </>
   )
 }
