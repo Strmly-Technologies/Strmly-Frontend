@@ -1,12 +1,14 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, Send, Smile, Heart, MoreVertical } from "lucide-react"
+import { Send, Smile, Heart, MoreVertical, ArrowBigUp, ArrowBigDown, IndianRupee, ChevronDown, SendHorizonal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuthStore } from "@/store/useAuthStore"
+import { timeStamp } from "console"
 
+/*
 const mockComments = [
   {
     id: 1,
@@ -57,29 +59,100 @@ const mockComments = [
     replies: [],
   },
 ]
+*/
+
+const mockComments: Comment[] = Array.from({ length: 50 }, (_, i) => {
+  const videoId = (Math.floor(Math.random() * 4) + 1).toString();
+  const randomUserId = `user_${i + 1}`;
+  const usernames = ["sunny_dev", "alice123", "coderjoe", "techie22", "nomadguy", "janedoe", "pixie_dust"];
+  const names = ["Sunny", "Alice", "Joe", "Rita", "Karan", "Jane", "Pixie"];
+  const randomIndex = Math.floor(Math.random() * usernames.length);
+
+  return {
+    _id: `comment_${i + 1}`,
+    content: `This is a mock comment #${i + 1}`,
+    videoId: videoId,
+    repliesCount: Math.floor(Math.random() * 10),
+    timestamp: new Date(Date.now() - Math.floor(Math.random() * 100000000)).toISOString(),
+    donations: Math.floor(Math.random() * 100),
+    upVotes: Math.floor(Math.random() * 200),
+    downVotes: Math.floor(Math.random() * 50),
+    user: {
+      id: randomUserId,
+      name: names[randomIndex],
+      username: usernames[randomIndex],
+      avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${usernames[randomIndex]}`
+    },
+    upvoted: Math.random() > 0.7,
+    downvoted: Math.random() > 0.8,
+    replies: Math.floor(Math.random() * 50)
+  };
+});
+
+const mockReplies: reply[] = Array.from({ length: 100 }, (_, i) => {
+  const randomUserId = `user_${i + 1}`;
+  const usernames = ["sunny_dev", "alice123", "coderjoe", "techie22", "nomadguy", "janedoe", "pixie_dust"];
+  const names = ["Sunny", "Alice", "Joe", "Rita", "Karan", "Jane", "Pixie"];
+  const randomIndex = Math.floor(Math.random() * usernames.length);
+
+  return {
+    _id: `reply_${i + 1}`,
+    content: `This is a mock reply #${i + 1}`,
+    parentId: `comment_${Math.floor(Math.random() * 50) + 1}`, // Matches with your mockComments
+    timestamp: new Date(Date.now() - Math.floor(Math.random() * 100000000)).toISOString(),
+    donations: Math.floor(Math.random() * 50),
+    upVotes: Math.floor(Math.random() * 100),
+    downVotes: Math.floor(Math.random() * 30),
+    user: {
+      id: randomUserId,
+      name: names[randomIndex],
+      username: usernames[randomIndex],
+      avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${usernames[randomIndex]}`,
+    },
+    upvoted: Math.random() > 0.7,
+    downvoted: Math.random() > 0.8,
+  };
+});
+
 
 const emojis = ["😀", "😂", "😍", "🔥", "💯", "👍", "❤️", "🎉", "🚀", "💪", "��", "🙌"]
 
 interface Comment {
   _id: string
   content: string
-  userId: string
   videoId: string
-  parentId?: string
-  likesCount: number
   repliesCount: number
-  isEdited: boolean
-  createdAt: string
+  timestamp: string
+  donations: number
+  upVotes: number
+  downVotes: number
+  user: {
+    id: string
+    name: string
+    avatar: string
+  }
+  upvoted?: boolean
+  downvoted?: boolean
+  replies: number
+}
+
+interface reply {
+  _id: string
+  content: string
+  parentId: string
+  timestamp: string
+  donations: number
+  upVotes: number
+  downVotes: number
   user: {
     id: string
     name: string
     username: string
     avatar: string
-    isVerified: boolean
   }
-  isLiked?: boolean
+  upvoted?: boolean
+  downvoted?: boolean
 }
-
 interface CommentsSectionProps {
   isOpen: boolean
   onClose: () => void
@@ -89,6 +162,8 @@ interface CommentsSectionProps {
 export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSectionProps) {
   const [comments, setComments] = useState<Comment[]>([])
   const [comment, setComment] = useState("")
+  const [openReplies, setOpenReplies] = useState<{ [key: string]: reply[] }>({})
+  const [loadingReplies, setLoadingReplies] = useState<string | null>(null)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const token = useAuthStore((state) => state.token)
@@ -126,9 +201,9 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
         },
       })
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch comments")
-      }
+      //if (!response.ok) {
+      //  throw new Error("Failed to fetch comments")
+      //}
 
       const data = await response.json()
       setComments(data)
@@ -136,6 +211,49 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
       console.error("Error fetching comments:", error)
     }
   }
+
+
+  const fetchReplies = async (commentID: string) => {
+    if (openReplies[commentID]) {
+      // Already loaded replies, toggle visibility
+      setOpenReplies(prev => {
+        const newReplies = { ...prev }
+        delete newReplies[commentID]
+        return newReplies
+      })
+      return
+    }
+
+    try {
+      {/*
+      setLoadingReplies(commentID)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}/comments/${commentID}/replies`, {
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+      })
+
+      const data = await response.json()
+      setOpenReplies(prev => ({ ...prev, [commentID]: data }))*/}
+      
+    setLoadingReplies(commentID)
+
+    // Use mock data
+    const filteredReplies = mockReplies.filter(reply => reply.parentId === commentID)
+
+    // Simulate network delay (optional)
+    await new Promise(res => setTimeout(res, 500))
+
+    setOpenReplies(prev => ({ ...prev, [commentID]: filteredReplies }))
+    } catch (error) {
+      console.error("Error fetching replies:", error)
+    } finally {
+      setLoadingReplies(null)
+    }
+  }
+
 
   const handleSendComment = async () => {
     if (!token || !videoId || !comment.trim()) return
@@ -152,6 +270,7 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
         body: JSON.stringify({ content: comment }),
       })
 
+
       if (!response.ok) {
         throw new Error("Failed to post comment")
       }
@@ -166,42 +285,6 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
     }
   }
 
-  const handleLikeComment = async (commentId: string) => {
-    if (!token || !videoId) return
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}/comments/${commentId}/like`, {
-        method: 'POST',
-        credentials: "include",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to like comment")
-      }
-
-      const data = await response.json()
-      
-      // Update the comment's like count and liked state
-      setComments(prevComments => 
-        prevComments.map(comment => 
-          comment._id === commentId 
-            ? { 
-                ...comment, 
-                likesCount: data.liked ? comment.likesCount + 1 : comment.likesCount - 1,
-                isLiked: data.liked 
-              }
-            : comment
-        )
-      )
-    } catch (error) {
-      console.error("Error liking comment:", error)
-    }
-  }
-
   const addEmoji = (emoji: string) => {
     setComment((prev) => prev + emoji)
     setShowEmojiPicker(false)
@@ -210,64 +293,86 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
   if (!isOpen) return null
 
   return (
-    <div className="comments-section open">
+    <div className="comments-section open flex flex-col h-[80vh] ">
       {/* Header */}
-      <div className="flex items-center justify-center p-3 lg:p-4 border-b border-border flex-col">
+      <div className="flex items-center justify-center p-3 lg:p-4 flex-col bg-[#1A1A1A] rounded-t-3xl">
         <div className="w-20 h-1 bg-white/80 rounded-full mx-auto my-2 hover:bg-white/60 transition-colors" />
-        <h3 className="text-base text-[24px] font-semibold">Comments</h3>
+        <h3 className="text-base text-[24px] font-semibold ">Comments</h3>
       </div>
 
       {/* Comments List */}
-      <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 lg:space-y-4">
-        {comments.map((comment) => (
+      <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 lg:space-y-4 bg-[#1A1A1A]">
+        {mockComments.map((comment) => (
           <div key={comment._id} className="space-y-2">
             {/* Main Comment */}
-            <div className="flex space-x-2 lg:space-x-3">
-              <Avatar className="w-8 h-8 lg:w-10 lg:h-10 flex-shrink-0">
-                <AvatarImage src={comment.user?.avatar || "/placeholder.svg"} />
-                <AvatarFallback className="text-xs lg:text-sm">{comment.user?.name?.[0] || "U"}</AvatarFallback>
-              </Avatar>
+            {comment.videoId == videoId ?
+              <div className="flex space-x-2 lg:space-x-3">
+                <Avatar className="w-8 h-8 lg:w-10 lg:h-10 flex-shrink-0">
+                  <AvatarImage src={comment.user?.avatar || "/placeholder.svg"} />
+                  <AvatarFallback className="text-xs lg:text-sm">{comment.user?.name?.[0] || "U"}</AvatarFallback>
+                </Avatar>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-1 lg:space-x-2 mb-1">
-                  <span className="font-medium text-sm lg:text-base truncate">{comment.user?.name || "Anonymous User"}</span>
-                  <span className="text-xs text-muted-foreground flex-shrink-0">
-                    {new Date(comment.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-                <p className="text-sm lg:text-base leading-relaxed">{comment.content}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-1 lg:space-x-2 mb-1">
+                    <span className="font-medium text-sm lg:text-base truncate">{comment.user?.name || "Anonymous User"}</span>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">
+                      {new Date(comment.timestamp).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="text-sm lg:text-base leading-relaxed">{comment.content}</p>
+                  <button onClick={() => fetchReplies(comment._id)} className="flex items-center" >
+                    <span className="text-xs text-muted-foreground ">
+                      View replies ({comment.replies})</span>
+                    <ChevronDown />
+                  </button>
+                  {openReplies[comment._id] && (
+                    <div className="ml-10 space-y-2 mt-2">
+                      {openReplies[comment._id].length === 0 ? (
+                        <p className="text-xs text-muted-foreground">No replies yet.</p>
+                      ) : (
+                        openReplies[comment._id].map(reply => (
+                          <div key={reply._id} className="flex space-x-2">
+                            <Avatar className="w-7 h-7">
+                              <AvatarImage src={reply.user?.avatar || "/placeholder.svg"} />
+                              <AvatarFallback className="text-xs">{reply.user?.name?.[0] || "U"}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="flex items-center space-x-1 mb-1">
+                                <span className="font-medium text-xs">{reply.user.name}</span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {new Date(reply.timestamp).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <p className="text-sm">{reply.content}</p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
 
-                <div className="flex items-center space-x-2 lg:space-x-4 mt-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className={`h-8 lg:h-6 px-2 lg:px-2 text-xs lg:text-xs ${comment.isLiked ? 'text-red-500' : ''}`}
-                    onClick={() => handleLikeComment(comment._id)}
-                  >
-                    <Heart size={12} className={`mr-1 lg:w-3 lg:h-3 ${comment.isLiked ? 'fill-current' : ''}`} />
-                    {comment.likesCount}
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-8 lg:h-6 px-2 lg:px-2 text-xs lg:text-xs">
-                    Reply
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-8 lg:h-6 px-1 lg:px-1">
-                    <MoreVertical size={12} className="lg:w-3 lg:h-3" />
-                  </Button>
+                  {loadingReplies === comment._id && (
+                    <p className="text-xs text-muted-foreground ml-10">Loading replies...</p>
+                  )}
                 </div>
-              </div>
-            </div>
-          </div>
+                <div className="flex">
+                  <button className="flex flex-col items-center pt-1">
+                    <IndianRupee size={18} />{comment.donations}
+                  </button>
+                  <button className="flex flex-col items-center">
+                    <ArrowBigUp size={24} />{comment.upVotes}
+                  </button>
+                  <button className="flex flex-col items-center">
+                    <ArrowBigDown size={24} />{comment.downVotes}
+                  </button>
+                </div>
+              </div> : ''}</div>
         ))}
       </div>
 
       {/* Comment Input */}
-      <div className="p-3 lg:p-4 border-t border-border">
+      <div className="p-3 lg:p-4 border-t border-border bg-[#1A1A1A]">
         <div className="flex space-x-2 lg:space-x-3">
-          <Avatar className="w-8 h-8 lg:w-10 lg:h-10 flex-shrink-0">
-            <AvatarImage src="/placeholder.svg" />
-            <AvatarFallback className="text-xs lg:text-sm">U</AvatarFallback>
-          </Avatar>
-
           <div className="flex-1 relative">
             <Textarea
               placeholder="Add a comment..."
@@ -311,13 +416,13 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
                 )}
               </div>
 
-              <Button 
-                size="sm" 
-                onClick={handleSendComment} 
-                disabled={!comment.trim() || isLoading} 
-                className="h-8 w-8 lg:h-6 lg:w-6 p-0"
+              <Button
+                size="sm"
+                onClick={handleSendComment}
+                disabled={!comment.trim() || isLoading}
+                className="h-8 w-8 lg:h-6 lg:w-6 p-0 bg-transparent"
               >
-                <Send size={14} className="lg:w-4 lg:h-4" />
+                <SendHorizonal size={14} className="lg:w-4 lg:h-4" />
               </Button>
             </div>
           </div>
