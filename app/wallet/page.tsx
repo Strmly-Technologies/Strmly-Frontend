@@ -33,68 +33,64 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const mockTransactions = [
+  
   {
     id: 1,
-    type: "earning",
-    category: "video_monetization",
-    description: "Video monetization - 'Startup Guide'",
-    amount: 25.5,
-    date: "2024-01-15",
-    status: "completed",
-    videoTitle: "How to Build a Startup",
-    views: 1250,
-  },
-  {
-    id: 2,
-    type: "withdrawal",
-    category: "bank_transfer",
-    description: "Bank transfer to ****1234",
-    amount: -100.0,
-    date: "2024-01-14",
+    type: "deposit",
+    category: "bank_to_wallet",
+    description: "Added ₹500 from HDFC Bank",
+    amount: 500.0,
+    date: "2024-01-17",
     status: "completed",
     bankName: "HDFC Bank",
   },
+
+  {
+    id: 2,
+    type: "withdrawal",
+    category: "wallet_to_bank",
+    description: "Withdrawn ₹250 to Axis Bank",
+    amount: -250.0,
+    date: "2024-01-16",
+    status: "completed",
+    bankName: "Axis Bank",
+  },
+
+ 
   {
     id: 3,
-    type: "earning",
-    category: "tips",
-    description: "Tips from followers",
-    amount: 15.75,
+    type: "spending",
+    category: "wallet_to_app",
+    description: "Boosted video 'React Tutorial'",
+    amount: -40.0,
+    date: "2024-01-15",
+    status: "completed",
+    videoTitle: "React Tutorial",
+  },
+
+  {
+    id: 4,
+    type: "spending",
+    category: "wallet_to_app",
+    description: "Purchased premium content - 'Next.js Advanced'",
+    amount: -20.0,
+    date: "2024-01-14",
+    status: "completed",
+    contentTitle: "Next.js Advanced",
+  },
+
+  {
+    id: 5,
+    type: "spending",
+    category: "wallet_to_app",
+    description: "Tipped creator - John Doe",
+    amount: -10.0,
     date: "2024-01-13",
     status: "completed",
     tipperName: "John Doe",
   },
-  {
-    id: 4,
-    type: "earning",
-    category: "premium_content",
-    description: "Premium content purchase",
-    amount: 9.99,
-    date: "2024-01-12",
-    status: "pending",
-    contentTitle: "Advanced React Patterns",
-  },
-  {
-    id: 5,
-    type: "earning",
-    category: "live_stream",
-    description: "Live stream donations",
-    amount: 45.0,
-    date: "2024-01-11",
-    status: "completed",
-    streamTitle: "Live Coding Session",
-  },
-  {
-    id: 6,
-    type: "spending",
-    category: "boost_video",
-    description: "Video promotion boost",
-    amount: -20.0,
-    date: "2024-01-10",
-    status: "completed",
-    videoTitle: "React Tutorial",
-  },
 ]
+
 
 const mockEarningsSources = [
   { source: "Video Monetization", amount: 156.75, percentage: 45, growth: 12 },
@@ -695,11 +691,6 @@ export default function WalletPage() {
         </button>
       </div>
       <h1 className="text-xl absolute left-1/2 -translate-x-1/2 ">My Wallet</h1>
-      <div className="ml-auto">
-        <button>
-          <MoreHorizontal size={22} />
-        </button>
-      </div>
     </div>
 
     {/* Balance Card */}
@@ -743,62 +734,94 @@ export default function WalletPage() {
   </div>
 
 
-  <div className="flex-1 overflow-y-auto px-4 pb-28 space-y-3 no-scrollbar">
-    {activeTab === "transactions" && (
-      <div className="space-y-4 mt-4">
-        {mockTransactions.slice(0).map((transaction) => (
-          <div
-            key={transaction.id}
-            className="bg-[#1E1E1E] text-white rounded-xl px-4 py-3 shadow-md border border-gray-700/40"
-          >
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-base font-semibold mb-4">
-                  {transaction.description}
-                </p>
-                <p className="text-xs text-gray-400">{transaction.date}</p>
-              </div>
-              <div className="text-right">
-                <p
-                  className={`text-sm font-bold ${
-                    transaction.type === "earning"
-                      ? "text-green-400"
-                      : "text-red-400"
-                  }`}
-                >
-                  {transaction.type === "earning" ? "+" : "-"}₹
-                  {Math.abs(transaction.amount).toFixed(2)}
-                </p>
-                <div className="text-[10px] mt-2 pt-6">
-                  {getStatusBadge(transaction.status)}
-                </div>
-              </div>
+{/* Scrollable Content */}
+<div className="flex-1 overflow-y-auto px-4 pb-32 space-y-6 no-scrollbar">
+  {activeTab === "overview" && (
+  <div className="space-y-4 mt-3">
+    {mockTransactions
+      .filter(
+        (transaction) =>
+          transaction.category === "wallet_to_bank" || transaction.category === "bank_to_wallet"
+      )
+      .map((transaction) => (
+        <div
+          key={transaction.id}
+          className="bg-[#1E1E1E] text-white rounded-xl px-4 py-3 shadow-md border border-gray-700/40"
+        >
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-base font-semibold mb-4">{transaction.description}</p>
+              <p className="text-xs text-gray-400">{transaction.date}</p>
+            </div>
+            <div className="text-right">
+              <p
+                className={`text-sm font-bold ${
+                  transaction.amount > 0 ? "text-green-400" : "text-red-400"
+                }`}
+              >
+                {transaction.amount > 0 ? "+" : "-"}₹{Math.abs(transaction.amount).toFixed(2)}
+              </p>
+              <div className="text-[10px] mt-2 pt-6">{getStatusBadge(transaction.status)}</div>
             </div>
           </div>
-        ))}
-      </div>
-    )}
+        </div>
+      ))}
   </div>
+)}
+
+{activeTab === "transactions" && (
+  <div className="space-y-4 mt-3">
+    {mockTransactions
+      .filter((transaction) => transaction.category === "wallet_to_app")
+      .map((transaction) => (
+        <div
+          key={transaction.id}
+          className="bg-[#1E1E1E] text-white rounded-xl px-4 py-3 shadow-md border border-gray-700/40"
+        >
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-base font-semibold mb-4">{transaction.description}</p>
+              <p className="text-xs text-gray-400">{transaction.date}</p>
+            </div>
+            <div className="text-right">
+              <p
+                className={`text-sm font-bold ${
+                  transaction.amount > 0 ? "text-green-400" : "text-red-400"
+                }`}
+              >
+                {transaction.amount > 0 ? "+" : "-"}₹{Math.abs(transaction.amount).toFixed(2)}
+              </p>
+              <div className="text-[10px] mt-2 pt-6">{getStatusBadge(transaction.status)}</div>
+            </div>
+          </div>
+        </div>
+      ))}
+  </div>
+)}
+
+</div>
 
 
-  {activeTab === "overview" && (
-    <div className="fixed bottom-20 left-0 right-0 px-4 z-50">
-      <div className="flex flex-col gap-3 bg-black py-3 rounded-xl shadow-md">
-        <Button
-          className="w-full text-black font-medium h-11 rounded-xl"
-          style={{ backgroundColor: "#F1C40F" }}
-        >
-          Add credit
-        </Button>
-        <Button
-          className="w-full text-black font-medium h-11 rounded-xl"
-          style={{ backgroundColor: "#F1C40F" }}
-        >
-          Withdraw now
-        </Button>
-      </div>
-    </div>
-  )}
+{/* Bottom Buttons for Both Tabs */}
+<div className="fixed bottom-20 -mb-0.5 left-0 right-0 px-4 z-50 bg-black py-0.2 shadow-[0_-2px_10px_rgba(0,0,0,0.5)]">
+  <div className="flex flex-col gap-3">
+    <Button
+      className="w-full text-black font-medium h-11 rounded-xl"
+      style={{ backgroundColor: "#F1C40F" }}
+    >
+      Add credit
+    </Button>
+    <Button
+      className="w-full text-black font-medium h-11 rounded-xl"
+      style={{ backgroundColor: "#F1C40F" }}
+    >
+      Withdraw now
+    </Button>
+  </div>
+</div>
+
+
+
 </div>
 
     </>
