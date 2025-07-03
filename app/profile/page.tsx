@@ -141,40 +141,15 @@ export default function ProfilePage() {
       {/* Cover Image */}
       <div className="h-48 relative">
 
-        <ProfileTopbar/>
+        <ProfileTopbar hashtag={false} name={'Gabar Singh'} handleLogout={handleLogout}/>
 
-        {/* Logout in more option */}
-        <div>
-          {/* Add Sign Out button for mobile */}
-          <div className="absolute top-4 right-4 md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="bg-[#f62000] hover:bg-[#f62000]/90 rounded-full p-2"
-            >
-              <LogOut size={20} className="text-white" />
-            </Button>
-          </div>
-          {/* Add Sign Out button for desktop */}
-          <div className="absolute top-4 right-4 hidden md:block">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="bg-[#f62000] hover:bg-[#f62000]/90 rounded-full p-2"
-            >
-              <LogOut size={20} className="text-white" />
-            </Button>
-          </div>
-        </div>
       </div>
 
       {/* Profile Info */}
       <div className="max-w-4xl px-6 -mt-20 relative">
         <div className="flex flex-col items-center md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4">
           <div className="relative">
-            <Avatar className="w-28 h-28 border-4 border-background">
+            <Avatar className="size-24 border-4 border-background">
               <AvatarImage src={profileData.image} alt={profileData.name} />
               <AvatarFallback>{profileData.name[0]}</AvatarFallback>
             </Avatar>
