@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Heart, MessageCircle, Maximize, MoreVertical, ChevronDown, Link as LinkIcon, Send, IndianRupee, HashIcon } from "lucide-react"
+import { Heart, MessageCircle, Maximize, ChevronDown, Link as LinkIcon, Send, IndianRupee, HashIcon, MoreHorizontal, } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -26,10 +26,10 @@ const mockVideos = [
     community: "Startup Community",
     series: "Entrepreneur Series",
     episodes: [
-      { id: 1, title: "Episode 1: Getting Started", duration: "15:42", videoURL: "/MockVideos/video.mp4" },
-      { id: 2, title: "Episode 2: Market Research", duration: "18:30", videoURL: "/MockVideos/video2.mp4" },
-      { id: 3, title: "Episode 3: Building MVP", duration: "22:15", videoURL: "/MockVideos/video3.mp4" },
-      { id: 4, title: "Episode 4: Funding", duration: "19:45", videoURL: "/MockVideos/video4.mp4" },
+      { id: 1, videoURL: "/MockVideos/video.mp4" },
+      { id: 2, videoURL: "/MockVideos/video2.mp4" },
+      { id: 3, videoURL: "/MockVideos/video3.mp4" },
+      { id: 4, videoURL: "/MockVideos/video4.mp4" },
     ],
     currentEpisode: 1,
     duration: "15:42",
@@ -53,11 +53,11 @@ const mockVideos = [
     community: "Developer Community",
     series: "Web Dev Masterclass",
     episodes: [
-      { id: 1, title: "Episode 1: Introduction", duration: "12:30", videoURL: "/MockVideos/video2.mp4" },
-      { id: 2, title: "Episode 2: React Basics", duration: "20:15", videoURL: "/MockVideos/video.mp4" },
-      { id: 3, title: "Episode 3: Next.js Features", duration: "22:15", videoURL: "/MockVideos/video4.mp4" },
-      { id: 4, title: "Episode 4: Performance", duration: "18:45", videoURL: "/MockVideos/video3.mp4" },
-      { id: 5, title: "Episode 5: Deployment", duration: "16:30", videoURL: "/MockVideos/video2.mp4" },
+      { id: 1, videoURL: "/MockVideos/video2.mp4" },
+      { id: 2, videoURL: "/MockVideos/video.mp4" },
+      { id: 3, videoURL: "/MockVideos/video4.mp4" },
+      { id: 4, videoURL: "/MockVideos/video3.mp4" },
+      { id: 5, videoURL: "/MockVideos/video2.mp4" },
     ],
     currentEpisode: 1,
     duration: "22:15",
@@ -110,8 +110,9 @@ const mockVideos = [
   },
 ]
 interface VideoFeedProps {
-  showMixedContent?: boolean
   longVideoOnly?: boolean
+  ChangeVideoProgress:(value: number | ((prev: number) => number)) => void
+  Muted: boolean
 }
 
 const socialPlatforms = [
@@ -148,8 +149,6 @@ interface Video {
   currentEpisode?: number
   episodes?: Array<{
     id: number
-    title: string
-    duration: string
     videoURL: string
   }>
   tags?: string[]
@@ -168,13 +167,13 @@ const truncateWords = (text: string, maxWords: number) => {
 };
 
 
-export default function VideoFeed({ showMixedContent = false, longVideoOnly = false }: VideoFeedProps) {
+export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, Muted}: VideoFeedProps) {
+
   const [videos, setVideos] = useState<Video[]>([])
   // currentVideo is no longer directly used for playback logic but can be for other UI purposes.
   const [currentVideo, setCurrentVideo] = useState(0) // Still present, but not used in fullscreen logic anymore
   const [playingStates, setPlayingStates] = useState<{ [key: string]: boolean }>({})
   const manuallyPausedRef = useRef<Record<string, boolean>>({});
-  const [progressMap, setProgressMap] = useState<Record<string, number>>({});
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showComments, setShowComments] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
@@ -621,7 +620,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
     }));
   };
 
-  const DEFAULT_WORD_LIMIT = 7;
+  const DEFAULT_WORD_LIMIT = 20;
 
   return (
     <>
@@ -642,6 +641,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                 poster={video.thumbnailUrl}
                 className={`w-full h-full object-cover ${isFullscreen ? 'object-contain' : ''}`}
                 playsInline
+                muted={Muted}
                 onPlay={() => setPlayingStates(prev => ({ ...prev, [video._id]: true }))}
                 onPause={() => setPlayingStates(prev => ({ ...prev, [video._id]: false }))}
                 onClick={(e) => {
@@ -651,10 +651,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                 onTimeUpdate={(e) => {
                   const videoEl = e.currentTarget;
                   const percent = (videoEl.currentTime / videoEl.duration) * 100;
-                  setProgressMap(prev => ({
-                    ...prev,
-                    [video._id]: percent
-                  }));
+                  ChangeVideoProgress(percent)
                 }}
                 onEnded={() => {
                   const nextIndex = index + 1;
@@ -669,14 +666,13 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                   }
                 }}
               />
-
-              {/* Video Progress Bar */}
+              {/* Video Progress Bar 
               <div className="absolute top-0 left-0 right-0 h-1 bg-gray-700/40 z-40">
                 <div
                   className="h-full bg-[#F1C40F] transition-all duration-300"
                   style={{ width: `${progressMap[video._id] || 0}%` }}
                 />
-              </div>
+              </div>*/}
 
               {/* Play/Pause overlay buttons */}
               {!playingStates[video._id] && (
@@ -743,23 +739,9 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                   onClick={() => handleVideoAction("more", video._id)}
                   className="bg-transparent text-white hover:text-primary hover:bg-transparent p-1"
                 >
-                  <MoreVertical size={36} />
+                  <MoreHorizontal size={36} />
                 </Button>
               </div>
-
-              {/* Fullscreen button for long videos */}
-              {video.type === "long" && (
-                <div className="flex flex-col items-center">
-                  <Button
-                    onClick={handleFullscreen}
-                    className="bg-transparent text-white hover:text-primary rounded-full p-1"
-                  >
-                    <Maximize size={36} />
-                  </Button>
-                </div>
-              )}
-
-
             </div>
 
             {/* Bottom Info */}
@@ -826,24 +808,25 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                                     size="sm"
                                     className="text-white border border-white rounded-full px-2 py-0 text-xs font-medium hover:bg-white/10 h-auto min-h-0"
                                   >
-                                    Ep: {video.currentEpisode}
+                                    Ep : {video.currentEpisode}
                                     <ChevronDown size={12} />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent side="top" className="w-64">
+                                <DropdownMenuContent side="top" className="w-32">
                                   {video.episodes?.map((episode) => (
                                     <DropdownMenuItem
                                       key={episode.id}
                                       className="flex justify-between cursor-pointer"
                                       onClick={() => {
+                                        video.currentEpisode = episode.id;
                                         setCurrentEpisodeMap((prev) => ({
                                           ...prev,
                                           [video._id]: episode.id,
                                         }));
                                       }}
                                     >
-                                      <span>{episode.title}</span>
-                                      <span className="text-muted-foreground">{episode.duration}</span>
+                                      <span>Episode : {episode.id}</span>
+                                      <span>{video.currentEpisode == episode.id ? <img src='./assets/MiscIcons/TickMark.svg' className="w-5 h-5"/> : ""}</span>
                                     </DropdownMenuItem>
                                   ))}
                                 </DropdownMenuContent>
@@ -874,9 +857,6 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                             <AvatarImage src={video.user?.avatar || "/placeholder.svg"} />
                             <AvatarFallback className="text-xs">{video.user?.name[0]}</AvatarFallback>
                           </Avatar>
-                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full flex items-center justify-center border border-black">
-                            <span className="text-black text-xs font-bold leading-none">+</span>
-                          </div>
                         </div>
 
                         {/* Main Info */}
@@ -972,8 +952,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                 )}
               </div>
 
-              <div className="mb-1 text-left" ref={descriptionRef}>
-
+              <div className="mb-1 text-left flex justify-between" ref={descriptionRef}>
                 {/* Show more button if the number of words exceeds the actual limit*/}
                 {video.description && video.description.split(/\s+/).length > DEFAULT_WORD_LIMIT && (
                   <button
@@ -983,7 +962,18 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                       {showFullDescriptionMap[video._id] ? video.description : truncateWords(video.description, DEFAULT_WORD_LIMIT)}
                     </p>
                   </button>
+                  
                 )}
+                {/* Fullscreen button for long videos */}
+                {video.type === "long" && (
+                <div className="flex flex-col items-right z-50">
+                  <Button
+                    onClick={handleFullscreen}
+                    className="bg-transparent text-white hover:text-primary rounded-full p-1"
+                  >
+                    <Maximize size={36} />
+                  </Button>
+                </div>)}
               </div>
 
               {/* Tags */}
