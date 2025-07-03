@@ -4,7 +4,11 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
-export default function MobileBottomNav() {
+type VideoProgressBarProps = {
+  progress?: number;
+};
+
+export default function MobileBottomNav({ progress }:VideoProgressBarProps) {
   const pathname = usePathname()
 
   const navItems = [
@@ -17,7 +21,15 @@ export default function MobileBottomNav() {
 
   return (
     <div className="mobile-bottom-nav items-center justify-center fixed bottom-0 left-0 right-0 bg-[#1A1A1A] border-t border-border z-50 lg:hidden">
-      <div className="flex items-center justify-around w-full p-1">
+    
+    <div className="absolute top-0 left-0 right-0 h-1 bg-gray-700/40 z-40">
+    {progress ? (
+      <div
+        className="h-full bg-[#F1C40F] transition-all duration-300"
+        style={{ width: `${progress}%` }}
+      />) : ""}
+    </div>
+      <div className="flex items-center justify-around w-full p-1 pt-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href
 

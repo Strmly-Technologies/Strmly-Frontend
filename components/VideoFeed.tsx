@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Heart, MessageCircle, Bookmark, Play, Pause, Maximize, Users, MoreVertical, ChevronDown, Link as LinkIcon, Send, IndianRupee, PauseCircleIcon, HashIcon } from "lucide-react"
+import { Heart, MessageCircle, Maximize, ChevronDown, Link as LinkIcon, Send, IndianRupee, HashIcon, MoreHorizontal, } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -11,7 +11,6 @@ import VideoMoreMenu from "./VideoMoreMenu"
 import { useAuthStore } from "@/store/useAuthStore"
 import { api } from "@/lib/api"
 import { FaWhatsapp, FaInstagram, FaTelegram, FaSnapchat, FaTwitter, FaFacebook } from "react-icons/fa"
-
 
 const mockVideos = [
   {
@@ -27,10 +26,10 @@ const mockVideos = [
     community: "Startup Community",
     series: "Entrepreneur Series",
     episodes: [
-      { id: 1, title: "Episode 1: Getting Started", duration: "15:42" },
-      { id: 2, title: "Episode 2: Market Research", duration: "18:30" },
-      { id: 3, title: "Episode 3: Building MVP", duration: "22:15" },
-      { id: 4, title: "Episode 4: Funding", duration: "19:45" },
+      { id: 1, videoURL: "/MockVideos/video.mp4" },
+      { id: 2, videoURL: "/MockVideos/video2.mp4" },
+      { id: 3, videoURL: "/MockVideos/video3.mp4" },
+      { id: 4, videoURL: "/MockVideos/video4.mp4" },
     ],
     currentEpisode: 1,
     duration: "15:42",
@@ -43,7 +42,7 @@ const mockVideos = [
   },
   {
     id: 2,
-    type: "short",
+    type: "long",
     user: {
       name: "Code Master",
       username: "@codemaster",
@@ -54,13 +53,13 @@ const mockVideos = [
     community: "Developer Community",
     series: "Web Dev Masterclass",
     episodes: [
-      { id: 1, title: "Episode 1: Introduction", duration: "12:30" },
-      { id: 2, title: "Episode 2: React Basics", duration: "20:15" },
-      { id: 3, title: "Episode 3: Next.js Features", duration: "22:15" },
-      { id: 4, title: "Episode 4: Performance", duration: "18:45" },
-      { id: 5, title: "Episode 5: Deployment", duration: "16:30" },
+      { id: 1, videoURL: "/MockVideos/video2.mp4" },
+      { id: 2, videoURL: "/MockVideos/video.mp4" },
+      { id: 3, videoURL: "/MockVideos/video4.mp4" },
+      { id: 4, videoURL: "/MockVideos/video3.mp4" },
+      { id: 5, videoURL: "/MockVideos/video2.mp4" },
     ],
-    currentEpisode: 3,
+    currentEpisode: 1,
     duration: "22:15",
     progress: 60,
     likes: 67000,
@@ -69,10 +68,51 @@ const mockVideos = [
     earnings: 890,
     videoUrl: "/MockVideos/video.mp4",
   },
+
+  {
+    id: 3,
+    type: "short",
+    user: {
+      name: "Code Master",
+      username: "@codemaster",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    title: "React vs Next.js - Which Should You Choose?",
+    description: "Complete comparison of React and Next.js frameworks, diving deep into their features, performance, and best use cases for modern web development. This is a very comprehensive guide, perfect for developers looking to make informed decisions.",
+    community: "Developer Community",
+    duration: "22:15",
+    progress: 60,
+    likes: 6700,
+    comments: 4450,
+    shares: 127,
+    earnings: 899,
+    videoUrl: "/MockVideos/video3.mp4",
+  },
+
+  {
+    id: 4,
+    type: "short",
+    user: {
+      name: "Code Master",
+      username: "@codemaster",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    title: "React vs Next.js - Which Should You Choose?",
+    description: "Complete comparison of React and Next.js frameworks, diving deep into their features, performance, and best use cases for modern web development. This is a very comprehensive guide, perfect for developers looking to make informed decisions.",
+    community: "Developer Community",
+    duration: "22:15",
+    progress: 60,
+    likes: 6680,
+    comments: 745,
+    shares: 673,
+    earnings: 190,
+    videoUrl: "/MockVideos/video4.mp4",
+  },
 ]
 interface VideoFeedProps {
-  showMixedContent?: boolean
   longVideoOnly?: boolean
+  ChangeVideoProgress:(value: number | ((prev: number) => number)) => void
+  Muted: boolean
 }
 
 const socialPlatforms = [
@@ -109,8 +149,7 @@ interface Video {
   currentEpisode?: number
   episodes?: Array<{
     id: number
-    title: string
-    duration: string
+    videoURL: string
   }>
   tags?: string[]
   isLiked: boolean
@@ -128,18 +167,19 @@ const truncateWords = (text: string, maxWords: number) => {
 };
 
 
-export default function VideoFeed({ showMixedContent = false, longVideoOnly = false }: VideoFeedProps) {
+export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, Muted}: VideoFeedProps) {
+
   const [videos, setVideos] = useState<Video[]>([])
   // currentVideo is no longer directly used for playback logic but can be for other UI purposes.
   const [currentVideo, setCurrentVideo] = useState(0) // Still present, but not used in fullscreen logic anymore
   const [playingStates, setPlayingStates] = useState<{ [key: string]: boolean }>({})
   const manuallyPausedRef = useRef<Record<string, boolean>>({});
-  const [progressMap, setProgressMap] = useState<Record<string, number>>({});
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showComments, setShowComments] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null)
   const [isCopied, setIsCopied] = useState(false)
+  const [currentEpisodeMap, setCurrentEpisodeMap] = useState<Record<string, number>>({});
   // Updated videoRefs to store element and ID
   const videoRefs = useRef<Array<{ element: HTMLVideoElement | null; id: string }>>([])
   const [showShareOptions, setShowShareOptions] = useState(false)
@@ -210,6 +250,13 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
         }))
         console.log("Transformed videos data (check title/description here):", transformedVideos) // <<<--- CHECK THIS IN CONSOLE
         setVideos(transformedVideos)
+
+        //Initialize episodes]
+        const initialEpisodeMap: Record<string, number> = {}
+        transformedVideos.forEach((v) => {
+          initialEpisodeMap[v._id] = v.currentEpisode || 1
+        })
+        setCurrentEpisodeMap(initialEpisodeMap)
         // Check following status for each user
         const followingStatuses = await Promise.all(
           transformedVideos.map(async (v: Video) => {
@@ -232,7 +279,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
 
   const filteredVideos = longVideoOnly
     ? videos.filter(video => video.type === "long" && video.status === "PUBLISHED")
-    : videos.filter(video => video.status === "PUBLISHED")
+    : videos.filter(video => video.type === "short" && video.status === "PUBLISHED")
 
   const handleVideoAction = async (action: string, videoId: string) => {
     if (!token) {
@@ -573,7 +620,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
     }));
   };
 
-  const DEFAULT_WORD_LIMIT = 7;
+  const DEFAULT_WORD_LIMIT = 20;
 
   return (
     <>
@@ -590,12 +637,11 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                     videoRefs.current[index] = { element: el, id: video._id };
                   }
                 }}
-                src={video.videoUrl}
+                src={video.episodes?.find(e => e.id === currentEpisodeMap[video._id])?.videoURL || video.videoUrl}
                 poster={video.thumbnailUrl}
                 className={`w-full h-full object-cover ${isFullscreen ? 'object-contain' : ''}`}
-                loop
                 playsInline
-                muted
+                muted={Muted}
                 onPlay={() => setPlayingStates(prev => ({ ...prev, [video._id]: true }))}
                 onPause={() => setPlayingStates(prev => ({ ...prev, [video._id]: false }))}
                 onClick={(e) => {
@@ -605,25 +651,32 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                 onTimeUpdate={(e) => {
                   const videoEl = e.currentTarget;
                   const percent = (videoEl.currentTime / videoEl.duration) * 100;
-                  setProgressMap(prev => ({
-                    ...prev,
-                    [video._id]: percent
-                  }));
+                  ChangeVideoProgress(percent)
+                }}
+                onEnded={() => {
+                  const nextIndex = index + 1;
+                  const nextRef = videoRefs.current[nextIndex]?.element;
+                  if (nextRef) {
+                    nextRef.scrollIntoView({ behavior: "smooth", block: "center" });
+                    setTimeout(() => {
+                      nextRef.play().catch((err) => {
+                        console.warn("Autoplay failed:", err);
+                      });
+                    }, 500); // Small delay for scroll finish
+                  }
                 }}
               />
-
-              {/* Video Progress Bar */}
+              {/* Video Progress Bar 
               <div className="absolute top-0 left-0 right-0 h-1 bg-gray-700/40 z-40">
                 <div
                   className="h-full bg-[#F1C40F] transition-all duration-300"
                   style={{ width: `${progressMap[video._id] || 0}%` }}
                 />
-              </div>
+              </div>*/}
 
               {/* Play/Pause overlay buttons */}
               {!playingStates[video._id] && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <PauseCircleIcon size={48} />
                 </div>
               )}
             </div>
@@ -686,23 +739,9 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                   onClick={() => handleVideoAction("more", video._id)}
                   className="bg-transparent text-white hover:text-primary hover:bg-transparent p-1"
                 >
-                  <MoreVertical size={36} />
+                  <MoreHorizontal size={36} />
                 </Button>
               </div>
-
-              {/* Fullscreen button for long videos */}
-              {video.type === "long" && (
-                <div className="flex flex-col items-center">
-                  <Button
-                    onClick={handleFullscreen}
-                    className="bg-transparent text-white hover:text-primary rounded-full p-1"
-                  >
-                    <Maximize size={36} />
-                  </Button>
-                </div>
-              )}
-
-
             </div>
 
             {/* Bottom Info */}
@@ -741,9 +780,6 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                             <AvatarImage src={video.user?.avatar || "/placeholder.svg"} />
                             <AvatarFallback className="text-xs">{video.user?.name[0]}</AvatarFallback>
                           </Avatar>
-                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full flex items-center justify-center border border-black">
-                            <span className="text-black text-xs font-bold leading-none">+</span>
-                          </div>
                         </div>
 
                         {/* Main Info */}
@@ -764,7 +800,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                           <div className="w-full flex items-center justify-between mt-1">
                             {/* Left: DEATH + Ep Dropdown */}
                             <div className="flex items-center gap-2">
-                              <span className="text-white text-xs uppercase tracking-wider font-bold">{video.title.substring(0,20)}{video.title.length > 20 ? "..." : ""}</span>
+                              <span className="text-white text-xs uppercase tracking-wider font-bold">{video.title.substring(0, 20)}{video.title.length > 20 ? "..." : ""}</span>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button
@@ -772,15 +808,25 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                                     size="sm"
                                     className="text-white border border-white rounded-full px-2 py-0 text-xs font-medium hover:bg-white/10 h-auto min-h-0"
                                   >
-                                    Ep: {video.currentEpisode}
+                                    Ep : {video.currentEpisode}
                                     <ChevronDown size={12} />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent side="top" className="w-64">
+                                <DropdownMenuContent side="top" className="w-32">
                                   {video.episodes?.map((episode) => (
-                                    <DropdownMenuItem key={episode.id} className="flex justify-between">
-                                      <span>{episode.title}</span>
-                                      <span className="text-muted-foreground">{episode.duration}</span>
+                                    <DropdownMenuItem
+                                      key={episode.id}
+                                      className="flex justify-between cursor-pointer"
+                                      onClick={() => {
+                                        video.currentEpisode = episode.id;
+                                        setCurrentEpisodeMap((prev) => ({
+                                          ...prev,
+                                          [video._id]: episode.id,
+                                        }));
+                                      }}
+                                    >
+                                      <span>Episode : {episode.id}</span>
+                                      <span>{video.currentEpisode == episode.id ? <img src='./assets/MiscIcons/TickMark.svg' className="w-5 h-5"/> : ""}</span>
                                     </DropdownMenuItem>
                                   ))}
                                 </DropdownMenuContent>
@@ -811,9 +857,6 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                             <AvatarImage src={video.user?.avatar || "/placeholder.svg"} />
                             <AvatarFallback className="text-xs">{video.user?.name[0]}</AvatarFallback>
                           </Avatar>
-                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full flex items-center justify-center border border-black">
-                            <span className="text-black text-xs font-bold leading-none">+</span>
-                          </div>
                         </div>
 
                         {/* Main Info */}
@@ -833,7 +876,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                           {/* Title + Paid (left + right) */}
                           <div className="w-full flex items-center justify-between mt-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-white text-xs uppercase tracking-wider font-bold">{video.title.substring(0,20)}{video.title.length > 20 ? "..." : ""}</span>
+                              <span className="text-white text-xs uppercase tracking-wider font-bold">{video.title.substring(0, 20)}{video.title.length > 20 ? "..." : ""}</span>
                             </div>
 
                             {/* Right: Paid Badge */}
@@ -860,9 +903,6 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                             <AvatarImage src={video.user?.avatar || "/placeholder.svg"} />
                             <AvatarFallback className="text-xs">{video.user?.name[0]}</AvatarFallback>
                           </Avatar>
-                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full flex items-center justify-center border border-black">
-                            <span className="text-black text-xs font-bold leading-none">+</span>
-                          </div>
                         </div>
 
                         {/* Main Info */}
@@ -882,7 +922,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                           {/* Title + Paid (left + right) */}
                           <div className="w-full flex items-center justify-between mt-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-white text-xs uppercase tracking-wider font-bold">{video.title.substring(0,20)}{video.title.length > 20 ? "..." : ""}</span>
+                              <span className="text-white text-xs uppercase tracking-wider font-bold">{video.title.substring(0, 20)}{video.title.length > 20 ? "..." : ""}</span>
                             </div>
 
                             {/* Right: Paid Badge */}
@@ -912,8 +952,7 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                 )}
               </div>
 
-              <div className="mb-1 text-left" ref={descriptionRef}>
-
+              <div className="mb-1 text-left flex justify-between" ref={descriptionRef}>
                 {/* Show more button if the number of words exceeds the actual limit*/}
                 {video.description && video.description.split(/\s+/).length > DEFAULT_WORD_LIMIT && (
                   <button
@@ -923,7 +962,18 @@ export default function VideoFeed({ showMixedContent = false, longVideoOnly = fa
                       {showFullDescriptionMap[video._id] ? video.description : truncateWords(video.description, DEFAULT_WORD_LIMIT)}
                     </p>
                   </button>
+                  
                 )}
+                {/* Fullscreen button for long videos */}
+                {video.type === "long" && (
+                <div className="flex flex-col items-right z-50">
+                  <Button
+                    onClick={handleFullscreen}
+                    className="bg-transparent text-white hover:text-primary rounded-full p-1"
+                  >
+                    <Maximize size={36} />
+                  </Button>
+                </div>)}
               </div>
 
               {/* Tags */}
