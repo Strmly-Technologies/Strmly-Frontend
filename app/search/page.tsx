@@ -29,7 +29,7 @@ const suggestedUsers = [
   {
     name: "Tech Guru",
     username: "@techguru",
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     followers: "125K",
     isVerified: true,
     bio: "Technology enthusiast and educator",
@@ -37,7 +37,7 @@ const suggestedUsers = [
   {
     name: "Startup Mentor",
     username: "@startupmentor",
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "https://randomuser.me/api/portraits/women/45.jpg",
     followers: "89K",
     isVerified: false,
     bio: "Helping startups grow and scale",
