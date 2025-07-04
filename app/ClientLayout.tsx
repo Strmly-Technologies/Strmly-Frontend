@@ -41,7 +41,7 @@ export default function ClientLayout({
       {isLoggedIn && (
         <>
           <Sidebar />
-          <MobileBottomNav />
+          {/* <MobileBottomNav /> */}
         </>
       )}
       <main className={isLoggedIn ? "md:ml-64 mobile-layout w-full" : "w-full"}>

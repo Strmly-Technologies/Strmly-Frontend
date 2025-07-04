@@ -691,6 +691,11 @@ export default function WalletPage() {
         </button>
       </div>
       <h1 className="text-xl absolute left-1/2 -translate-x-1/2 ">My Wallet</h1>
+      <div className="ml-auto">
+        <button>
+          <MoreHorizontal size={22} />
+        </button>
+      </div>
     </div>
 
     {/* Balance Card */}
@@ -734,94 +739,62 @@ export default function WalletPage() {
   </div>
 
 
-{/* Scrollable Content */}
-<div className="flex-1 overflow-y-auto px-4 pb-32 space-y-6 no-scrollbar">
+  <div className="flex-1 overflow-y-auto px-4 pb-28 space-y-3 no-scrollbar">
+    {activeTab === "transactions" && (
+      <div className="space-y-4 mt-4">
+        {mockTransactions.slice(0).map((transaction) => (
+          <div
+            key={transaction.id}
+            className="bg-[#1E1E1E] text-white rounded-xl px-4 py-3 shadow-md border border-gray-700/40"
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-base font-semibold mb-4">
+                  {transaction.description}
+                </p>
+                <p className="text-xs text-gray-400">{transaction.date}</p>
+              </div>
+              <div className="text-right">
+                <p
+                  className={`text-sm font-bold ${
+                    transaction.type === "earning"
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {transaction.type === "earning" ? "+" : "-"}₹
+                  {Math.abs(transaction.amount).toFixed(2)}
+                </p>
+                <div className="text-[10px] mt-2 pt-6">
+                  {getStatusBadge(transaction.status)}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+
+
   {activeTab === "overview" && (
-  <div className="space-y-4 mt-3">
-    {mockTransactions
-      .filter(
-        (transaction) =>
-          transaction.category === "wallet_to_bank" || transaction.category === "bank_to_wallet"
-      )
-      .map((transaction) => (
-        <div
-          key={transaction.id}
-          className="bg-[#1E1E1E] text-white rounded-xl px-4 py-3 shadow-md border border-gray-700/40"
+    <div className="fixed bottom-20 left-0 right-0 px-4 z-50">
+      <div className="flex flex-col gap-3 bg-black py-3 rounded-xl shadow-md">
+        <Button
+          className="w-full text-black font-medium h-11 rounded-xl"
+          style={{ backgroundColor: "#F1C40F" }}
         >
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-base font-semibold mb-4">{transaction.description}</p>
-              <p className="text-xs text-gray-400">{transaction.date}</p>
-            </div>
-            <div className="text-right">
-              <p
-                className={`text-sm font-bold ${
-                  transaction.amount > 0 ? "text-green-400" : "text-red-400"
-                }`}
-              >
-                {transaction.amount > 0 ? "+" : "-"}₹{Math.abs(transaction.amount).toFixed(2)}
-              </p>
-              <div className="text-[10px] mt-2 pt-6">{getStatusBadge(transaction.status)}</div>
-            </div>
-          </div>
-        </div>
-      ))}
-  </div>
-)}
-
-{activeTab === "transactions" && (
-  <div className="space-y-4 mt-3">
-    {mockTransactions
-      .filter((transaction) => transaction.category === "wallet_to_app")
-      .map((transaction) => (
-        <div
-          key={transaction.id}
-          className="bg-[#1E1E1E] text-white rounded-xl px-4 py-3 shadow-md border border-gray-700/40"
+          Add credit
+        </Button>
+        <Button
+          className="w-full text-black font-medium h-11 rounded-xl"
+          style={{ backgroundColor: "#F1C40F" }}
         >
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-base font-semibold mb-4">{transaction.description}</p>
-              <p className="text-xs text-gray-400">{transaction.date}</p>
-            </div>
-            <div className="text-right">
-              <p
-                className={`text-sm font-bold ${
-                  transaction.amount > 0 ? "text-green-400" : "text-red-400"
-                }`}
-              >
-                {transaction.amount > 0 ? "+" : "-"}₹{Math.abs(transaction.amount).toFixed(2)}
-              </p>
-              <div className="text-[10px] mt-2 pt-6">{getStatusBadge(transaction.status)}</div>
-            </div>
-          </div>
-        </div>
-      ))}
-  </div>
-)}
-
-</div>
-
-
-{/* Bottom Buttons for Both Tabs */}
-<div className="fixed bottom-20 -mb-0.5 left-0 right-0 px-4 z-50 bg-black py-0.2 shadow-[0_-2px_10px_rgba(0,0,0,0.5)]">
-  <div className="flex flex-col gap-3">
-    <Button
-      className="w-full text-black font-medium h-11 rounded-xl"
-      style={{ backgroundColor: "#F1C40F" }}
-    >
-      Add credit
-    </Button>
-    <Button
-      className="w-full text-black font-medium h-11 rounded-xl"
-      style={{ backgroundColor: "#F1C40F" }}
-    >
-      Withdraw now
-    </Button>
-  </div>
-</div>
-
-
-
+          Withdraw now
+        </Button>
+      </div>
+    </div>
+  )}
 </div>
 
     </>

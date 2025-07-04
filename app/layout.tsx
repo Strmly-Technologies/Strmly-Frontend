@@ -5,6 +5,7 @@ import "./globals.css"
 import ClientLayout from "./ClientLayout"
 import { ThemeProvider } from "@/components/ThemeProvider"
 import Providers from "@/components/Providers"
+import { Toaster } from "@/components/ui/sonner"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -39,12 +40,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes"/>
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           <ThemeProvider defaultTheme="dark">
+            <Toaster
+              position="top-center"
+              richColors
+            />
             <ClientLayout>{children}</ClientLayout>
           </ThemeProvider>
         </Providers>

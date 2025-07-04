@@ -44,14 +44,13 @@ const suggestedUsers = [
   },
 ]
 
-
  const dummyVideos = [
   {
     _id: "vid1",
     title: "Learn React in 10 Minutes",
     description: "Quick crash course for beginners to learn React fundamentals.",
     videoUrl: "https://www.youtube.com/watch?v=bMknfKXIFA8",
-    thumbnailUrl: "https://i.ibb.co/0VWNMPkK/Screenshot-2025-07-02-092223.png",
+    thumbnailUrl: "https://i.ytimg.com/vi/bMknfKXIFA8/hqdefault.jpg",
     type: "LONG",
     status: "PUBLISHED",
     user: {
@@ -82,7 +81,7 @@ const suggestedUsers = [
     title: "Startup Pitch: How I Raised $1M",
     description: "Explaining how we pitched our startup and closed seed funding.",
     videoUrl: "https://youtube.com/shorts/j0UglUvMuj8?si=-LI_CyF45KYXW1Dy",
-    thumbnailUrl: "https://i.ibb.co/mFbCK8zd/Screenshot-2025-07-02-092246.png",
+    thumbnailUrl: "https://i.vimeocdn.com/video/452001751-640.jpg",
     type: "LONG",
     status: "PUBLISHED",
     user: {
@@ -194,85 +193,7 @@ const suggestedUsers = [
     series: null,
     currentEpisode: undefined,
     episodes: undefined,
-  }, {
-    _id: "vid6",
-    title: "Put This in 0.25x ☠️ ",
-    description: "Today’s top tech news, AI breakthroughs, and product launches.",
-    videoUrl: "https://youtube.com/shorts/5PMCgp0Y4fc?si=i0l9vnbTCaT_PTfT",
-    thumbnailUrl: "https://i.ibb.co/Myjm4rhQ/Screenshot-2025-07-01-140927.png",
-    type: "SHORT",
-    status: "PUBLISHED",
-    user: {
-      id: "user3",
-      name: "Tech Insider",
-      username: "techinsider",
-      avatar: "https://randomuser.me/api/portraits/men/23.jpg",
-    },
-    likes: 870,
-    comments: 62,
-    shares: 20,
-    views: 30200,
-    saves: 145,
-    isLiked: false,
-    tags: ["news", "tech", "ai"],
-    createdAt: "2025-07-01T06:00:00Z",
-    community: null,
-    series: null,
-    currentEpisode: undefined,
-    episodes: undefined,
-  }, {
-    _id: "vid7",
-    title: "Put This in 0.25x ☠️ ",
-    description: "Today’s top tech news, AI breakthroughs, and product launches.",
-    videoUrl: "https://youtube.com/shorts/5PMCgp0Y4fc?si=i0l9vnbTCaT_PTfT",
-    thumbnailUrl: "https://i.ibb.co/Myjm4rhQ/Screenshot-2025-07-01-140927.png",
-    type: "SHORT",
-    status: "PUBLISHED",
-    user: {
-      id: "user3",
-      name: "Tech Insider",
-      username: "techinsider",
-      avatar: "https://randomuser.me/api/portraits/men/23.jpg",
-    },
-    likes: 870,
-    comments: 62,
-    shares: 20,
-    views: 30200,
-    saves: 145,
-    isLiked: false,
-    tags: ["news", "tech", "ai"],
-    createdAt: "2025-07-01T06:00:00Z",
-    community: null,
-    series: null,
-    currentEpisode: undefined,
-    episodes: undefined,
-  }, {
-    _id: "vid8",
-    title: "Put This in 0.25x ☠️ ",
-    description: "Today’s top tech news, AI breakthroughs, and product launches.",
-    videoUrl: "https://youtube.com/shorts/5PMCgp0Y4fc?si=i0l9vnbTCaT_PTfT",
-    thumbnailUrl: "https://i.ibb.co/Myjm4rhQ/Screenshot-2025-07-01-140927.png",
-    type: "SHORT",
-    status: "PUBLISHED",
-    user: {
-      id: "user3",
-      name: "Tech Insider",
-      username: "techinsider",
-      avatar: "https://randomuser.me/api/portraits/men/23.jpg",
-    },
-    likes: 870,
-    comments: 62,
-    shares: 20,
-    views: 30200,
-    saves: 145,
-    isLiked: false,
-    tags: ["news", "tech", "ai"],
-    createdAt: "2025-07-01T06:00:00Z",
-    community: null,
-    series: null,
-    currentEpisode: undefined,
-    episodes: undefined,
-  }
+  },
 ];
 
 
@@ -369,6 +290,141 @@ export default function SearchPage() {
     className="pl-10 pr-12 text-sm bg-transparent border border-white rounded-full text-white placeholder:text-white"
   />
 
+  {/* Filter Button */}
+  <Sheet open={showFilters} onOpenChange={setShowFilters}>
+    <SheetTrigger asChild>
+      <Button
+        variant="ghost"
+        size="sm"
+        className={`absolute right-1 top-1/2 transform -translate-y-1/2 ${
+          hasActiveFilters ? "text-primary" : "text-white"
+        }`}
+      >
+        <Filter size={16} />
+        {hasActiveFilters && (
+          <div className="w-1 h-1 bg-primary rounded-full ml-1" />
+        )}
+      </Button>
+    </SheetTrigger>
+
+    {/* Filter Content */}
+    <SheetContent>
+      <div className="flex items-center mb-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowFilters(false)}
+          className="mr-2"
+        >
+          <ChevronLeft className="text-white" size={20} />
+        </Button>
+        <SheetHeader>
+          <SheetTitle>Search Filters</SheetTitle>
+        </SheetHeader>
+      </div>
+      
+
+      <div className="space-y-6 mt-2">
+        {/* Duration Filter */}
+        <div>
+          <label className="text-sm font-medium mb-2 block">Duration</label>
+          <Select
+            value={filters.duration}
+            onValueChange={(value) =>
+              setFilters({ ...filters, duration: value })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select duration" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All durations</SelectItem>
+              <SelectItem value="short">Under 1 minute</SelectItem>
+              <SelectItem value="medium">1-10 minutes</SelectItem>
+              <SelectItem value="long">Over 10 minutes</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Upload Time Filter */}
+        <div>
+          <label className="text-sm font-medium mb-2 block">Upload time</label>
+          <Select
+            value={filters.uploadTime}
+            onValueChange={(value) =>
+              setFilters({ ...filters, uploadTime: value })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select time" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Any time</SelectItem>
+              <SelectItem value="hour">Last hour</SelectItem>
+              <SelectItem value="day">Today</SelectItem>
+              <SelectItem value="week">This week</SelectItem>
+              <SelectItem value="month">This month</SelectItem>
+              <SelectItem value="year">This year</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Sort By Filter */}
+        <div>
+          <label className="text-sm font-medium mb-2 block">Sort by</label>
+          <Select
+            value={filters.sortBy}
+            onValueChange={(value) =>
+              setFilters({ ...filters, sortBy: value })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select sort order" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="relevance">Relevance</SelectItem>
+              <SelectItem value="recent">Upload date</SelectItem>
+              <SelectItem value="views">View count</SelectItem>
+              <SelectItem value="rating">Rating</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Category Filter */}
+        <div>
+          <label className="text-sm font-medium mb-2 block">Category</label>
+          <Select
+            value={filters.category}
+            onValueChange={(value) =>
+              setFilters({ ...filters, category: value })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All categories</SelectItem>
+              <SelectItem value="education">Education</SelectItem>
+              <SelectItem value="entertainment">Entertainment</SelectItem>
+              <SelectItem value="technology">Technology</SelectItem>
+              <SelectItem value="business">Business</SelectItem>
+              <SelectItem value="lifestyle">Lifestyle</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Clear and Apply Buttons */}
+        <div className="flex space-x-2">
+          <Button onClick={clearFilters} variant="outline" className="flex-1">
+            Clear
+          </Button>
+          <Button onClick={() => setShowFilters(false)} className="flex-1">
+            Apply
+          </Button>
+        </div>
+      </div>
+    </SheetContent>
+  </Sheet>
 </div>
 </div>
 
@@ -397,79 +453,162 @@ export default function SearchPage() {
 
 
   {/* Tab Content */}
-{activeTab === "for-you" && (
-  <div className="space-y-4 mt-4">
-    <h3 className="font-semibold mb-2 text-white">Top Picks for You</h3>
+ {activeTab === "for-you" && (
+  <div className="space-y-6">
+    {/* Top Results */}
+    <div>
+      <h3 className="font-semibold mb-3">Top Results</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {dummyVideos.slice(0, 2).map((video) => (
+  <Card
+    key={video._id}
+    onClick={() => window.open(video.videoUrl, "_blank")}
+    className="cursor-pointer bg-black hover:bg-white/5 transition-colors"
+  >
+    <CardContent className="p-3">
+      <div className="flex space-x-3">
+        {/* Thumbnail */}
+        <div className="relative w-[120px] h-[80px] flex-shrink-0">
+          <Image
+            src={video.thumbnailUrl || "/placeholder.svg"}
+            alt={video.title}
+            fill
+            className="rounded-lg object-cover"
+          />
+          <span className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
+            {video.episodes?.[video.currentEpisode || 0]?.duration || "4:20"}
+          </span>
+        </div>
 
-    <div className="grid grid-cols-3 gap-1">
-      {dummyVideos.slice(0, 12).map((video) => (
-        <Link key={video._id} href={video.videoUrl} passHref legacyBehavior>
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            className="relative overflow-hidden transition-transform hover:scale-[1.03] rounded-md aspect-[9/16] w-full bg-neutral-900"
-          >
-            <Image
-              src={video.thumbnailUrl || "/placeholder.svg"}
-              alt={video.title}
-              fill
-              className="object-cover"
-            />
+        {/* Text Info */}
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium line-clamp-2 mb-1 text-white">{video.title}</h4>
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <Avatar className="w-4 h-4">
+              <AvatarImage src={video.user.avatar || "/placeholder.svg"} />
+              <AvatarFallback>{video.user.name[0]}</AvatarFallback>
+            </Avatar>
+            <span>{video.user.name}</span>
+          </div>
+          <div className="text-sm text-muted-foreground mt-1">
+            {video.views.toLocaleString()} views •{" "}
+            {new Date(video.createdAt).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+))}
 
-            {/* Overlay: Bottom duration + title */}
-            <div className="absolute bottom-0 left-0 w-full px-2 py-1 bg-gradient-to-t from-black/80 to-transparent">
-              <p className="text-xs font-semibold text-white line-clamp-2">
-                {video.title}
-              </p>
-              <div className="flex items-center justify-between text-[10px] text-gray-300 mt-0.5">
-                <span>{video.user.name}</span>
-                <span>
-                  {video.episodes?.[video.currentEpisode || 0]?.duration || "4:20"}
-                </span>
+      </div>
+      </div>
+
+      {/* Users */}
+      <div>
+        <h3 className="font-semibold mb-3">Users</h3>
+        <div className="space-y-3">
+          {searchResults.users.slice(0, 3).map((user) => (
+            <div
+              key={user.username}
+              className="flex items-center justify-between p-3 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center space-x-3">
+                <Avatar>
+                  <AvatarImage src={user.avatar || "/placeholder.svg"} />
+                  <AvatarFallback>{user.name[0]}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="flex items-center space-x-1">
+                    <p className="font-medium">{user.name}</p>
+                    {user.isVerified && (
+                      <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                        <span className="text-primary-foreground text-xs">✓</span>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{user.username}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {user.followers} followers
+                  </p>
+                </div>
               </div>
+              <Button size="sm">Follow</Button>
             </div>
-          </a>
-        </Link>
-      ))}
+          ))}
+        </div>
+      </div>
     </div>
-  </div>
-)}
-
-
+  )}
 
 {activeTab === "long-videos" && (
-  <div className="grid grid-cols-3 gap-1 mt-4">
+  <div className="space-y-4 mt-4">
     {dummyVideos
       .filter((video) => video.type === "LONG")
       .map((video) => (
-        <Link key={video._id} href={video.videoUrl} passHref legacyBehavior>
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            className="relative overflow-hidden transition-transform hover:scale-[1.03] rounded-sm aspect-[9/16] w-full"
-          >
+        <div
+          key={video._id}
+          onClick={() => window.open(video.videoUrl, "_blank")}
+          className="cursor-pointer rounded-md overflow-hidden bg-black hover:bg-white/5 transition-colors"
+        >
+          {/*Thumbnail */}
+          <div className="relative w-full h-52">
             <Image
               src={video.thumbnailUrl || "/placeholder.svg"}
               alt={video.title}
               fill
               className="object-cover"
             />
-          </a>
-        </Link>
+            <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-0.5 rounded">
+              {video.episodes?.[video.currentEpisode || 0]?.duration || "4:20"}
+            </span>
+          </div>
+
+          {/* Details Below */}
+          <div className="px-1  text-white space-y-1">
+            {/* Title + Views + Date */}
+            <div className="flex justify-between items-center">
+              <h4 className="font-semibold text-sm leading-snug line-clamp-2 max-w-[70%]">
+                {video.title}
+              </h4>
+              <p className="mt-5 text-xs text-white text-right whitespace-nowrap">
+                {video.views.toLocaleString()} views<br />
+                {new Date(video.createdAt).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+          </div>
+        </div>
       ))}
   </div>
 )}
 
-{activeTab === "short-videos" && (
-  <div className="grid grid-cols-3 gap-1 mt-4">
-    {dummyVideos
-      .filter((video) => video.type === "SHORT")
-      .map((video) => (
+
+
+ {activeTab === "short-videos" && (
+    <div className="grid grid-cols-3 gap-1 mt-4">
+  {dummyVideos
+    .filter((video) => video.type === "SHORT")
+    .map((video, index) => {
+      // Every 6th and 7th item (starting at 6) should be large
+      const isLarge = (index % 8 === 6 || index % 8 === 7)
+
+      return (
         <Link key={video._id} href={video.videoUrl} passHref legacyBehavior>
           <a
             target="_blank"
             rel="noopener noreferrer"
-            className="relative overflow-hidden transition-transform hover:scale-[1.03] rounded-sm aspect-[9/16] w-full"
+            className={`relative overflow-hidden transition-transform hover:scale-[1.03] rounded-sm ${
+              isLarge
+                ? "col-span-3 md:col-span-3 row-span-2 aspect-[16/9]" // Large tile
+                : "aspect-[9/16] w-full" // Normal short tile
+            }`}
           >
             <Image
               src={video.thumbnailUrl || "/placeholder.svg"}
@@ -479,9 +618,12 @@ export default function SearchPage() {
             />
           </a>
         </Link>
-      ))}
-  </div>
-)}
+      );
+    })}
+</div>
+  )}
+
+
 
   {activeTab === "communities" && (
     <div className="grid grid-cols-3 gap-2 mt-4">
@@ -506,40 +648,9 @@ export default function SearchPage() {
     </div>
   )}
 
-{activeTab === "accounts" && (
-  <div className="space-y-4 mt-4">
-    {suggestedUsers.map((user, index) => (
-      <div
-        key={index}
-        className="flex items-center justify-between px-1 py-1.5 rounded-lg"
-      >
-        
-        <div className="flex items-center space-x-3">
-          <Image
-            src={user.avatar}
-            alt={user.name}
-            width={44}
-            height={44}
-            className="rounded-full object-cover"
-          />
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-white leading-tight">
-              {user.username}
-            </span>
-            <span className="text-xs text-gray-400 leading-tight">
-              {user.bio}
-            </span>
-          </div>
-        </div>
-
-        <button className="text-xs font-semibold text-white bg-black hover:underline focus:outline-none">
-          Follow
-        </button>
-      </div>
-    ))}
-  </div>
-)}
-
+  {activeTab === "accounts" && (
+    <p className="text-sm text-gray-400 mt-4">Coming soon...</p>
+  )}
 </div>
 
       </div>
