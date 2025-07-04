@@ -33,68 +33,64 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const mockTransactions = [
+  
   {
     id: 1,
-    type: "earning",
-    category: "video_monetization",
-    description: "Video monetization - 'Startup Guide'",
-    amount: 25.5,
-    date: "2024-01-15",
-    status: "completed",
-    videoTitle: "How to Build a Startup",
-    views: 1250,
-  },
-  {
-    id: 2,
-    type: "withdrawal",
-    category: "bank_transfer",
-    description: "Bank transfer to ****1234",
-    amount: -100.0,
-    date: "2024-01-14",
+    type: "deposit",
+    category: "bank_to_wallet",
+    description: "Added ₹500 from HDFC Bank",
+    amount: 500.0,
+    date: "2024-01-17",
     status: "completed",
     bankName: "HDFC Bank",
   },
+
+  {
+    id: 2,
+    type: "withdrawal",
+    category: "wallet_to_bank",
+    description: "Withdrawn ₹250 to Axis Bank",
+    amount: -250.0,
+    date: "2024-01-16",
+    status: "completed",
+    bankName: "Axis Bank",
+  },
+
+ 
   {
     id: 3,
-    type: "earning",
-    category: "tips",
-    description: "Tips from followers",
-    amount: 15.75,
+    type: "spending",
+    category: "wallet_to_app",
+    description: "Boosted video 'React Tutorial'",
+    amount: -40.0,
+    date: "2024-01-15",
+    status: "completed",
+    videoTitle: "React Tutorial",
+  },
+
+  {
+    id: 4,
+    type: "spending",
+    category: "wallet_to_app",
+    description: "Purchased premium content - 'Next.js Advanced'",
+    amount: -20.0,
+    date: "2024-01-14",
+    status: "completed",
+    contentTitle: "Next.js Advanced",
+  },
+
+  {
+    id: 5,
+    type: "spending",
+    category: "wallet_to_app",
+    description: "Tipped creator - John Doe",
+    amount: -10.0,
     date: "2024-01-13",
     status: "completed",
     tipperName: "John Doe",
   },
-  {
-    id: 4,
-    type: "earning",
-    category: "premium_content",
-    description: "Premium content purchase",
-    amount: 9.99,
-    date: "2024-01-12",
-    status: "pending",
-    contentTitle: "Advanced React Patterns",
-  },
-  {
-    id: 5,
-    type: "earning",
-    category: "live_stream",
-    description: "Live stream donations",
-    amount: 45.0,
-    date: "2024-01-11",
-    status: "completed",
-    streamTitle: "Live Coding Session",
-  },
-  {
-    id: 6,
-    type: "spending",
-    category: "boost_video",
-    description: "Video promotion boost",
-    amount: -20.0,
-    date: "2024-01-10",
-    status: "completed",
-    videoTitle: "React Tutorial",
-  },
 ]
+
 
 const mockEarningsSources = [
   { source: "Video Monetization", amount: 156.75, percentage: 45, growth: 12 },
