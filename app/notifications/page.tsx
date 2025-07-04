@@ -51,7 +51,7 @@ export default function LongVideosPage() {
     <AvatarFallback className="text-xs">U</AvatarFallback>
   </Avatar><div className="flex-1 min-w-0 relative"> {/* Make this relative for positioning */}
   {/* Red dot in top-right if notification is unread */}
- {Notification.read ? '': <div className="absolute top-0 right-0 w-2.5 h-2.5 lg:w-3 lg:h-3 bg-red-500 rounded-full"/>}
+ {Notification.read ? '': <div className="absolute top-0 right-0 w-2.5 h-2.5 lg:w-3 lg:h-3 bg-[#F1C40F] rounded-full"/>}
 
   {/* Date & other content */}
   <div className="flex items-center justify-between mb-1">
