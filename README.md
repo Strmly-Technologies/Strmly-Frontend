@@ -14,10 +14,15 @@
 
 **Example Request:**
 ```http
-GET /api/videos?type=short&page=1&limit=10
+POST /api/videos
 Authorization: Bearer <token>
 Content-Type: application/json
-```
+{
+  "type": "short",
+  "page": 1,
+  "limit": 10
+}
+---
 
 ---
 
