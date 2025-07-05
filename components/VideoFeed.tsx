@@ -1,5 +1,7 @@
 "use client"
 
+import { Video } from "@/types/VideoFeed"
+import { fetchAndTransformVideos, getFollowingMap } from "@/lib/utils"
 import { useState, useRef, useEffect, useCallback } from "react"
 import { ChevronDown, Link as LinkIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -12,109 +14,6 @@ import { useAuthStore } from "@/store/useAuthStore"
 import { api } from "@/lib/api"
 import { FaWhatsapp, FaInstagram, FaTelegram, FaSnapchat, FaTwitter, FaFacebook } from "react-icons/fa"
 
-const mockVideos = [
-  {
-    id: 1,
-    type: "long",
-    user: {
-      name: "Tech Creator",
-      username: "@techcreator",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    title: "Building a Startup from Scratch - Complete Guide",
-    description: "Learn how to build a successful startup from the ground up, covering everything from idea validation to funding and scaling. This comprehensive guide will walk you through every step of the process, from ideation to launch.",
-    community: "Startup Community",
-    series: "Entrepreneur Series",
-    episodes: [
-      { id: 1, videoURL: "/MockVideos/video.mp4" },
-      { id: 2, videoURL: "/MockVideos/video2.mp4" },
-      { id: 3, videoURL: "/MockVideos/video3.mp4" },
-      { id: 4, videoURL: "/MockVideos/video4.mp4" },
-    ],
-    currentEpisode: 1,
-    duration: "15:42",
-    progress: 35,
-    likes: 89500,
-    comments: 892,
-    shares: 234,
-    earnings: 1200,
-    videoUrl: "/MockVideos/video.mp4",
-  },
-  {
-    id: 2,
-    type: "long",
-    user: {
-      name: "Code Master",
-      username: "@codemaster",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    title: "React vs Next.js - Which Should You Choose?",
-    description: "Complete comparison of React and Next.js frameworks, diving deep into their features, performance, and best use cases for modern web development. This is a very comprehensive guide, perfect for developers looking to make informed decisions.",
-    community: "Developer Community",
-    series: "Web Dev Masterclass",
-    episodes: [
-      { id: 1, videoURL: "/MockVideos/video2.mp4" },
-      { id: 2, videoURL: "/MockVideos/video.mp4" },
-      { id: 3, videoURL: "/MockVideos/video4.mp4" },
-      { id: 4, videoURL: "/MockVideos/video3.mp4" },
-      { id: 5, videoURL: "/MockVideos/video2.mp4" },
-    ],
-    currentEpisode: 1,
-    duration: "22:15",
-    progress: 60,
-    likes: 67000,
-    comments: 445,
-    shares: 123,
-    earnings: 890,
-    videoUrl: "/MockVideos/video.mp4",
-  },
-
-  {
-    id: 3,
-    type: "short",
-    user: {
-      name: "Code Master",
-      username: "@codemaster",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    title: "React vs Next.js - Which Should You Choose?",
-    description: "Complete comparison of React and Next.js frameworks, diving deep into their features, performance, and best use cases for modern web development. This is a very comprehensive guide, perfect for developers looking to make informed decisions.",
-    community: "Developer Community",
-    duration: "22:15",
-    progress: 60,
-    likes: 6700,
-    comments: 4450,
-    shares: 127,
-    earnings: 899,
-    videoUrl: "/MockVideos/video3.mp4",
-  },
-
-  {
-    id: 4,
-    type: "short",
-    user: {
-      name: "Code Master",
-      username: "@codemaster",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    title: "React vs Next.js - Which Should You Choose?",
-    description: "Complete comparison of React and Next.js frameworks, diving deep into their features, performance, and best use cases for modern web development. This is a very comprehensive guide, perfect for developers looking to make informed decisions.",
-    community: "Developer Community",
-    duration: "22:15",
-    progress: 60,
-    likes: 6680,
-    comments: 745,
-    shares: 673,
-    earnings: 190,
-    videoUrl: "/MockVideos/video4.mp4",
-  },
-]
-interface VideoFeedProps {
-  longVideoOnly?: boolean
-  ChangeVideoProgress: (value: number | ((prev: number) => number)) => void
-  Muted: boolean
-}
-
 const socialPlatforms = [
   { name: "WhatsApp", icon: FaWhatsapp, color: "text-green-500" },
   { name: "Instagram", icon: FaInstagram, color: "text-pink-500" },
@@ -123,38 +22,6 @@ const socialPlatforms = [
   { name: "Twitter", icon: FaTwitter, color: "text-blue-400" },
   { name: "Facebook", icon: FaFacebook, color: "text-blue-600" },
 ]
-
-interface Video {
-  _id: string
-  title: string
-  description: string
-  videoUrl: string
-  thumbnailUrl: string
-  type: "short" | "long"
-  status: "DRAFT" | "PROCESSING" | "PUBLISHED" | "FAILED" | "PRIVATE"
-  user: {
-    id: string
-    name: string
-    username: string
-    avatar: string
-  }
-  likes: number
-  comments: number
-  shares: number
-  views: number
-  earnings: number
-  progress?: number
-  community?: string
-  series?: string
-  currentEpisode?: number
-  episodes?: Array<{
-    id: number
-    videoURL: string
-  }>
-  tags?: string[]
-  isLiked: boolean
-  createdAt: string // Ensure createdAt is part of the interface
-}
 
 // Utility function to truncate description by words
 const truncateWords = (text: string, maxWords: number) => {
@@ -166,9 +33,16 @@ const truncateWords = (text: string, maxWords: number) => {
   return text;
 };
 
+interface VideoFeedProps {
+  longVideoOnly?: boolean
+  ChangeVideoProgress: (value: number | ((prev: number) => number)) => void
+  Muted: boolean
+}
 
 export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, Muted }: VideoFeedProps) {
-
+  const [offset, setOffset] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const [videos, setVideos] = useState<Video[]>([])
   const [playingStates, setPlayingStates] = useState<{ [key: string]: boolean }>({})
   const manuallyPausedRef = useRef<Record<string, boolean>>({});
@@ -189,6 +63,51 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
   const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({})
   const { user } = useAuthStore()
 
+  useEffect(() => {
+  if (!loadMoreRef.current || loading) return
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) {
+        console.log("Load more videos triggered")
+        loadMore()
+      }
+    },
+    { threshold: 1.0, rootMargin: "100px" }
+  )
+
+  observer.observe(loadMoreRef.current)
+
+  return () => observer.disconnect()
+}, [loadMoreRef, loading])
+
+const loadMore = async () => {
+  if (loading || !token) return
+  setLoading(true)
+
+  try {
+    const page = offset / 10 + 1
+    const newVideos = await fetchAndTransformVideos(token, page, 10, longVideoOnly ? "long" : "short")
+    setVideos((prev) => [...prev, ...newVideos])
+    setOffset((prev) => prev + newVideos.length)
+
+    const episodeMap: Record<string, number> = {}
+    newVideos.forEach((v) => {  
+        // If episodes exist, default to the first one’s ID
+        const defaultEpId = v.episodes?.[0]?.id ?? 1
+        episodeMap[v._id] = defaultEpId
+    })
+    setCurrentEpisodeMap((prev) => ({ ...prev, ...episodeMap }))
+
+    const followingMap = await getFollowingMap(user?.id || "", newVideos)
+    setFollowingMap((prev) => ({ ...prev, ...followingMap }))
+  } catch (err) {
+    console.error("Failed to load more videos", err)
+  } finally {
+    setLoading(false)
+  }
+}
+
   // Ref to hold the current playingStates, so it's stable within useCallback
   const playingStatesRef = useRef(playingStates);
   useEffect(() => {
@@ -197,92 +116,49 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
 
   useEffect(() => {
     const fetchVideos = async () => {
-      try {
         if (!token) {
           console.error("No authentication token found")
-          //return
+          return
         }
 
-        //const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos`, {
-        //  credentials: "include",
-        //  headers: {
-        //    "Authorization": `Bearer ${token}`,
-        //   "Content-Type": "application/json"
-        //  },
-        //})
-        //if (!response.ok) {
-        //  throw new Error(`Failed to fetch videos: ${response.status} ${response.statusText}`)
-        //}
-        //const data = await response.json()
-        //console.log("Raw API response data:", data) // <<<--- CHECK THIS IN CONSOLE
+      try {
+        if(longVideoOnly){ 
+          const transformedVideos = await fetchAndTransformVideos(token, offset / 10 + 1, 10, "long")
+          setVideos(transformedVideos)
+        } else {
+          const transformedVideos = await fetchAndTransformVideos(token, offset / 10 + 1, 10, "short")
+          setVideos(transformedVideos)
+        }
 
-        // Transform the data to match the Video interface
-        //const transformedVideos = data.map((video: any) => ({
-        const transformedVideos = mockVideos.map((video: any) => ({
-          _id: video.id,
-          title: video.title || "Untitled Video", // This line tries to get the title
-          description: video.description || "",   // This line tries to get the description
-          videoUrl: video.videoUrl,
-          thumbnailUrl: video.thumbnailUrl || "",
-          type: video.type,
-          status: video.status || "PUBLISHED",
-          user: {
-            id: video.userId,
-            name: video.user?.name || "Anonymous",
-            username: video.user?.username || "@anonymous",
-            avatar: video.user?.avatar || "/placeholder.svg"
-          },
-          likes: video.likes || 0,
-          comments: video.comments || 0,
-          shares: video.shares || 0,
-          views: video.views || 0,
-          earnings: video.earnings || 0,
-          progress: 0,
-          isLiked: video.isLiked || false,
-          tags: video.tags || [],
-          createdAt: video.createdAt,
-          community: video.community || null,
-          series: video.series || null,
-          currentEpisode: video.currentEpisode || 1,
-          episodes: video.episodes || []
-        }))
-        console.log("Transformed videos data (check title/description here):", transformedVideos) // <<<--- CHECK THIS IN CONSOLE
-        setVideos(transformedVideos)
-
-        //Initialize episodes]
-        const initialEpisodeMap: Record<string, number> = {}
-        transformedVideos.forEach((v) => {
-          initialEpisodeMap[v._id] = v.currentEpisode || 1
-        })
-        setCurrentEpisodeMap(initialEpisodeMap)
-        // Check following status for each user
-        const followingStatuses = await Promise.all(
-          transformedVideos.map(async (v: Video) => {
-            if (v.user.id === user?.id) return { id: v.user.id, isFollowing: false }
-            const isFollowing = await api.isFollowing(user?.id || "", v.user.id)
-            return { id: v.user.id, isFollowing }
-          })
-        )
-
-        setFollowingMap(prev => ({
-          ...prev,
-          ...Object.fromEntries(followingStatuses.map(s => [s.id, s.isFollowing]))
-        }))
+      //Initialize episodes
+      const episodeMap: Record<string, number> = {}
+      videos.forEach((v) => {  
+        // If episodes exist, default to the first one’s ID
+        const defaultEpId = v.episodes?.[0]?.id ?? 1
+        episodeMap[v._id] = defaultEpId
+      })
+      setCurrentEpisodeMap(episodeMap)
+      // Get following map
+      const followingMap = await getFollowingMap(user?.id || "", videos)
+      setFollowingMap((prev) => ({ ...prev, ...followingMap }))
       } catch (error) {
         console.error("Error fetching videos:", error)
       }
     }
+
+    setVideos([])
+    setOffset(0)
     fetchVideos()
-  }, [token, user?.id])
+  }, [token, user?.id, longVideoOnly])
 
   const filteredVideos = longVideoOnly
-    ? videos.filter(video => video.type === "long" && video.status === "PUBLISHED")
-    : videos.filter(video => video.type === "short" && video.status === "PUBLISHED")
+    ? videos.filter(video => video.type === "long")
+    : videos.filter(video => video.type === "short" )
 
   const handleVideoAction = async (action: string, videoId: string) => {
     if (!token) {
       console.error("No authentication token found")
-      //return
+      return
     }
 
     if (action === "like") {
@@ -666,7 +542,6 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                   className="bg-transparent text-white hover:text-primary rounded-full hover:bg-transparent p-1 shadow-none"
                 >
                   <img src='./assets/SidebarIcons/Comments.svg' />
-
                 </Button>
                 <span className="text-white text-xs font-medium mt-1">
                   {video.comments > 1000 ? `${(video.comments / 1000).toFixed(1)}K` : video.comments}
@@ -778,7 +653,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                                   size="sm"
                                   className="text-white border border-white rounded-full px-2 py-0 text-xs font-medium hover:bg-white/10 h-auto min-h-0"
                                 >
-                                  Ep : {video.currentEpisode}
+                                  Ep : {currentEpisodeMap[video._id] || 1}
                                   <ChevronDown size={12} />
                                 </Button>
                               </DropdownMenuTrigger>
@@ -788,7 +663,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                                     key={episode.id}
                                     className="flex justify-between cursor-pointer"
                                     onClick={() => {
-                                      video.currentEpisode = episode.id;
+                                      currentEpisodeMap[video._id] === episode.id
                                       setCurrentEpisodeMap((prev) => ({
                                         ...prev,
                                         [video._id]: episode.id,
@@ -797,7 +672,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                                   >
                                     <span>Episode : {episode.id}</span>
                                     <span>
-                                      {video.currentEpisode == episode.id ? (
+                                      {currentEpisodeMap[video._id] === episode.id ? (
                                         <img src="./assets/MiscIcons/TickMark.svg" className="w-5 h-5" />
                                       ) : (
                                         ""

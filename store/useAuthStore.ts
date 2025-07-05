@@ -32,7 +32,7 @@ export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
       user: null,
-      token: null,
+      token: 'test',
       isLoggedIn: true,
       login: async (token: string) => {
         set({ token, isLoggedIn: true })
