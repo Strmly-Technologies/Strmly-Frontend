@@ -33,11 +33,7 @@ Returns an array of video objects. Each object has the following structure:
     "videoUrl": "string", // URL of the video file
     "thumbnailUrl": "string", // URL of the video's thumbnail image
     "type": "short" | "long", // Type of the video
-    "user": {
-      "id": "string", // Unique identifier for the uploader
-      "name": "string", // Name of the uploader
-      "avatar": "string" // URL of the uploader's avatar image
-    },
+    "userid : "string" //Unique identifier for the user
     "likes": number, // Number of likes
     "comments": number, // Number of comments
     "shares": number, // Number of shares
