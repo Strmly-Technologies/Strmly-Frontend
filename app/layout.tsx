@@ -6,6 +6,7 @@ import ClientLayout from "./ClientLayout"
 import { ThemeProvider } from "@/components/ThemeProvider"
 import Providers from "@/components/Providers"
 import { Toaster } from "@/components/ui/sonner"
+import { Poppins } from 'next/font/google';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -17,6 +18,12 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
   weight: "100 900",
 })
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'], // Customize as needed
+  variable: '--font-poppins',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: "STRMLY - Social Video Platform",
@@ -43,7 +50,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes"/>
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}>
         <Providers>
           <ThemeProvider defaultTheme="dark">
             <Toaster
