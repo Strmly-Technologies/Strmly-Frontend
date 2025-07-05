@@ -680,7 +680,7 @@ export default function WalletPage() {
     { /* Mobile version */ }
     </div>
     {/* mobile version */}
-<div className="block md:hidden bg-black text-white h-screen flex flex-col">
+<div className="md:hidden bg-black text-white h-screen flex flex-col">
   {/*Top Section */}
   <div className="sticky top-0 z-20 bg-black px-4 pt-4 pb-2 space-y-4">
     {/* Header */}
