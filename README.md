@@ -27,46 +27,44 @@ Returns an array of video objects. Each object has the following structure:
 ```json
 [
   {
-    "_id": "string",
-    "title": "string",
-    "description": "string",
-    "videoUrl": "string",
-    "thumbnailUrl": "string",
-    "type": "short" | "long",
-    "status": "DRAFT" | "PROCESSING" | "PUBLISHED" | "FAILED" | "PRIVATE",
+    "_id": "string", // Unique identifier for the video
+    "title": "string", // Title of the video
+    "description": "string", // Description of the video
+    "videoUrl": "string", // URL of the video file
+    "thumbnailUrl": "string", // URL of the video's thumbnail image
+    "type": "short" | "long", // Type of the video
     "user": {
-      "id": "string",
-      "name": "string",
-      "username": "string",
-      "avatar": "string"
+      "id": "string", // Unique identifier for the uploader
+      "name": "string", // Name of the uploader
+      "avatar": "string" // URL of the uploader's avatar image
     },
-    "likes": number,
-    "comments": number,
-    "shares": number,
-    "views": number,
-    "earnings": number,
-    "progress": number,
-    "community": "string | null",
-    "series": "string | null",
-    "currentEpisode": number,
-    "episodes": [
+    "likes": number, // Number of likes
+    "comments": number, // Number of comments
+    "shares": number, // Number of shares
+    "views": number, // Number of views
+    "earnings": number, // Earnings from the video
+    "community": "string | null", // Community ID (optional)
+    "series": "string | null", // Series ID (optional)
+    "episodes": [ // List of episodes (optional)
       {
-        "id": number,
-        "videoURL": "string"
+        "id": number, // Unique identifier for the episode
+        "videoURL": "string" // URL of the episode video
       }
     ],
-    "tags": ["string"],
-    "isLiked": boolean,
-    "createdAt": "string (ISO date)"
+    "tags": ["string"], // Tags (optional)
+    "isLiked": boolean, // Whether the viewer has liked the video
+    "createdAt": "string (ISO date)", // Creation date
+    "updatedAt": "string (ISO date)", // Last update date (optional)
   }
 ]
 ```
 
 **Notes:**
 - All fields are required unless otherwise specified.
-- `episodes` can be an empty array if not applicable.
-- `community` and `series` can be `null` if not set.
-- `progress` is a frontend-only field and may be set to 0 by default.
+- `episodes`, `community`, `series`, `tags`, and `updatedAt` are optional and may be omitted or set to `null`/empty.
+- `isLiked` is a boolean indicating if the current user has liked the video.
+- `createdAt` and `updatedAt` are ISO date strings.
+- `progress` is not part of the backend response and is managed on the frontend only.
 
 ---
 
