@@ -9,21 +9,22 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
-import { signupSchema } from "@/lib/authSchemas";
+import { signupSchema } from "@/lib/schemas/authSchemas";
 import { FaGoogle } from "react-icons/fa";
+import { useState } from "react";
+import { ApiError } from "next/dist/server/api-utils";
+import { Loader2Icon } from "lucide-react";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -33,41 +34,37 @@ export default function SignupPage() {
     },
   });
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      form.setValue("profilePhoto", file);
-      setPreviewImage(URL.createObjectURL(file));
-    }
-  };
-
   async function onSubmit(values: z.infer<typeof signupSchema>) {
+    setIsLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("username", values.username);
-      formData.append("email", values.email);
-      formData.append("password", values.password);
-      if (values.profilePhoto) {
-        formData.append("profilePhoto", values.profilePhoto);
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          typeof data.message === 'string' ? data.message : "Signup failed"
+        );
       }
 
-      //   const response = await fetch("/api/auth/signup", {
-      //     method: "POST",
-      //     body: formData,
-      //   });
-
-      //   const data = await response.json();
-
-      //   if (!response.ok) {
-      //     throw new Error(data.message || "Signup failed");
-      //   }
-
       toast.success("Account created successfully");
-      //   router.push("/dashboard");
+        // router.push("/");
     } catch (error) {
+      console.error("Signup error:", error);
       toast.error(
-        error instanceof Error ? error.message : "An unknown error occurred"
+        error instanceof Error 
+          ? error.message 
+          : "An unknown error occurred during signup"
       );
+    } finally{
+      setIsLoading(false);
     }
   }
 
@@ -80,49 +77,11 @@ export default function SignupPage() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="flex flex-col items-center">
-              <Avatar className="w-24 h-24 mb-4">
-                {previewImage ? (
-                  <AvatarImage src={previewImage} alt="Preview" />
-                ) : (
-                  <AvatarFallback className="text-2xl">
-                    {form.watch("username")?.[0]?.toUpperCase() || "U"}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-              <FormField
-                control={form.control}
-                name="profilePhoto"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="cursor-pointer">
-                      <Button variant="outline" type="button">
-                        Upload Photo
-                      </Button>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageChange}
-                        ref={field.ref}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
             <FormField
               control={form.control}
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
                   <FormControl>
                     <Input placeholder="username" {...field} />
                   </FormControl>
@@ -136,7 +95,6 @@ export default function SignupPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
@@ -154,7 +112,6 @@ export default function SignupPage() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>
@@ -163,9 +120,16 @@ export default function SignupPage() {
               )}
             />
 
-            <Button type="submit" className="w-full">
-              Create Account
-            </Button>
+            <Button type="submit" disabled={isLoading} className="w-full bg-[#F1C40F]">
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <Loader2Icon className="size-4 animate-spin" />
+                Processing...
+              </div>
+            ) : (
+              "Create Account"
+            )}
+          </Button>
           </form>
         </Form>
 
@@ -181,10 +145,10 @@ export default function SignupPage() {
             type="button"
             className="w-full flex items-center justify-center gap-2"
           >
-            <div className="p-1 rounded-full">
-              <FaGoogle className="size-4 text-red-400" />
+            <div className="p-2 rounded-full bg-gray-100">
+              <FaGoogle className="size-4 text-red-500" />
             </div>
-            <h2 className="text-red-500">Log in with Google</h2>
+            <h2 className="text-blue-500">Signup with Google</h2>
           </button>
         </div>
 
@@ -192,7 +156,7 @@ export default function SignupPage() {
           Already have an account?{" "}
           <Link
             href="/login"
-            className="font-medium text-primary hover:underline"
+            className="font-medium text-[#F1C40F] hover:underline"
           >
             Sign in
           </Link>

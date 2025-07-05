@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { loginSchema } from "@/lib/authSchemas";
+import { loginSchema } from "@/lib/schemas/authSchemas";
 import { FaGoogle } from "react-icons/fa";
 
 export default function LoginPage() {
@@ -24,20 +24,22 @@ export default function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     try {
-      // Replace with your actual login logic
-    //   const response = await fetch("/api/auth/login", {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify(values),
-    //   });
+      // Login API call
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+        credentials: 'include'
+      });
 
-    //   const data = await response.json();
+      const data = await response.json();
 
-    //   if (!response.ok) {
-    //     throw new Error(data.message || "Login failed");
-    //   }
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
 
       toast.success("Login successful");
     //   router.push("/dashboard");
@@ -59,9 +61,9 @@ export default function LoginPage() {
               control={form.control}
               name="identifier"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="w-full">
                   <FormControl>
-                    <Input className="h-12 w-72 rounded-lg" placeholder="username or email" {...field} />
+                    <Input className="h-12 rounded-lg" placeholder="username or email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -72,23 +74,23 @@ export default function LoginPage() {
               control={form.control}
               name="password"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="w-full">
                   <FormControl>
-                    <Input className="h-12 w-72 rounded-lg" type="password" placeholder="••••••••" {...field} />
+                    <Input className="h-12 rounded-lg" type="password" placeholder="••••••••" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <Button type="submit" className="w-72">
+            <Button type="submit" className="w-full bg-[#F1C40F]">
               Sign In
             </Button>
           </form>
         </Form>
 
         <div className="relative">
-            <hr className="w-72 ml-8"/>
+            <hr className="w-full"/>
             <div className="absolute -bottom-5 left-[45%] bg-white p-2 text-black rounded-full">
                 <span className="tracking-wider">OR</span>
             </div>
@@ -111,7 +113,7 @@ export default function LoginPage() {
 
         <div className="text-center text-sm">
           Don't have an account?{" "}
-          <Link href="/auth/signup" className="font-medium text-primary hover:underline">
+          <Link href="/auth/signup" className="font-medium text-[#F1C40F] hover:underline">
             Sign up
           </Link>
         </div>
