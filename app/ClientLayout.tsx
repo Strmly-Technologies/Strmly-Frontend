@@ -25,10 +25,10 @@ export default function ClientLayout({
   useEffect(() => {
     if (isLoading) return // Don't redirect while loading
 
-    if (isLoggedIn && pathname === "/auth") {
+    if (isLoggedIn && pathname === "/login") {
       router.push("/")
-    } else if (!isLoggedIn && pathname !== "/auth" && pathname !== "/auth/callback") {
-      router.push("/auth")
+    } else if (!isLoggedIn && pathname !== "/login" && pathname !== "/auth/callback") {
+      router.push("/login")
     }
   }, [isLoggedIn, pathname, router, isLoading])
 

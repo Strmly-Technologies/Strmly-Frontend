@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider"
 import Providers from "@/components/Providers"
 import { Toaster } from "@/components/ui/sonner"
 import { Poppins } from 'next/font/google';
+import AuthProvider from "@/providers/AuthProvider"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -51,15 +52,17 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased`}>
-        <Providers>
-          <ThemeProvider defaultTheme="dark">
-            <Toaster
-              position="top-center"
-              richColors
-            />
-            <ClientLayout>{children}</ClientLayout>
-          </ThemeProvider>
-        </Providers>
+        <AuthProvider>
+            <Providers>
+            <ThemeProvider defaultTheme="dark">
+              <Toaster
+                position="top-center"
+                richColors
+              />
+              <ClientLayout>{children}</ClientLayout>
+            </ThemeProvider>
+          </Providers>
+        </AuthProvider>
       </body>
     </html>
   )

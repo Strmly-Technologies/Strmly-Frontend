@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { loginSchema } from "@/lib/schemas/authSchemas";
 import { FaGoogle } from "react-icons/fa";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,6 +41,9 @@ export default function LoginPage() {
         throw new Error(data.message || "Login failed");
       }
 
+      // Update the auth store with user data and token
+      useAuthStore.getState().login(data.token);
+      useAuthStore.getState().setUser(data.user);
 
       toast.success("Login successful");
     //   router.push("/dashboard");

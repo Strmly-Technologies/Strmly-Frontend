@@ -48,10 +48,6 @@ export default function ProfilePage() {
   const { user, isLoggedIn, token, logout } = useAuthStore();
   const router = useRouter();
 
-  const handleLogout = async () => {
-    logout();
-    router.push("/auth");
-  };
 
   const fetchUserVideos = async () => {
     if (!userData?.id) return;
@@ -141,7 +137,7 @@ export default function ProfilePage() {
       {/* Cover Image */}
       <div className="h-48 relative">
 
-        <ProfileTopbar hashtag={false} name={'Gabar Singh'} handleLogout={handleLogout}/>
+        <ProfileTopbar hashtag={false} name={'Gabar Singh'}/>
 
       </div>
 
