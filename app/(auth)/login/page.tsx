@@ -46,7 +46,7 @@ export default function LoginPage() {
       useAuthStore.getState().setUser(data.user);
 
       toast.success("Login successful");
-    //   router.push("/dashboard");
+      // router.push("/");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An unknown error occurred");
     }

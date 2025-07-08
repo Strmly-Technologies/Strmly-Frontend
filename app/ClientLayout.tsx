@@ -27,8 +27,6 @@ export default function ClientLayout({
 
     if (isLoggedIn && pathname === "/login") {
       router.push("/")
-    } else if (!isLoggedIn && pathname !== "/login" && pathname !== "/auth/callback") {
-      router.push("/login")
     }
   }, [isLoggedIn, pathname, router, isLoading])
 

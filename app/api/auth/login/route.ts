@@ -84,10 +84,8 @@ export async function POST(req: Request) {
       maxAge: 60 * 60 * 24 * 30 // 30 days token expiration
     });
 
-    // Return user data without the token in the response body
-    const { token, ...userData } = data;
     return NextResponse.json<Omit<LoginSuccessResponse, 'token'>>(
-      userData,
+      data,
       { status: 200 }
     );
 

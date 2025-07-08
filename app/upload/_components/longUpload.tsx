@@ -26,22 +26,21 @@ const formSchema = z.object({
   type: z.string().min(1, "Type is required"),
   episode: z.string().min(1, "Episode is required"),
   title: z.string().min(1, "Title is required"),
-  series: z.string().min(1, "Series is required"),
+  series: z.string().optional(), // Made optional since it's conditional
   description: z.string().min(10, "Description must be at least 10 characters"),
   community: z.string().min(1, "Community is required"),
   genre: z.string().min(1, "Genre is required"),
   access: z.string().min(1, "Access type is required"),
-  price: z.string(),
+  price: z.string().optional(), // Made optional since it's conditional
   videoFile: z.instanceof(File).optional(),
   thumbnailFile: z
     .instanceof(File)
-      .refine((file) => file.type.startsWith("image/"), {
-        message: "Only image files are allowed",
-      })
-      .optional(),
+    .refine((file) => file.type.startsWith("image/"), {
+      message: "Only image files are allowed",
+    })
+    .optional(),
   videoType: z.string().min(1, "Video Type type is required"),
   language: z.string().min(1, "Language is required"),
-  Tags: z.string().min(1, "tag is required"),
   ageRestriction: z.string().min(1, "age restriction is required"),
 });
 
@@ -51,7 +50,7 @@ const LongVideoUpload = () => {
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-
+  const [showNewSeriesInput, setShowNewSeriesInput] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -69,8 +68,13 @@ const LongVideoUpload = () => {
       genre: "",
       access: "",
       price: "",
+      language: "",
+      ageRestriction: "",
     },
   });
+
+  const watchType = form.watch("type");
+  const watchAccess = form.watch("access");
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>, type: "video" | "image") => {
@@ -180,64 +184,92 @@ const LongVideoUpload = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 items-center gap-2">
-                {/* Type Dropdown */}
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl className="rounded-xl">
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="movie">Movie</SelectItem>
-                          <SelectItem value="series">Series</SelectItem>
-                          <SelectItem value="short">Short</SelectItem>
-                          <SelectItem value="documentary">
-                            Documentary
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              {/* Type Dropdown */}
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        // Reset series field when type changes
+                        if (value !== "series") {
+                          form.setValue("series", "");
+                        }
+                      }}
+                      defaultValue={field.value}
+                    >
+                      <FormControl className="rounded-xl">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="movie">Single</SelectItem>
+                        <SelectItem value="series">Series</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                {/* Episode Dropdown */}
-                <FormField
-                  control={form.control}
-                  name="episode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl className="rounded-xl">
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select episode" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Array.from({ length: 10 }, (_, i) => (
-                            <SelectItem key={i + 1} value={`Episode ${i + 1}`}>
-                              Episode {i + 1}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
+              {/* Series Input - Only shown when type is "series" */}
+              {watchType === "series" && (
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="series"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex gap-2">
+                          <FormControl>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <SelectTrigger className="rounded-xl flex-1">
+                                <SelectValue placeholder="Select series" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="series1">
+                                  Series 1
+                                </SelectItem>
+                                <SelectItem value="series2">
+                                  Series 2
+                                </SelectItem>
+                                <SelectItem value="series3">
+                                  Series 3
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-xl"
+                            onClick={() =>
+                              setShowNewSeriesInput(!showNewSeriesInput)
+                            }
+                          >
+                            {showNewSeriesInput ? "Cancel" : "New Series"}
+                          </Button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {showNewSeriesInput && (
+                    <Input
+                      placeholder="Enter new series name"
+                      className="h-14 rounded-xl"
+                      onChange={(e) => form.setValue("series", e.target.value)}
+                    />
                   )}
-                />
-              </div>
+                </div>
+              )}
 
               {/* Title Input */}
               <FormField
@@ -248,24 +280,6 @@ const LongVideoUpload = () => {
                     <FormControl>
                       <Input
                         placeholder="Enter title"
-                        {...field}
-                        className="h-14 rounded-xl"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Series Input */}
-              <FormField
-                control={form.control}
-                name="series"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter series name"
                         {...field}
                         className="h-14 rounded-xl"
                       />
@@ -356,7 +370,13 @@ const LongVideoUpload = () => {
                   render={({ field }) => (
                     <FormItem>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Reset price when access changes
+                          if (value !== "paid") {
+                            form.setValue("price", "");
+                          }
+                        }}
                         defaultValue={field.value}
                       >
                         <FormControl className="rounded-xl">
@@ -367,9 +387,6 @@ const LongVideoUpload = () => {
                         <SelectContent>
                           <SelectItem value="free">Free</SelectItem>
                           <SelectItem value="paid">Paid</SelectItem>
-                          <SelectItem value="subscription">
-                            Subscription
-                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -377,8 +394,8 @@ const LongVideoUpload = () => {
                   )}
                 />
 
-                {/* Price Dropdown (conditional) */}
-                {form.watch("access") !== "free" && (
+                {/* Price Dropdown (conditional) - Only shown when access is "paid" */}
+                {watchAccess === "paid" && (
                   <FormField
                     control={form.control}
                     name="price"
@@ -449,36 +466,10 @@ const LongVideoUpload = () => {
                 </div>
               </div>
 
-              {/* Type Dropdown */}
+              {/* Language Dropdown */}
               <FormField
                 control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl className="rounded-xl">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Video type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="single">Single Video</SelectItem>
-                        <SelectItem value="series">Series</SelectItem>
-                        <SelectItem value="documentary">Documentary</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Episode Dropdown */}
-              <FormField
-                control={form.control}
-                name="episode"
+                name="language"
                 render={({ field }) => (
                   <FormItem>
                     <Select
@@ -491,8 +482,8 @@ const LongVideoUpload = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="single">Single</SelectItem>
-                        <SelectItem value="multiple">Multiple</SelectItem>
+                        <SelectItem value="english">English</SelectItem>
+                        <SelectItem value="hindi">Hindi</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -500,64 +491,33 @@ const LongVideoUpload = () => {
                 )}
               />
 
-              <div className="grid grid-cols-2 items-center gap-2">
-                {/* Type Dropdown */}
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl className="rounded-xl">
-                          <SelectTrigger>
-                            <SelectValue placeholder="Tags" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="movie">Movie</SelectItem>
-                          <SelectItem value="series">Series</SelectItem>
-                          <SelectItem value="short">Short</SelectItem>
-                          <SelectItem value="documentary">
-                            Documentary
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Episode Dropdown */}
-                <FormField
-                  control={form.control}
-                  name="episode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl className="rounded-xl">
-                          <SelectTrigger>
-                            <SelectValue placeholder="Age restriction" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Array.from({ length: 10 }, (_, i) => (
-                            <SelectItem key={i + 1} value={`Episode ${i + 1}`}>
-                              Episode {i + 1}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              {/* Age Restriction Dropdown */}
+              <FormField
+                control={form.control}
+                name="ageRestriction"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl className="rounded-xl">
+                        <SelectTrigger>
+                          <SelectValue placeholder="age restriction" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="3-10">3-10</SelectItem>
+                        <SelectItem value="10-15">10-15</SelectItem>
+                        <SelectItem value="15-20">15-20</SelectItem>
+                        <SelectItem value="21-30">21-30</SelectItem>
+                        <SelectItem value="all">All</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <Button type="submit" className="bg-[#F1C40F] w-full my-10">
                 Submit

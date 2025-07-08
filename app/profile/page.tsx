@@ -29,6 +29,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import UserList from "@/components/UserList";
 import ProfileTopbar from "./_components/ProfileTopbar";
+import { toast } from "sonner";
 
 const mockPosts = [
   { id: 1, image: "/placeholder.svg?height=300&width=300", type: "image" },
@@ -71,27 +72,45 @@ export default function ProfilePage() {
     }
   };
 
-  // useEffect(() => {
-  //   if (!isLoggedIn) {
-  //     router.push("/auth")
-  //     return
-  //   }
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.push("/auth")
+      return
+    }
 
-  //   const fetchUserData = async () => {
-  //     try {
-  //       const data = await api.getUserProfile()
-  //       setUserData(data)
-  //     } catch (err) {
-  //       console.error("Error fetching user data:", err)
-  //     } finally {
-  //       setIsLoading(false)
-  //     }
-  //   }
+    const fetchUserData = async () => {
+      try {
+        // Login API call
+        const response = await fetch("/api/user/profile", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: 'include'
+        });
 
-  //   if (token) {
-  //     fetchUserData()
-  //   }
-  // }, [isLoggedIn, router, token])
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch user profile");
+        }
+
+        console.log(data.user);
+        setUserData(data.user);
+      } catch (error) {
+        console.log(error);
+        toast.error(error instanceof Error ? error.message : "An unknown error occurred");
+      } finally{
+        setIsLoading(false);
+      }
+    }
+
+    if (token) {
+      fetchUserData()
+    }
+  }, [isLoggedIn, router, token])
+  
 
   // useEffect(() => {
   //   if (userData?.id) {
@@ -211,12 +230,6 @@ export default function ProfilePage() {
           <Button
             variant={"outline"}
             className="px-4  border-black py-2 text-black rounded-md"
-          >
-            Playlist
-          </Button>
-          <Button
-            variant={"outline"}
-            className="px-4 border-black py-2 text-black rounded-md"
           >
             History
           </Button>
