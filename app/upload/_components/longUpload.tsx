@@ -1,7 +1,7 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { any, z } from "zod";
+import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,29 +20,66 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { X } from "lucide-react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
 
-// Schema with validation
-const formSchema = z.object({
-  type: z.string().min(1, "Type is required"),
-  episode: z.string().min(1, "Episode is required"),
-  title: z.string().min(1, "Title is required"),
-  series: z.string().optional(), // Made optional since it's conditional
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  community: z.string().min(1, "Community is required"),
-  genre: z.string().min(1, "Genre is required"),
-  access: z.string().min(1, "Access type is required"),
-  price: z.string().optional(), // Made optional since it's conditional
-  videoFile: z.instanceof(File).optional(),
-  thumbnailFile: z
-    .instanceof(File)
-    .refine((file) => file.type.startsWith("image/"), {
-      message: "Only image files are allowed",
-    })
-    .optional(),
-  videoType: z.string().min(1, "Video Type type is required"),
-  language: z.string().min(1, "Language is required"),
-  ageRestriction: z.string().min(1, "age restriction is required"),
-});
+// Updated schema with required videoFile and new community fields
+const formSchema = z
+  .object({
+    // Required fields
+    type: z.string().min(1, "Type is required"),
+    title: z.string().min(1, "Title is required"),
+    description: z
+      .string()
+      .min(10, "Description must be at least 10 characters"),
+    community: z.string().min(1, "Community is required"),
+    genre: z.string().min(1, "Genre is required"),
+    access: z.string().min(1, "Access type is required"),
+    videoFile: z.instanceof(File, { message: "Video file is required" }),
+    language: z.string().min(1, "Language is required"),
+    ageRestriction: z.string().min(1, "Age restriction is required"),
+
+    // Optional fields
+    series: z.string().optional(),
+    price: z.string().optional(),
+    thumbnailFile: z
+      .instanceof(File)
+      .refine((file) => !file || file.type.startsWith("image/"), {
+        message: "Only image files are allowed",
+      })
+      .optional(),
+    newCommunityName: z.string().optional(),
+    newCommunityDescription: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    // Only require new community fields if creating new community
+    if (data.community === "create" && !data.newCommunityName) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["newCommunityName"],
+        message: "Community name is required when creating new community",
+      });
+    }
+
+    // Only require price if access is paid
+    if (data.access === "paid" && !data.price) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["price"],
+        message: "Price is required for paid access",
+      });
+    }
+
+    // Only require series if type is series
+    if (data.type === "series" && !data.series) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["series"],
+        message: "Series is required for series type",
+      });
+    }
+  });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -52,19 +89,25 @@ const LongVideoUpload = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showNewSeriesInput, setShowNewSeriesInput] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [showCreateCommunityFields, setShowCreateCommunityFields] =
+    useState(false);
 
   const videoInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const router = useRouter();
+  const { user, token, isLoggedIn } = useAuthStore();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       type: "",
-      episode: "",
       title: "",
       series: "",
       description: "",
       community: "",
+      newCommunityName: "",
+      newCommunityDescription: "",
       genre: "",
       access: "",
       price: "",
@@ -75,6 +118,11 @@ const LongVideoUpload = () => {
 
   const watchType = form.watch("type");
   const watchAccess = form.watch("access");
+  const watchCommunity = form.watch("community");
+
+  useEffect(() => {
+    setShowCreateCommunityFields(watchCommunity === "create");
+  }, [watchCommunity]);
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>, type: "video" | "image") => {
@@ -95,7 +143,7 @@ const LongVideoUpload = () => {
 
   const handleRemoveFile = (type: "video" | "image") => {
     if (type === "video") {
-      form.setValue("videoFile", undefined);
+      form.setValue("videoFile", undefined as any); // Force clear required field
       setVideoPreview(null);
       if (videoInputRef.current) videoInputRef.current.value = "";
     } else {
@@ -107,11 +155,67 @@ const LongVideoUpload = () => {
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
+
     try {
-      // Handle form submission
-      console.log("Form data:", data);
-      // Add your API call here
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
+      const formData = new FormData();
+
+      // Required fields
+      formData.append("type", data.type);
+      formData.append("title", data.title);
+      formData.append("description", data.description);
+      formData.append("community", data.community);
+      formData.append("genre", data.genre);
+      formData.append("access", data.access);
+      formData.append("language", data.language);
+      formData.append("ageRestriction", data.ageRestriction);
+
+      // Optional fields
+      if (data.series) formData.append("series", data.series);
+      if (data.price) formData.append("price", data.price);
+      if (data.newCommunityName)
+        formData.append("newCommunityName", data.newCommunityName);
+      if (data.newCommunityDescription)
+        formData.append(
+          "newCommunityDescription",
+          data.newCommunityDescription
+        );
+
+      // File uploads
+      if (data.videoFile) formData.append("videoFile", data.videoFile);
+      if (data.thumbnailFile)
+        formData.append("thumbnailFile", data.thumbnailFile);
+
+      // Optional: Auth (if you have user/token)
+      formData.append("user", JSON.stringify(user));
+
+      const response = await fetch("/api/upload/long", {
+        method: "POST",
+        body: formData,
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const result = await response.json();
+      toast("✅ Video uploaded successfully!");
+
+      // Clear form & state
+      form.reset();
+      setVideoPreview(null);
+      setImagePreview(null);
+      if (videoInputRef.current) videoInputRef.current.value = "";
+      if (imageInputRef.current) imageInputRef.current.value = "";
+      setCurrentStep(1);
+      setShowNewSeriesInput(false);
+      setShowCreateCommunityFields(false);
+    } catch (error) {
+      console.error("❌ Upload error:", error);
+      toast("Upload failed");
     } finally {
       setIsSubmitting(false);
     }
@@ -120,13 +224,25 @@ const LongVideoUpload = () => {
   return (
     <>
       <div className="flex items-center justify-between mx-5 mt-5">
-        <X className="size-5" />
-
+        <X onClick={() => router.back()} className="size-5" />
         <h2>New Video</h2>
-
         {currentStep === 1 ? (
           <Button
-            onClick={() => setCurrentStep(currentStep + 1)}
+            onClick={async () => {
+              const valid = await form.trigger([
+                "type",
+                "title",
+                "description",
+                "community",
+                "genre",
+                "access",
+                "videoFile",
+              ]);
+
+              if (valid) {
+                setCurrentStep(currentStep + 1);
+              }
+            }}
             variant={"link"}
             className="text-yellow-400"
           >
@@ -142,11 +258,12 @@ const LongVideoUpload = () => {
           </Button>
         )}
       </div>
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="m-4">
           {currentStep === 1 && (
             <div className="space-y-3">
-              {/* Video Upload & Preview */}
+              {/* Video Upload & Preview (Required) */}
               <div className="h-52">
                 <Input
                   id="video"
@@ -155,8 +272,8 @@ const LongVideoUpload = () => {
                   accept="video/*"
                   className="hidden"
                   onChange={(e) => handleFileChange(e, "video")}
+                  required
                 />
-
                 <div className="h-full flex items-center justify-center border rounded-lg">
                   {videoPreview ? (
                     <div className="relative">
@@ -178,10 +295,15 @@ const LongVideoUpload = () => {
                       variant={"outline"}
                       className="rounded-xl"
                     >
-                      Upload File
+                      Upload Video (Required)
                     </Button>
                   )}
                 </div>
+                {form.formState.errors.videoFile && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.videoFile.message}
+                  </p>
+                )}
               </div>
 
               {/* Type Dropdown */}
@@ -193,7 +315,6 @@ const LongVideoUpload = () => {
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value);
-                        // Reset series field when type changes
                         if (value !== "series") {
                           form.setValue("series", "");
                         }
@@ -308,33 +429,79 @@ const LongVideoUpload = () => {
                 )}
               />
 
-              <div className="grid grid-cols-2 space-y-1 grid-rows-2 items-center gap-2">
-                {/* Community Dropdown */}
-                <FormField
-                  control={form.control}
-                  name="community"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl className="rounded-xl">
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select community" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="general">General</SelectItem>
-                          <SelectItem value="premium">Premium</SelectItem>
-                          <SelectItem value="exclusive">Exclusive</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              {/* Community Dropdown with Create Option */}
+              <FormField
+                control={form.control}
+                name="community"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setShowCreateCommunityFields(value === "create");
+                      }}
+                      defaultValue={field.value}
+                    >
+                      <FormControl className="rounded-xl">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select community" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="owned">Owned Communities</SelectItem>
+                        <SelectItem value="joined">
+                          Joined Communities
+                        </SelectItem>
+                        <SelectItem value="create" className="text-yellow-400">
+                          + Create New Community
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
+              {/* Community Creation Fields */}
+              {showCreateCommunityFields && (
+                <div className="space-y-3">
+                  <FormField
+                    control={form.control}
+                    name="newCommunityName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            placeholder="Community name (required)"
+                            {...field}
+                            className="h-14 rounded-xl"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="newCommunityDescription"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Community description (optional)"
+                            rows={2}
+                            {...field}
+                            className="rounded-xl"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-2">
                 {/* Genre Dropdown */}
                 <FormField
                   control={form.control}
@@ -372,7 +539,6 @@ const LongVideoUpload = () => {
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
-                          // Reset price when access changes
                           if (value !== "paid") {
                             form.setValue("price", "");
                           }
@@ -394,29 +560,22 @@ const LongVideoUpload = () => {
                   )}
                 />
 
-                {/* Price Dropdown (conditional) - Only shown when access is "paid" */}
+                {/* Price Dropdown (conditional) */}
                 {watchAccess === "paid" && (
                   <FormField
                     control={form.control}
                     name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl className="rounded-xl">
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select price" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="4.99">$4.99</SelectItem>
-                            <SelectItem value="9.99">$9.99</SelectItem>
-                            <SelectItem value="14.99">$14.99</SelectItem>
-                            <SelectItem value="19.99">$19.99</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Enter price in USD"
+                            {...field}
+                            className="rounded-xl"
+                            min={1}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -428,7 +587,7 @@ const LongVideoUpload = () => {
 
           {currentStep === 2 && (
             <div className="space-y-3">
-              {/* Thumbnail Upload and preview  */}
+              {/* Thumbnail Upload and preview */}
               <div className="space-y-2 h-52">
                 <Input
                   id="image"
@@ -438,7 +597,6 @@ const LongVideoUpload = () => {
                   className="hidden"
                   onChange={(e) => handleFileChange(e, "image")}
                 />
-
                 <div className="h-full flex items-center justify-center border rounded-lg">
                   {imagePreview ? (
                     <div className="relative">
@@ -464,6 +622,11 @@ const LongVideoUpload = () => {
                     </Button>
                   )}
                 </div>
+                {form.formState.errors.thumbnailFile && (
+                  <p className="text-red-500 text-sm">
+                    {form.formState.errors.thumbnailFile.message}
+                  </p>
+                )}
               </div>
 
               {/* Language Dropdown */}
@@ -478,7 +641,7 @@ const LongVideoUpload = () => {
                     >
                       <FormControl className="rounded-xl">
                         <SelectTrigger>
-                          <SelectValue placeholder="language" />
+                          <SelectValue placeholder="Select language" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -503,7 +666,7 @@ const LongVideoUpload = () => {
                     >
                       <FormControl className="rounded-xl">
                         <SelectTrigger>
-                          <SelectValue placeholder="age restriction" />
+                          <SelectValue placeholder="Select age restriction" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -519,8 +682,12 @@ const LongVideoUpload = () => {
                 )}
               />
 
-              <Button type="submit" className="bg-[#F1C40F] w-full my-10">
-                Submit
+              <Button
+                type="submit"
+                className="bg-[#F1C40F] w-full my-10"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Uploading..." : "Submit"}
               </Button>
             </div>
           )}

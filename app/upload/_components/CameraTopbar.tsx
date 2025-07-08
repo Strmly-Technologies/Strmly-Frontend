@@ -28,14 +28,14 @@ const CameraTopbar = ({
 
       <div className="relative right-5 w-full">
         <div className="flex gap-2 items-center">
-          <Button type="button" className="bg-transparent w-full" variant="link">
+          {/* <Button type="button" className="bg-transparent w-full" variant="link">
             <img className="size-5" alt="vector" src="/assets/UploadPageIcons/Vector.png" />
           </Button>
           <Button type="button" className="bg-transparent text-white w-full" variant="link">
             <div className="text-xs font-semibold">
               <span className="text-lg">1</span>x
             </div>
-          </Button>
+          </Button> */}
           <Button
             type="button"
             className="bg-transparent text-white w-full"

@@ -21,34 +21,100 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { ChevronLeft } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const formSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters"),
   community: z.string().min(1, "Community is required"),
   tags: z.string().optional(),
+  newCommunityName: z.string().optional(),
+  newCommunityDescription: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.community === "create-new" && !data.newCommunityName) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["newCommunityName"],
+      message: "Community name is required",
+    });
+  }
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 type ShortVideoFormProps = {
   videoURL: string;
+  videoBlob: Blob;
   onBack: () => void;
 };
 
-const ShortVideoForm = ({ videoURL, onBack }: ShortVideoFormProps) => {
+const ShortVideoForm = ({ videoURL, videoBlob, onBack }: ShortVideoFormProps) => {
+  const [showCreateCommunityFields, setShowCreateCommunityFields] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const { user, isLoggedIn, token } = useAuthStore();
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       description: "",
       community: "",
       tags: "",
+      newCommunityName: "",
+      newCommunityDescription: "",
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    console.log("Form submitted:", data);
-    console.log("Video URL:", videoURL);
-    // Add your API call here
+  const selectedCommunity = form.watch("community");
+
+  useEffect(() => {
+    setShowCreateCommunityFields(selectedCommunity === "create-new");
+  }, [selectedCommunity]);
+
+  const onSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append("video", videoBlob, "short-video.mp4");
+      formData.append("description", data.description);
+      formData.append("community", data.community);
+      if (data.tags) formData.append("tags", data.tags);
+      
+      if (data.community === "create-new") {
+        formData.append("newCommunityName", data.newCommunityName || "");
+        formData.append("newCommunityDescription", data.newCommunityDescription || "");
+      }
+
+      // Append additional data to FormData
+        formData.append("user", JSON.stringify(user));
+
+      const response = await fetch("/api/upload/long", {
+        method: "POST",
+        body: formData,
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const result = await response.json();
+      
+      toast("Upload successful");
+
+      router.push(`/video/${result.videoId}`);
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast("Upload failed");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -98,7 +164,11 @@ const ShortVideoForm = ({ videoURL, onBack }: ShortVideoFormProps) => {
               name="community"
               render={({ field }) => (
                 <FormItem>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                    value={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger className="rounded-xl bg-gray-900 border-gray-700 text-white">
                         <SelectValue placeholder="Select community" />
@@ -106,13 +176,13 @@ const ShortVideoForm = ({ videoURL, onBack }: ShortVideoFormProps) => {
                     </FormControl>
                     <SelectContent className="bg-gray-900 border-gray-700 text-white">
                       <SelectItem value="general" className="hover:bg-gray-800">
-                        General
+                        Owned
                       </SelectItem>
                       <SelectItem value="premium" className="hover:bg-gray-800">
-                        Premium
+                        Joined
                       </SelectItem>
-                      <SelectItem value="exclusive" className="hover:bg-gray-800">
-                        Exclusive
+                      <SelectItem value="create-new" className="hover:bg-gray-800 text-yellow-400">
+                        + Create New Community
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -120,6 +190,45 @@ const ShortVideoForm = ({ videoURL, onBack }: ShortVideoFormProps) => {
                 </FormItem>
               )}
             />
+
+            {/* Community Creation Fields */}
+            {showCreateCommunityFields && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="newCommunityName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          placeholder="Community name"
+                          {...field}
+                          className="rounded-xl bg-gray-900 border-gray-700 text-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="newCommunityDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Community description (optional)"
+                          rows={2}
+                          {...field}
+                          className="rounded-xl bg-gray-900 border-gray-700 text-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
 
             {/* Tags (Optional) */}
             <FormField
@@ -142,8 +251,10 @@ const ShortVideoForm = ({ videoURL, onBack }: ShortVideoFormProps) => {
             <Button
               type="submit"
               className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-6 rounded-xl"
+              disabled={isSubmitting}
             >
-              Upload Video
+              {isSubmitting ? "Uploading..." : 
+               showCreateCommunityFields ? "Create Community & Upload Video" : "Upload Video"}
             </Button>
           </form>
         </Form>
