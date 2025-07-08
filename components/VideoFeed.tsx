@@ -581,6 +581,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                   className="bg-transparent text-white hover:text-primary rounded-full hover:bg-transparent p-1 shadow-none"
                 >
                   <img alt="icon" src='./assets/SidebarIcons/Comments.svg' />
+
                 </Button>
                 <span className="text-white text-xs font-medium mt-1">
                   {video.comments > 1000 ? `${(video.comments / 1000).toFixed(1)}K` : video.comments}
