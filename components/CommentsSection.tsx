@@ -52,10 +52,15 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
   }, [])
 
   const fetchComments = async () => {
-    //if (!token || !videoId) return
+    if (!token || !videoId){
+      console.warn("No token or videoId provided, using mock comments")
+      setComments(mockComments)
+      return
+    } 
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}/comments`, {
+        method: "GET",
         credentials: "include",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -63,9 +68,9 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
         },
       })
 
-      //if (!response.ok) {
-      //  throw new Error("Failed to fetch comments")
-      //}
+      if (!response.ok) {
+        throw new Error("Failed to fetch comments")
+      }
 
       const data = await response.json()
       setComments(data)
@@ -120,14 +125,17 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
 
     setIsLoading(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}/comment`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/comment`, {
         method: 'POST',
         credentials: "include",
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ content: comment }),
+        body: JSON.stringify({
+          videoId,
+          content: comment
+        }),
       })
 
 

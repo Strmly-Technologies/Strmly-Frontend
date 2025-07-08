@@ -85,9 +85,9 @@ export async function POST(req: Request) {
     });
 
     // Return user data without the token in the response body
-    const { token, ...userData } = data;
+    //const { token, ...userData } = data;
     return NextResponse.json<Omit<LoginSuccessResponse, 'token'>>(
-      userData,
+      data,
       { status: 200 }
     );
 

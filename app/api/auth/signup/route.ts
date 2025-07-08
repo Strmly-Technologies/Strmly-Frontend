@@ -83,8 +83,8 @@ export async function POST(req: Request) {
     });
 
     // Return the same structure as login response
-    const { token, ...userData } = data;
-    return NextResponse.json<Omit<AuthResponse, "token">>(userData, {
+    //const { token, ...userData } = data;
+    return NextResponse.json<Omit<AuthResponse, "token">>(data, {
       status: 200,
     });
     

@@ -1,9 +1,9 @@
 "use client"
-
+import { useVideoActions } from "@/lib/utils"
 import { Video } from "@/types/VideoFeed"
 import { fetchAndTransformVideos, getFollowingMap } from "@/lib/utils"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { ChevronDown, Link as LinkIcon } from "lucide-react"
+import { ChevronDown, Link as LinkIcon, Loader2Icon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -11,8 +11,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import CommentsSection from "./CommentsSection"
 import VideoMoreMenu from "./VideoMoreMenu"
 import { useAuthStore } from "@/store/useAuthStore"
-import { api } from "@/lib/api"
 import { FaWhatsapp, FaInstagram, FaTelegram, FaSnapchat, FaTwitter, FaFacebook } from "react-icons/fa"
+import { vi } from "zod/v4/locales"
 
 const socialPlatforms = [
   { name: "WhatsApp", icon: FaWhatsapp, color: "text-green-500" },
@@ -40,15 +40,22 @@ interface VideoFeedProps {
 }
 
 export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, Muted }: VideoFeedProps) {
+  const [initialLoading, setInitialLoading] = useState(true);
   const [offset, setOffset] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [videoSpeed, setVideoSpeed] = useState(1)
+  const [showFullDescriptionMap, setShowFullDescriptionMap] = useState<Record<string, boolean>>({});
+  const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({})
+  const { handleFollow, toggleFullDescription } = useVideoActions(setFollowingMap, setShowFullDescriptionMap);
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const [reachedEnd, setReachedEnd] = useState(false)
   const [videos, setVideos] = useState<Video[]>([])
   const [playingStates, setPlayingStates] = useState<{ [key: string]: boolean }>({})
   const manuallyPausedRef = useRef<Record<string, boolean>>({});
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showComments, setShowComments] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
+  const [showPaidMenu, setShowPaidMenu] = useState(false)
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null)
   const [isCopied, setIsCopied] = useState(false)
   const [currentEpisodeMap, setCurrentEpisodeMap] = useState<Record<string, number>>({});
@@ -56,57 +63,72 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
   const videoRefs = useRef<Array<{ element: HTMLVideoElement | null; id: string }>>([])
   const [showShareOptions, setShowShareOptions] = useState(false)
   const token = useAuthStore((state) => state.token)
-  const [showFullDescriptionMap, setShowFullDescriptionMap] = useState<Record<string, boolean>>({});
   const commentsRef = useRef<HTMLDivElement>(null)
   const shareOptionsRef = useRef<HTMLDivElement>(null)
   const descriptionRef = useRef<HTMLDivElement>(null);
-  const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({})
   const { user } = useAuthStore()
 
+
   useEffect(() => {
-  if (!loadMoreRef.current || loading) return
+  videoRefs.current.forEach((ref) => {
+    if (ref.element) {
+      ref.element.playbackRate = videoSpeed;
+    }
+  });
+}, [videoSpeed, videos]);
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      if (entries[0].isIntersecting) {
-        console.log("Load more videos triggered")
-        loadMore()
+
+  useEffect(() => {
+    console.log("Load more videos triggered")
+    if (!loadMoreRef.current || loading) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          console.log("Load more videos triggered")
+          loadMore()
+        }
+      },
+      { threshold: 1.0, rootMargin: "200px" }
+    )
+
+    observer.observe(loadMoreRef.current)
+
+    return () => observer.disconnect()
+  }, [loadMoreRef, loading, playingStates])
+
+  const loadMore = async () => {
+    if (loading || !token || reachedEnd) return
+    setLoading(true)
+
+    try {
+      const page = offset + 1
+      const newVideos = await fetchAndTransformVideos(token, page, 1, longVideoOnly ? "long" : "short")
+      if (newVideos.length === 0) {
+        console.log("No more videos to load")
+        setReachedEnd(true)
       }
-    },
-    { threshold: 1.0, rootMargin: "100px" }
-  )
+      console.log("transformed data:", newVideos);
+      setVideos((prev) => [...prev, ...newVideos])
+      setOffset((prev) => prev + newVideos.length)
 
-  observer.observe(loadMoreRef.current)
-
-  return () => observer.disconnect()
-}, [loadMoreRef, loading])
-
-const loadMore = async () => {
-  if (loading || !token) return
-  setLoading(true)
-
-  try {
-    const page = offset / 10 + 1
-    const newVideos = await fetchAndTransformVideos(token, page, 10, longVideoOnly ? "long" : "short")
-    setVideos((prev) => [...prev, ...newVideos])
-    setOffset((prev) => prev + newVideos.length)
-
-    const episodeMap: Record<string, number> = {}
-    newVideos.forEach((v) => {  
+      const episodeMap: Record<string, number> = {}
+      newVideos.forEach((v) => {
         // If episodes exist, default to the first one’s ID
+        v.videoUrl = "/MockVideos/video.mp4";  //TEMPORARY: remove when videos are aded to database
         const defaultEpId = v.episodes?.[0]?.id ?? 1
         episodeMap[v._id] = defaultEpId
-    })
-    setCurrentEpisodeMap((prev) => ({ ...prev, ...episodeMap }))
+      })
+      setCurrentEpisodeMap((prev) => ({ ...prev, ...episodeMap }))
 
-    const followingMap = await getFollowingMap(user?.id || "", newVideos)
-    setFollowingMap((prev) => ({ ...prev, ...followingMap }))
-  } catch (err) {
-    console.error("Failed to load more videos", err)
-  } finally {
-    setLoading(false)
+      const followingMap = await getFollowingMap(user?.id || "", newVideos)
+      setFollowingMap((prev) => ({ ...prev, ...followingMap }))
+    } catch (err) {
+      console.error("Failed to load more videos", err)
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
   // Ref to hold the current playingStates, so it's stable within useCallback
   const playingStatesRef = useRef(playingStates);
@@ -114,47 +136,53 @@ const loadMore = async () => {
     playingStatesRef.current = playingStates;
   }, [playingStates]);
 
+
   useEffect(() => {
     const fetchVideos = async () => {
-        if (!token) {
-          console.error("No authentication token found")
-          return
-        }
+      if (!token) {
+        console.error("No authentication token found");
+        setInitialLoading(false); // still stop loading1
+        return;
+      }
 
       try {
-        if(longVideoOnly){ 
-          const transformedVideos = await fetchAndTransformVideos(token, offset / 10 + 1, 10, "long")
-          setVideos(transformedVideos)
-        } else {
-          const transformedVideos = await fetchAndTransformVideos(token, offset / 10 + 1, 10, "short")
-          setVideos(transformedVideos)
-        }
+        const transformedVideos = await fetchAndTransformVideos(token, 1, 1, longVideoOnly ? "long" : "short");
 
-      //Initialize episodes
-      const episodeMap: Record<string, number> = {}
-      videos.forEach((v) => {  
-        // If episodes exist, default to the first one’s ID
-        const defaultEpId = v.episodes?.[0]?.id ?? 1
-        episodeMap[v._id] = defaultEpId
-      })
-      setCurrentEpisodeMap(episodeMap)
-      // Get following map
-      const followingMap = await getFollowingMap(user?.id || "", videos)
-      setFollowingMap((prev) => ({ ...prev, ...followingMap }))
+        console.table(transformedVideos.map(video => ({
+          id: video._id,
+          Description: video.description,
+          URL: video.videoUrl
+        }))) // Log the transformed videos for debugging
+        transformedVideos.forEach((video: Video) => {
+          video.videoUrl = "/MockVideos/video.mp4";  //TEMPORARY: remove when videos are aded to database
+        });
+
+
+        setVideos(transformedVideos);
+        setOffset(transformedVideos.length);
+
+        const episodeMap: Record<string, number> = {};
+        transformedVideos.forEach((v) => {
+          episodeMap[v._id] = v.episodes?.[0]?.id ?? 1;
+        });
+        setCurrentEpisodeMap(episodeMap);
+
+        //const followingMap = await getFollowingMap(user?.id || "", transformedVideos);
+        //setFollowingMap((prev) => ({ ...prev, ...followingMap }));
       } catch (error) {
-        console.error("Error fetching videos:", error)
+        console.error("Failed to fetch videos:", error);
+      } finally {
+        setInitialLoading(false); // ✅ stop loading regardless
       }
-    }
+    };
 
-    setVideos([])
-    setOffset(0)
-    fetchVideos()
-  }, [token, user?.id, longVideoOnly])
+    setVideos([]);
+    setOffset(0);
+    setInitialLoading(true); // ✅ start loading
+    fetchVideos();
+  }, [token, user?.id, longVideoOnly]);
 
-  const filteredVideos = longVideoOnly
-    ? videos.filter(video => video.type === "long")
-    : videos.filter(video => video.type === "short" )
-
+  const filteredVideos = videos
   const handleVideoAction = async (action: string, videoId: string) => {
     if (!token) {
       console.error("No authentication token found")
@@ -163,13 +191,18 @@ const loadMore = async () => {
 
     if (action === "like") {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}/like`, {
+        console.log("Sending like for video:", videoId, longVideoOnly ? "long" : "short");
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/like`, {
           method: 'POST',
           credentials: "include",
           headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
           },
+          body: JSON.stringify({
+            "videoId": videoId,
+            "type": longVideoOnly ? "long" : "short",
+          })
         })
 
         if (!response.ok) {
@@ -204,7 +237,7 @@ const loadMore = async () => {
     }
   }
 
-  // CORRECTED: handleFullscreen now uses playingStatesRef to find the active video
+  // HandleFullscreen functionality to toggle fullscreen mode
   const handleFullscreen = async () => {
     const currentlyPlayingVideoRef = videoRefs.current.find(ref => playingStatesRef.current[ref.id]);
     const currentVideoEl = currentlyPlayingVideoRef?.element;
@@ -419,7 +452,7 @@ const loadMore = async () => {
 
 
 
-  // Add click outside handler for comments, share options, AND description
+  //Click to open and close comments section,share and description menus.
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Close comments section
@@ -449,35 +482,23 @@ const loadMore = async () => {
     }
   }, [showFullDescriptionMap])
 
+  const DEFAULT_WORD_LIMIT = 15;
 
-  const handleFollow = async (targetUserId: string) => {
-    try {
-      const result = await api.followUser(targetUserId)
-      setFollowingMap(prev => ({
-        ...prev,
-        [targetUserId]: result.following
-      }))
-    } catch (error) {
-      console.error("Error following user:", error)
-    }
+  if (initialLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen text-white text-lg">
+        <Loader2Icon className="ml-2 animate-spin" />
+      </div>
+    );
   }
-
-  const toggleFullDescription = (videoId: string) => {
-    setShowFullDescriptionMap(prev => ({
-      ...prev,
-      [videoId]: !prev[videoId]
-    }));
-  };
-
-  const DEFAULT_WORD_LIMIT = 25;
 
   return (
     <>
       {/* Increased padding-bottom to account for mobile nav */}
       <div className={`h-screen overflow-y-scroll snap-y snap-mandatory ${isFullscreen ? "fullscreen-video" : ""} pt-14 pb-16`}>
 
-        {filteredVideos.map((video, index) => (
-          <div key={video._id} className="h-screen snap-start relative bg-black">
+        {filteredVideos.map((video: Video, index) => (
+          <div key={video._id} className="h-screen snap-start relative bg-black" ref={index === filteredVideos.length - 1 ? loadMoreRef : null}>
             {/* Video Background */}
             <div className="absolute inset-0">
               <video
@@ -610,9 +631,8 @@ const loadMore = async () => {
                     </Badge>
                   )}*/}
 
-                  {video.type === "long" && video.episodes && video.episodes.length > 0 && (
+                  {longVideoOnly && video.episodes && video.episodes.length > 0 && (
                     <>
-
                       <div className="w-full font-poppins">
 
                         {/* Top Row: Avatar + Name + Follow */}
@@ -698,8 +718,7 @@ const loadMore = async () => {
 
                     </>
                   )}
-
-                  {video.type === "long" && !video.episodes && (
+                  {longVideoOnly && !(video.episodes ? video.episodes.length > 0 : false) && (
                     <>
                       <div className="w-full font-poppins">
 
@@ -737,23 +756,44 @@ const loadMore = async () => {
                           </div>
 
                           {/* Right: Paid Badge */}
-                          {true && (
-                            <Badge
-                              variant="secondary"
-                              className="bg-transparent text-[#F1C40F] text-[16px] font-bold px-2 border-white rounded-md"
-                            >
-                              Paid
-                            </Badge>
+                          {video.type === "Paid" && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                  <Button onClick={() => setShowPaidMenu(!showPaidMenu)}
+                                variant="ghost"
+                                size="sm"
+                                className="text-[#F1C40F] border border-white rounded-half px-2 py-0.5 text-[16px] font-medium hover:bg-white/10 h-auto min-h-0"
+                              >
+                                Paid
+                              </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent side="top" className="w-95 mr-4 bg-transparent border-none rounded-[16px] p-0">
+                                <DropdownMenuItem
+                                  className="flex justify-between cursor-pointer font-poppins text-[18px] bg-[#222222] p-2"
+                                  onClick={() => { /* Add code here */ }}
+                                >
+                                  <span>Full Series</span>
+                                  <span>₹29</span>
+                                </DropdownMenuItem>
+                                <div className="w-full h-[1px] bg-white opacity-25"></div>
+                                <DropdownMenuItem
+                                  className="flex justify-between cursor-pointer font-poppins text-[18px] bg-[#222222] p-2"
+                                  onClick={() => { /* Add code here */ }}
+                                >
+                                  <span>Creator Pass</span>
+                                  <span>₹99/Month</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           )}
                         </div>
                       </div>
                     </>
                   )}
 
-                  {video.type === "short" && (
+                  {(!longVideoOnly) && (
                     <>
                       <div className="w-full font-poppins">
-
                         {/* Top Row: Avatar + Name + Follow */}
                         <div className="flex gap-3 mt-1 w-full px-1 items-center pb-1">
                           {/* Avatar */}
@@ -794,7 +834,7 @@ const loadMore = async () => {
               </div>
 
 
-              <div className="flex items-center space-x-2 mb-1">
+              {/*<div className="flex items-center space-x-2 mb-1">
 
                 {video.user.id && video.user.id !== user?.id && (
                   <Button
@@ -809,31 +849,30 @@ const loadMore = async () => {
                     {followingMap[video.user.id] ? "Following" : "Follow"}
                   </Button>
                 )}
-              </div>
+              </div>*/}
 
               <div className="mb-1 text-left flex justify-between" ref={descriptionRef}>
                 {/* Show more button if the number of words exceeds the actual limit*/}
-                {video.description && video.description.split(/\s+/).length > DEFAULT_WORD_LIMIT && (
+                {video.description && (
                   <button
                     onClick={() => toggleFullDescription(video._id)}
                     className="text-xs text-white/80 hover:text-white mt-1 w-full pr-1">
-                      <div className={`relative overflow-hidden ${!showFullDescriptionMap[video._id] ? 'h-[3.5rem]' : ''}`}>
-  <p
-    className={`text-white text-[13px] text-left pb-1 leading-tight ${
-      !showFullDescriptionMap[video._id] ? 'fade-text' : ''
-    }`}
-  >
-    {showFullDescriptionMap[video._id]
-      ? video.description
-      : truncateWords(video.description, DEFAULT_WORD_LIMIT)}
-  </p>
-</div>
+                    <div className={`relative overflow-hidden ${!showFullDescriptionMap[video._id] ? 'h-auto max-h-[2rem]' : ''}`}>
+                      <p
+                        className={`text-white text-[13px] text-left pb-1 leading-tight ${!showFullDescriptionMap[video._id] ? 'fade-text' : ''
+                          }`}
+                      >
+                        {showFullDescriptionMap[video._id]
+                          ? video.description
+                          : truncateWords(video.description, DEFAULT_WORD_LIMIT)}
+                      </p>
+                    </div>
 
                   </button>
 
                 )}
                 {/* Fullscreen button for long videos */}
-                {video.type === "long" && (
+                {longVideoOnly && (
                   <div className="flex flex-col items-right z-50 mt-auto">
                     <Button
                       onClick={handleFullscreen}
@@ -845,7 +884,7 @@ const loadMore = async () => {
               </div>
 
               {/* Tags */}
-              {video.tags && video.tags.length > 0 && (
+              {/*video.tags && video.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {video.tags.map((tag, tagIndex) => ( // Changed index to tagIndex to avoid conflict
                     <span
@@ -856,11 +895,13 @@ const loadMore = async () => {
                     </span>
                   ))}
                 </div>
-              )}
+              )*/}
             </div>
           </div>
         ))}
+
       </div>
+
 
       {/* Comments Section */}
       <div ref={commentsRef}>
@@ -895,7 +936,7 @@ const loadMore = async () => {
       )}
 
       {/* Video More Menu */}
-      <VideoMoreMenu isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} videoId={selectedVideoId} videoRefs={{
+      <VideoMoreMenu isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} videoId={selectedVideoId} setVideoSpeed={setVideoSpeed}videoRefs={{
         current: Object.fromEntries(
           videoRefs.current.map(({ id, element }) => [id, element])
         ),
