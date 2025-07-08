@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { api } from "@/lib/api"
@@ -25,7 +25,8 @@ export default function UserList({ userId, type }: UserListProps) {
   const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({})
   const { user } = useAuthStore()
 
-  const fetchUsers = async () => {
+
+  const fetchUsers = useCallback(async () => {
     try {
       const data = type === "followers" 
         ? await api.getFollowers(userId, page)
@@ -43,15 +44,13 @@ export default function UserList({ userId, type }: UserListProps) {
         avatar: item.user.avatar || "/placeholder.svg",
         isVerified: item.user.isVerified || false
       }))
-      
-      // Filter out duplicate users
+
       setUsers(prev => {
         const existingIds = new Set(prev.map((u: User) => u.id))
         const uniqueNewUsers = newUsers.filter((u: User) => !existingIds.has(u.id))
         return [...prev, ...uniqueNewUsers]
       })
 
-      // Check following status for each user
       const followingStatuses = await Promise.all(
         newUsers.map(async (u: User) => {
           if (u.id === user?.id) return { id: u.id, isFollowing: false }
@@ -69,11 +68,11 @@ export default function UserList({ userId, type }: UserListProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [type, userId, page, user])  // Make sure all used variables are in deps
 
   useEffect(() => {
     fetchUsers()
-  }, [userId, type, page])
+  }, [fetchUsers])
 
   const handleFollow = async (targetUserId: string) => {
     try {
