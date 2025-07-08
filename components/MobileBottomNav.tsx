@@ -12,8 +12,8 @@ export default function MobileBottomNav({ progress }:VideoProgressBarProps) {
   const pathname = usePathname()
 
   const navItems = [
-    { icon: "/assets/NavIcons/play.svg", activeIcon:"/assets/NavIcons/play-active.svg",label: "Home", href: "/" },
     { icon: "/assets/NavIcons/longVideo.svg", activeIcon:"/assets/NavIcons/longVideo-active.svg", label: "Long", href: "/long" },
+    { icon: "/assets/NavIcons/play.svg", activeIcon:"/assets/NavIcons/play-active.svg",label: "Home", href: "/" },
     { icon: "/assets/NavIcons/addVideo.svg", activeIcon:"/assets/NavIcons/addVideo.svg", label: "Upload", href: "/upload" },
     { icon: "/assets/NavIcons/search.svg", activeIcon:"/assets/NavIcons/search.svg", label: "Search", href: "/search" },
     { icon: "assets/NavIcons/profileIcon.svg", activeIcon:"assets/NavIcons/profileIcon.svg", label: "Profile", href: "/profile" },

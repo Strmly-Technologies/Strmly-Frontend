@@ -4,7 +4,7 @@
   description: string // Description of the video
   videoUrl: string // URL of the video file
   thumbnailUrl: string // URL of the video's thumbnail image
-  type: "short" | "long" // Type of the video, either short or long
+  type: "Paid" | "Free" // Type of the video, either paid or free
   userid : string // Unique identifier for the uploader
   user: {
     id: string // Unique identifier for the uploader

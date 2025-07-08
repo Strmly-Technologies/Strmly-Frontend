@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState, useRef } from "react"
-import { X, Settings, Gauge, Download } from "lucide-react"
+import { X, Settings, Gauge, Download, Bookmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
@@ -10,11 +10,17 @@ interface VideoMoreMenuProps {
   onClose: () => void
   videoId: string | null
   videoRefs: React.MutableRefObject<{ [id: string]: HTMLVideoElement | null }>
+  setVideoSpeed: (value: number | ((prev: number) => number)) => void
 }
 
-export default function VideoMoreMenu({ isOpen, onClose, videoId, videoRefs }: VideoMoreMenuProps) {
-  const [quality, setQuality] = useState("720p")
+export default function VideoMoreMenu({ isOpen, onClose, videoId, videoRefs, setVideoSpeed }: VideoMoreMenuProps) {
+  const [saved, setSaved] = useState("false")
   const [speed, setSpeed] = useState("1")
+
+  useEffect(() => {
+    // Load saved state from localStorage or set default
+    setVideoSpeed(parseFloat(speed));
+  }, [speed])
 
   useEffect(() => {
     if (videoId && videoRefs.current[videoId]) {
@@ -29,29 +35,18 @@ export default function VideoMoreMenu({ isOpen, onClose, videoId, videoRefs }: V
       <div className="bg-background rounded-t-2xl w-full max-w-md p-4 lg:p-6 space-y-3 lg:space-y-4" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-base lg:text-lg font-semibold">Video Options</h3>
+          <h3 className="text-base lg:text-lg font-semibold text-yellow-500">Video Options</h3>
           <Button variant="ghost" size="sm" onClick={onClose} className="p-2 lg:p-3">
             <X size={18} className="lg:w-5 lg:h-5" />
           </Button>
         </div>
 
-        {/* Quality Settings */}
+        {/* Save Settings */}
         <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <Settings size={14} className="lg:w-4 lg:h-4" />
-            <span className="font-medium text-sm lg:text-base">Quality</span>
-          </div>
-          <Select value={quality} onValueChange={setQuality}>
-            <SelectTrigger className="text-sm lg:text-base">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="360p">360p</SelectItem>
-              <SelectItem value="480p">480p</SelectItem>
-              <SelectItem value="720p">720p HD</SelectItem>
-              <SelectItem value="1080p">1080p Full HD</SelectItem>
-            </SelectContent>
-          </Select>
+          <Button variant="outline" className="w-full justify-start text-sm lg:text-base py-2 lg:py-3">
+            <Bookmark size={14} className="mr-2 lg:w-4 lg:h-4" />
+            {true ? "Removed from Saved" : "Save Video"}
+          </Button>
         </div>
 
         {/* Speed Settings */}
