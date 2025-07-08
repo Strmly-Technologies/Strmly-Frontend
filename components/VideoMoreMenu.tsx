@@ -20,6 +20,7 @@ export default function VideoMoreMenu({ isOpen, onClose, videoId, videoRefs, set
   useEffect(() => {
     // Load saved state from localStorage or set default
     setVideoSpeed(parseFloat(speed));
+
   }, [speed, setVideoSpeed])
 
   useEffect(() => {

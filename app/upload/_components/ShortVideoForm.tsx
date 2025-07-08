@@ -51,6 +51,7 @@ type ShortVideoFormProps = {
 };
 
 const ShortVideoForm = ({ videoFile, videoURL, onBack }: ShortVideoFormProps) => {
+
   const [showCreateCommunityFields, setShowCreateCommunityFields] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -78,7 +79,7 @@ const ShortVideoForm = ({ videoFile, videoURL, onBack }: ShortVideoFormProps) =>
     
     try {
       const formData = new FormData();
-      
+
       formData.append("description", data.description);
       formData.append("community", data.community);
       if (data.tags) formData.append("tags", data.tags);
@@ -89,6 +90,7 @@ const ShortVideoForm = ({ videoFile, videoURL, onBack }: ShortVideoFormProps) =>
       }
 
       // Append additional data to FormData
+
       formData.append("user", JSON.stringify(user));
       if (videoFile) {
         formData.append("video", videoFile);
@@ -96,7 +98,8 @@ const ShortVideoForm = ({ videoFile, videoURL, onBack }: ShortVideoFormProps) =>
         toast.error("No video file found to upload");
         return;
       }
-      
+     
+
       const response = await fetch("/api/upload/long", {
         method: "POST",
         body: formData,
