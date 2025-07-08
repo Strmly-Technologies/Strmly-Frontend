@@ -1,7 +1,9 @@
 "use client"
-
+import { useVideoActions } from "@/lib/utils"
+import { Video } from "@/types/VideoFeed"
+import { fetchAndTransformVideos, getFollowingMap } from "@/lib/utils"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { ChevronDown, Link as LinkIcon } from "lucide-react"
+import { ChevronDown, Link as LinkIcon, Loader2Icon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -9,111 +11,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import CommentsSection from "./CommentsSection"
 import VideoMoreMenu from "./VideoMoreMenu"
 import { useAuthStore } from "@/store/useAuthStore"
-import { api } from "@/lib/api"
 import { FaWhatsapp, FaInstagram, FaTelegram, FaSnapchat, FaTwitter, FaFacebook } from "react-icons/fa"
-
-const mockVideos = [
-  {
-    id: 1,
-    type: "long",
-    user: {
-      name: "Tech Creator",
-      username: "@techcreator",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    title: "Building a Startup from Scratch - Complete Guide",
-    description: "Learn how to build a successful startup from the ground up, covering everything from idea validation to funding and scaling. This comprehensive guide will walk you through every step of the process, from ideation to launch.",
-    community: "Startup Community",
-    series: "Entrepreneur Series",
-    episodes: [
-      { id: 1, videoURL: "/MockVideos/video.mp4" },
-      { id: 2, videoURL: "/MockVideos/video2.mp4" },
-      { id: 3, videoURL: "/MockVideos/video3.mp4" },
-      { id: 4, videoURL: "/MockVideos/video4.mp4" },
-    ],
-    currentEpisode: 1,
-    duration: "15:42",
-    progress: 35,
-    likes: 89500,
-    comments: 892,
-    shares: 234,
-    earnings: 1200,
-    videoUrl: "/MockVideos/video.mp4",
-  },
-  {
-    id: 2,
-    type: "long",
-    user: {
-      name: "Code Master",
-      username: "@codemaster",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    title: "React vs Next.js - Which Should You Choose?",
-    description: "Complete comparison of React and Next.js frameworks, diving deep into their features, performance, and best use cases for modern web development. This is a very comprehensive guide, perfect for developers looking to make informed decisions.",
-    community: "Developer Community",
-    series: "Web Dev Masterclass",
-    episodes: [
-      { id: 1, videoURL: "/MockVideos/video2.mp4" },
-      { id: 2, videoURL: "/MockVideos/video.mp4" },
-      { id: 3, videoURL: "/MockVideos/video4.mp4" },
-      { id: 4, videoURL: "/MockVideos/video3.mp4" },
-      { id: 5, videoURL: "/MockVideos/video2.mp4" },
-    ],
-    currentEpisode: 1,
-    duration: "22:15",
-    progress: 60,
-    likes: 67000,
-    comments: 445,
-    shares: 123,
-    earnings: 890,
-    videoUrl: "/MockVideos/video.mp4",
-  },
-
-  {
-    id: 3,
-    type: "short",
-    user: {
-      name: "Code Master",
-      username: "@codemaster",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    title: "React vs Next.js - Which Should You Choose?",
-    description: "Complete comparison of React and Next.js frameworks, diving deep into their features, performance, and best use cases for modern web development. This is a very comprehensive guide, perfect for developers looking to make informed decisions.",
-    community: "Developer Community",
-    duration: "22:15",
-    progress: 60,
-    likes: 6700,
-    comments: 4450,
-    shares: 127,
-    earnings: 899,
-    videoUrl: "/MockVideos/video3.mp4",
-  },
-
-  {
-    id: 4,
-    type: "short",
-    user: {
-      name: "Code Master",
-      username: "@codemaster",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    title: "React vs Next.js - Which Should You Choose?",
-    description: "Complete comparison of React and Next.js frameworks, diving deep into their features, performance, and best use cases for modern web development. This is a very comprehensive guide, perfect for developers looking to make informed decisions.",
-    community: "Developer Community",
-    duration: "22:15",
-    progress: 60,
-    likes: 6680,
-    comments: 745,
-    shares: 673,
-    earnings: 190,
-    videoUrl: "/MockVideos/video4.mp4",
-  },
-]
-interface VideoFeedProps {
-  longVideoOnly?: boolean
-  ChangeVideoProgress: (value: number | ((prev: number) => number)) => void
-  Muted: boolean
-}
+import { vi } from "zod/v4/locales"
 
 const socialPlatforms = [
   { name: "WhatsApp", icon: FaWhatsapp, color: "text-green-500" },
@@ -123,38 +22,6 @@ const socialPlatforms = [
   { name: "Twitter", icon: FaTwitter, color: "text-blue-400" },
   { name: "Facebook", icon: FaFacebook, color: "text-blue-600" },
 ]
-
-interface Video {
-  _id: string
-  title: string
-  description: string
-  videoUrl: string
-  thumbnailUrl: string
-  type: "short" | "long"
-  status: "DRAFT" | "PROCESSING" | "PUBLISHED" | "FAILED" | "PRIVATE"
-  user: {
-    id: string
-    name: string
-    username: string
-    avatar: string
-  }
-  likes: number
-  comments: number
-  shares: number
-  views: number
-  earnings: number
-  progress?: number
-  community?: string
-  series?: string
-  currentEpisode?: number
-  episodes?: Array<{
-    id: number
-    videoURL: string
-  }>
-  tags?: string[]
-  isLiked: boolean
-  createdAt: string // Ensure createdAt is part of the interface
-}
 
 // Utility function to truncate description by words
 const truncateWords = (text: string, maxWords: number) => {
@@ -166,15 +33,29 @@ const truncateWords = (text: string, maxWords: number) => {
   return text;
 };
 
+interface VideoFeedProps {
+  longVideoOnly?: boolean
+  ChangeVideoProgress: (value: number | ((prev: number) => number)) => void
+  Muted: boolean
+}
 
 export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, Muted }: VideoFeedProps) {
-
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [offset, setOffset] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [videoSpeed, setVideoSpeed] = useState(1)
+  const [showFullDescriptionMap, setShowFullDescriptionMap] = useState<Record<string, boolean>>({});
+  const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({})
+  const { handleFollow, toggleFullDescription } = useVideoActions(setFollowingMap, setShowFullDescriptionMap);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const [reachedEnd, setReachedEnd] = useState(false)
   const [videos, setVideos] = useState<Video[]>([])
   const [playingStates, setPlayingStates] = useState<{ [key: string]: boolean }>({})
   const manuallyPausedRef = useRef<Record<string, boolean>>({});
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showComments, setShowComments] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
+  const [showPaidMenu, setShowPaidMenu] = useState(false)
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null)
   const [isCopied, setIsCopied] = useState(false)
   const [currentEpisodeMap, setCurrentEpisodeMap] = useState<Record<string, number>>({});
@@ -182,12 +63,72 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
   const videoRefs = useRef<Array<{ element: HTMLVideoElement | null; id: string }>>([])
   const [showShareOptions, setShowShareOptions] = useState(false)
   const token = useAuthStore((state) => state.token)
-  const [showFullDescriptionMap, setShowFullDescriptionMap] = useState<Record<string, boolean>>({});
   const commentsRef = useRef<HTMLDivElement>(null)
   const shareOptionsRef = useRef<HTMLDivElement>(null)
   const descriptionRef = useRef<HTMLDivElement>(null);
-  const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({})
   const { user } = useAuthStore()
+
+
+  useEffect(() => {
+  videoRefs.current.forEach((ref) => {
+    if (ref.element) {
+      ref.element.playbackRate = videoSpeed;
+    }
+  });
+}, [videoSpeed, videos]);
+
+
+  useEffect(() => {
+    console.log("Load more videos triggered")
+    if (!loadMoreRef.current || loading) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          console.log("Load more videos triggered")
+          loadMore()
+        }
+      },
+      { threshold: 1.0, rootMargin: "200px" }
+    )
+
+    observer.observe(loadMoreRef.current)
+
+    return () => observer.disconnect()
+  }, [loadMoreRef, loading, playingStates])
+
+  const loadMore = async () => {
+    if (loading || !token || reachedEnd) return
+    setLoading(true)
+
+    try {
+      const page = offset + 1
+      const newVideos = await fetchAndTransformVideos(token, page, 1, longVideoOnly ? "long" : "short")
+      if (newVideos.length === 0) {
+        console.log("No more videos to load")
+        setReachedEnd(true)
+      }
+      console.log("transformed data:", newVideos);
+      setVideos((prev) => [...prev, ...newVideos])
+      setOffset((prev) => prev + newVideos.length)
+
+      const episodeMap: Record<string, number> = {}
+      newVideos.forEach((v) => {
+        // If episodes exist, default to the first one’s ID
+        v.videoUrl = "/MockVideos/video.mp4";  //TEMPORARY: remove when videos are aded to database
+        const defaultEpId = v.episodes?.[0]?.id ?? 1
+        episodeMap[v._id] = defaultEpId
+      })
+      setCurrentEpisodeMap((prev) => ({ ...prev, ...episodeMap }))
+
+      const followingMap = await getFollowingMap(user?.id || "", newVideos)
+      setFollowingMap((prev) => ({ ...prev, ...followingMap }))
+    } catch (err) {
+      console.error("Failed to load more videos", err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Ref to hold the current playingStates, so it's stable within useCallback
   const playingStatesRef = useRef(playingStates);
@@ -195,105 +136,73 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
     playingStatesRef.current = playingStates;
   }, [playingStates]);
 
+
   useEffect(() => {
     const fetchVideos = async () => {
-      try {
-        if (!token) {
-          console.error("No authentication token found")
-          //return
-        }
-
-        //const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos`, {
-        //  credentials: "include",
-        //  headers: {
-        //    "Authorization": `Bearer ${token}`,
-        //   "Content-Type": "application/json"
-        //  },
-        //})
-        //if (!response.ok) {
-        //  throw new Error(`Failed to fetch videos: ${response.status} ${response.statusText}`)
-        //}
-        //const data = await response.json()
-        //console.log("Raw API response data:", data) // <<<--- CHECK THIS IN CONSOLE
-
-        // Transform the data to match the Video interface
-        //const transformedVideos = data.map((video: any) => ({
-        const transformedVideos = mockVideos.map((video: any) => ({
-          _id: video.id,
-          title: video.title || "Untitled Video", // This line tries to get the title
-          description: video.description || "",   // This line tries to get the description
-          videoUrl: video.videoUrl,
-          thumbnailUrl: video.thumbnailUrl || "",
-          type: video.type,
-          status: video.status || "PUBLISHED",
-          user: {
-            id: video.userId,
-            name: video.user?.name || "Anonymous",
-            username: video.user?.username || "@anonymous",
-            avatar: video.user?.avatar || "/placeholder.svg"
-          },
-          likes: video.likes || 0,
-          comments: video.comments || 0,
-          shares: video.shares || 0,
-          views: video.views || 0,
-          earnings: video.earnings || 0,
-          progress: 0,
-          isLiked: video.isLiked || false,
-          tags: video.tags || [],
-          createdAt: video.createdAt,
-          community: video.community || null,
-          series: video.series || null,
-          currentEpisode: video.currentEpisode || 1,
-          episodes: video.episodes || []
-        }))
-        console.log("Transformed videos data (check title/description here):", transformedVideos) // <<<--- CHECK THIS IN CONSOLE
-        setVideos(transformedVideos)
-
-        //Initialize episodes]
-        const initialEpisodeMap: Record<string, number> = {}
-        transformedVideos.forEach((v) => {
-          initialEpisodeMap[v._id] = v.currentEpisode || 1
-        })
-        setCurrentEpisodeMap(initialEpisodeMap)
-        // Check following status for each user
-        const followingStatuses = await Promise.all(
-          transformedVideos.map(async (v: Video) => {
-            if (v.user.id === user?.id) return { id: v.user.id, isFollowing: false }
-            const isFollowing = await api.isFollowing(user?.id || "", v.user.id)
-            return { id: v.user.id, isFollowing }
-          })
-        )
-
-        setFollowingMap(prev => ({
-          ...prev,
-          ...Object.fromEntries(followingStatuses.map(s => [s.id, s.isFollowing]))
-        }))
-      } catch (error) {
-        console.error("Error fetching videos:", error)
+      if (!token) {
+        console.error("No authentication token found");
+        setInitialLoading(false); // still stop loading1
+        return;
       }
-    }
-    fetchVideos()
-  }, [token, user?.id])
 
-  const filteredVideos = longVideoOnly
-    ? videos.filter(video => video.type === "long" && video.status === "PUBLISHED")
-    : videos.filter(video => video.type === "short" && video.status === "PUBLISHED")
+      try {
+        const transformedVideos = await fetchAndTransformVideos(token, 1, 1, longVideoOnly ? "long" : "short");
 
+        console.table(transformedVideos.map(video => ({
+          id: video._id,
+          Description: video.description,
+          URL: video.videoUrl
+        }))) // Log the transformed videos for debugging
+        transformedVideos.forEach((video: Video) => {
+          video.videoUrl = "/MockVideos/video.mp4";  //TEMPORARY: remove when videos are aded to database
+        });
+
+
+        setVideos(transformedVideos);
+        setOffset(transformedVideos.length);
+
+        const episodeMap: Record<string, number> = {};
+        transformedVideos.forEach((v) => {
+          episodeMap[v._id] = v.episodes?.[0]?.id ?? 1;
+        });
+        setCurrentEpisodeMap(episodeMap);
+
+        //const followingMap = await getFollowingMap(user?.id || "", transformedVideos);
+        //setFollowingMap((prev) => ({ ...prev, ...followingMap }));
+      } catch (error) {
+        console.error("Failed to fetch videos:", error);
+      } finally {
+        setInitialLoading(false); // ✅ stop loading regardless
+      }
+    };
+
+    setVideos([]);
+    setOffset(0);
+    setInitialLoading(true); // ✅ start loading
+    fetchVideos();
+  }, [token, user?.id, longVideoOnly]);
+
+  const filteredVideos = videos
   const handleVideoAction = async (action: string, videoId: string) => {
     if (!token) {
       console.error("No authentication token found")
-      //return
+      return
     }
 
     if (action === "like") {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}/like`, {
+        console.log("Sending like for video:", videoId, longVideoOnly ? "long" : "short");
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/like`, {
           method: 'POST',
           credentials: "include",
           headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
           },
+          body: JSON.stringify({
+            "videoId": videoId,
+            "type": longVideoOnly ? "long" : "short",
+          })
         })
 
         if (!response.ok) {
@@ -328,7 +237,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
     }
   }
 
-  // CORRECTED: handleFullscreen now uses playingStatesRef to find the active video
+  // HandleFullscreen functionality to toggle fullscreen mode
   const handleFullscreen = async () => {
     const currentlyPlayingVideoRef = videoRefs.current.find(ref => playingStatesRef.current[ref.id]);
     const currentVideoEl = currentlyPlayingVideoRef?.element;
@@ -543,7 +452,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
 
 
 
-  // Add click outside handler for comments, share options, AND description
+  //Click to open and close comments section,share and description menus.
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Close comments section
@@ -573,35 +482,23 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
     }
   }, [showFullDescriptionMap])
 
+  const DEFAULT_WORD_LIMIT = 15;
 
-  const handleFollow = async (targetUserId: string) => {
-    try {
-      const result = await api.followUser(targetUserId)
-      setFollowingMap(prev => ({
-        ...prev,
-        [targetUserId]: result.following
-      }))
-    } catch (error) {
-      console.error("Error following user:", error)
-    }
+  if (initialLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen text-white text-lg">
+        <Loader2Icon className="ml-2 animate-spin" />
+      </div>
+    );
   }
-
-  const toggleFullDescription = (videoId: string) => {
-    setShowFullDescriptionMap(prev => ({
-      ...prev,
-      [videoId]: !prev[videoId]
-    }));
-  };
-
-  const DEFAULT_WORD_LIMIT = 25;
 
   return (
     <>
       {/* Increased padding-bottom to account for mobile nav */}
       <div className={`h-screen overflow-y-scroll snap-y snap-mandatory ${isFullscreen ? "fullscreen-video" : ""} pt-14 pb-16`}>
 
-        {filteredVideos.map((video, index) => (
-          <div key={video._id} className="h-screen snap-start relative bg-black">
+        {filteredVideos.map((video: Video, index) => (
+          <div key={video._id} className="h-screen snap-start relative bg-black" ref={index === filteredVideos.length - 1 ? loadMoreRef : null}>
             {/* Video Background */}
             <div className="absolute inset-0">
               <video
@@ -666,7 +563,6 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                   className="bg-transparent text-white hover:text-primary rounded-full hover:bg-transparent p-1 shadow-none"
                 >
                   <img src='./assets/SidebarIcons/Comments.svg' />
-
                 </Button>
                 <span className="text-white text-xs font-medium mt-1">
                   {video.comments > 1000 ? `${(video.comments / 1000).toFixed(1)}K` : video.comments}
@@ -735,9 +631,8 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                     </Badge>
                   )}*/}
 
-                  {video.type === "long" && video.episodes && video.episodes.length > 0 && (
+                  {longVideoOnly && video.episodes && video.episodes.length > 0 && (
                     <>
-
                       <div className="w-full font-poppins">
 
                         {/* Top Row: Avatar + Name + Follow */}
@@ -778,7 +673,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                                   size="sm"
                                   className="text-white border border-white rounded-full px-2 py-0 text-xs font-medium hover:bg-white/10 h-auto min-h-0"
                                 >
-                                  Ep : {video.currentEpisode}
+                                  Ep : {currentEpisodeMap[video._id] || 1}
                                   <ChevronDown size={12} />
                                 </Button>
                               </DropdownMenuTrigger>
@@ -788,7 +683,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                                     key={episode.id}
                                     className="flex justify-between cursor-pointer"
                                     onClick={() => {
-                                      video.currentEpisode = episode.id;
+                                      currentEpisodeMap[video._id] === episode.id
                                       setCurrentEpisodeMap((prev) => ({
                                         ...prev,
                                         [video._id]: episode.id,
@@ -797,7 +692,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                                   >
                                     <span>Episode : {episode.id}</span>
                                     <span>
-                                      {video.currentEpisode == episode.id ? (
+                                      {currentEpisodeMap[video._id] === episode.id ? (
                                         <img src="./assets/MiscIcons/TickMark.svg" className="w-5 h-5" />
                                       ) : (
                                         ""
@@ -823,8 +718,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
 
                     </>
                   )}
-
-                  {video.type === "long" && !video.episodes && (
+                  {longVideoOnly && !(video.episodes ? video.episodes.length > 0 : false) && (
                     <>
                       <div className="w-full font-poppins">
 
@@ -862,23 +756,44 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                           </div>
 
                           {/* Right: Paid Badge */}
-                          {true && (
-                            <Badge
-                              variant="secondary"
-                              className="bg-transparent text-[#F1C40F] text-[16px] font-bold px-2 border-white rounded-md"
-                            >
-                              Paid
-                            </Badge>
+                          {video.type === "Paid" && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                  <Button onClick={() => setShowPaidMenu(!showPaidMenu)}
+                                variant="ghost"
+                                size="sm"
+                                className="text-[#F1C40F] border border-white rounded-half px-2 py-0.5 text-[16px] font-medium hover:bg-white/10 h-auto min-h-0"
+                              >
+                                Paid
+                              </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent side="top" className="w-95 mr-4 bg-transparent border-none rounded-[16px] p-0">
+                                <DropdownMenuItem
+                                  className="flex justify-between cursor-pointer font-poppins text-[18px] bg-[#222222] p-2"
+                                  onClick={() => { /* Add code here */ }}
+                                >
+                                  <span>Full Series</span>
+                                  <span>₹29</span>
+                                </DropdownMenuItem>
+                                <div className="w-full h-[1px] bg-white opacity-25"></div>
+                                <DropdownMenuItem
+                                  className="flex justify-between cursor-pointer font-poppins text-[18px] bg-[#222222] p-2"
+                                  onClick={() => { /* Add code here */ }}
+                                >
+                                  <span>Creator Pass</span>
+                                  <span>₹99/Month</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           )}
                         </div>
                       </div>
                     </>
                   )}
 
-                  {video.type === "short" && (
+                  {(!longVideoOnly) && (
                     <>
                       <div className="w-full font-poppins">
-
                         {/* Top Row: Avatar + Name + Follow */}
                         <div className="flex gap-3 mt-1 w-full px-1 items-center pb-1">
                           {/* Avatar */}
@@ -919,7 +834,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
               </div>
 
 
-              <div className="flex items-center space-x-2 mb-1">
+              {/*<div className="flex items-center space-x-2 mb-1">
 
                 {video.user.id && video.user.id !== user?.id && (
                   <Button
@@ -934,31 +849,30 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                     {followingMap[video.user.id] ? "Following" : "Follow"}
                   </Button>
                 )}
-              </div>
+              </div>*/}
 
               <div className="mb-1 text-left flex justify-between" ref={descriptionRef}>
                 {/* Show more button if the number of words exceeds the actual limit*/}
-                {video.description && video.description.split(/\s+/).length > DEFAULT_WORD_LIMIT && (
+                {video.description && (
                   <button
                     onClick={() => toggleFullDescription(video._id)}
                     className="text-xs text-white/80 hover:text-white mt-1 w-full pr-1">
-                      <div className={`relative overflow-hidden ${!showFullDescriptionMap[video._id] ? 'h-[3.5rem]' : ''}`}>
-  <p
-    className={`text-white text-[13px] text-left pb-1 leading-tight ${
-      !showFullDescriptionMap[video._id] ? 'fade-text' : ''
-    }`}
-  >
-    {showFullDescriptionMap[video._id]
-      ? video.description
-      : truncateWords(video.description, DEFAULT_WORD_LIMIT)}
-  </p>
-</div>
+                    <div className={`relative overflow-hidden ${!showFullDescriptionMap[video._id] ? 'h-auto max-h-[2rem]' : ''}`}>
+                      <p
+                        className={`text-white text-[13px] text-left pb-1 leading-tight ${!showFullDescriptionMap[video._id] ? 'fade-text' : ''
+                          }`}
+                      >
+                        {showFullDescriptionMap[video._id]
+                          ? video.description
+                          : truncateWords(video.description, DEFAULT_WORD_LIMIT)}
+                      </p>
+                    </div>
 
                   </button>
 
                 )}
                 {/* Fullscreen button for long videos */}
-                {video.type === "long" && (
+                {longVideoOnly && (
                   <div className="flex flex-col items-right z-50 mt-auto">
                     <Button
                       onClick={handleFullscreen}
@@ -970,7 +884,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
               </div>
 
               {/* Tags */}
-              {video.tags && video.tags.length > 0 && (
+              {/*video.tags && video.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {video.tags.map((tag, tagIndex) => ( // Changed index to tagIndex to avoid conflict
                     <span
@@ -981,11 +895,13 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                     </span>
                   ))}
                 </div>
-              )}
+              )*/}
             </div>
           </div>
         ))}
+
       </div>
+
 
       {/* Comments Section */}
       <div ref={commentsRef}>
@@ -1020,7 +936,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
       )}
 
       {/* Video More Menu */}
-      <VideoMoreMenu isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} videoId={selectedVideoId} videoRefs={{
+      <VideoMoreMenu isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} videoId={selectedVideoId} setVideoSpeed={setVideoSpeed}videoRefs={{
         current: Object.fromEntries(
           videoRefs.current.map(({ id, element }) => [id, element])
         ),

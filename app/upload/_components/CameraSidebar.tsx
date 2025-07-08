@@ -41,11 +41,11 @@ const CameraSidebar = ({
             setShowEffects(false);
           }}
         >
-          <img className="size-8" alt="timer" src="/assets/UploadPageIcons/timmer.png" />
+          <img className="size-8 focus:bg-red-500 rounded-full" alt="timer" src="/assets/UploadPageIcons/timmer.png" />
         </Button>
 
         {/* Music Button */}
-        <Button
+        {/* <Button
           className="bg-transparent"
           variant="link"
           onClick={() => {
@@ -55,10 +55,10 @@ const CameraSidebar = ({
           }}
         >
           <img className="size-7" alt="music" src="/assets/UploadPageIcons/Music.png" />
-        </Button>
+        </Button> */}
 
         {/* Effects Button */}
-        <Button
+        {/* <Button
           className="bg-transparent"
           variant="link"
           onClick={() => {
@@ -68,7 +68,7 @@ const CameraSidebar = ({
           }}
         >
           <img className="size-7" alt="effect" src="/assets/UploadPageIcons/effect.png" />
-        </Button>
+        </Button> */}
       </div>
 
       {/* Timer Slider */}

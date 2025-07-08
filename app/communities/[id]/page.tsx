@@ -80,7 +80,7 @@ export default function OthersCommunitiesPage() {
     <div className="min-h-screen bg-background">
       {/* Cover Image */}
       <div className="h-48 relative">
-        <ProfileTopbar  hashtag={true} name={profileData.name} handleLogout={handleLogout}/>
+        <ProfileTopbar  hashtag={true} name={profileData.name}/>
       </div>
 
       {/* Profile Info */}

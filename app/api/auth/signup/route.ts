@@ -3,7 +3,6 @@ import axios, { AxiosError } from "axios";
 import { cookies } from "next/headers";
 
 type SignupRequest = {
-  username: string;
   email: string;
   password: string;
 };
@@ -25,10 +24,10 @@ type ErrorResponse = {
 
 export async function POST(req: Request) {
   try {
-    const { username, email, password }: SignupRequest = await req.json();
+    const { email, password }: SignupRequest = await req.json();
 
     // Validate required fields
-    if (!username || !email || !password) {
+    if (!email || !password) {
       return NextResponse.json<ErrorResponse>(
         { error: "All fields are required" },
         { status: 400 }
@@ -55,7 +54,7 @@ export async function POST(req: Request) {
     // Call registration endpoint
     const { data } = await axios.post<AuthResponse | ErrorResponse>(
       `${process.env.BACKEND_URL}/auth/register`,
-      { username, email, password },
+      { email, password },
       {
         headers: { "Content-Type": "application/json" },
         timeout: 5000,
@@ -82,9 +81,7 @@ export async function POST(req: Request) {
       maxAge: 60 * 60 * 24 * 7, // 1 week
     });
 
-    // Return the same structure as login response
-    const { token, ...userData } = data;
-    return NextResponse.json<Omit<AuthResponse, "token">>(userData, {
+    return NextResponse.json<Omit<AuthResponse, "token">>(data, {
       status: 200,
     });
     

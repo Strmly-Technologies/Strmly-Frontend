@@ -1,158 +1,20 @@
 "use client"
 
+import { emojis, Comment, reply } from "@/types/Comments"
 import { useState, useEffect, useRef } from "react"
-import { Send, Smile, Heart, MoreVertical, ArrowBigUp, ArrowBigDown, IndianRupee, ChevronDown, SendHorizonal } from "lucide-react"
+import { Smile, ArrowBigUp, ArrowBigDown, IndianRupee, ChevronDown, SendHorizonal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuthStore } from "@/store/useAuthStore"
 import { timeStamp } from "console"
+import { mockComments as DebugComments} from "./debugTools/CommentGenerator"
+import { mockReplies as DebugReplies} from "./debugTools/ReplyGenerator"
 
-/*
-const mockComments = [
-  {
-    id: 1,
-    user: {
-      name: "John Doe",
-      username: "@johndoe",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    content: "This is such an amazing video! Really helpful content 🔥",
-    likes: 24,
-    timestamp: "2h ago",
-    replies: [
-      {
-        id: 11,
-        user: {
-          name: "Jane Smith",
-          username: "@janesmith",
-          avatar: "/placeholder.svg?height=32&width=32",
-        },
-        content: "I totally agree! The explanation was so clear.",
-        likes: 5,
-        timestamp: "1h ago",
-      },
-    ],
-  },
-  {
-    id: 2,
-    user: {
-      name: "Tech Enthusiast",
-      username: "@techenthusiast",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    content: "Can you make a video on advanced React patterns next?",
-    likes: 18,
-    timestamp: "3h ago",
-    replies: [],
-  },
-  {
-    id: 3,
-    user: {
-      name: "Developer Pro",
-      username: "@devpro",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    content: "The code examples were perfect! Thanks for sharing 💯",
-    likes: 31,
-    timestamp: "5h ago",
-    replies: [],
-  },
-]
-*/
+const mockComments: Comment[] = DebugComments
 
-const mockComments: Comment[] = Array.from({ length: 50 }, (_, i) => {
-  const videoId = (Math.floor(Math.random() * 4) + 1).toString();
-  const randomUserId = `user_${i + 1}`;
-  const usernames = ["sunny_dev", "alice123", "coderjoe", "techie22", "nomadguy", "janedoe", "pixie_dust"];
-  const names = ["Sunny", "Alice", "Joe", "Rita", "Karan", "Jane", "Pixie"];
-  const randomIndex = Math.floor(Math.random() * usernames.length);
+const mockReplies: reply[] = DebugReplies
 
-  return {
-    _id: `comment_${i + 1}`,
-    content: `This is a mock comment #${i + 1}`,
-    videoId: videoId,
-    repliesCount: Math.floor(Math.random() * 10),
-    timestamp: new Date(Date.now() - Math.floor(Math.random() * 100000000)).toISOString(),
-    donations: Math.floor(Math.random() * 100),
-    upVotes: Math.floor(Math.random() * 200),
-    downVotes: Math.floor(Math.random() * 50),
-    user: {
-      id: randomUserId,
-      name: names[randomIndex],
-      username: usernames[randomIndex],
-      avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${usernames[randomIndex]}`
-    },
-    upvoted: Math.random() > 0.7,
-    downvoted: Math.random() > 0.8,
-    replies: Math.floor(Math.random() * 50)
-  };
-});
-
-const mockReplies: reply[] = Array.from({ length: 100 }, (_, i) => {
-  const randomUserId = `user_${i + 1}`;
-  const usernames = ["sunny_dev", "alice123", "coderjoe", "techie22", "nomadguy", "janedoe", "pixie_dust"];
-  const names = ["Sunny", "Alice", "Joe", "Rita", "Karan", "Jane", "Pixie"];
-  const randomIndex = Math.floor(Math.random() * usernames.length);
-
-  return {
-    _id: `reply_${i + 1}`,
-    content: `This is a mock reply #${i + 1}`,
-    parentId: `comment_${Math.floor(Math.random() * 50) + 1}`, // Matches with your mockComments
-    timestamp: new Date(Date.now() - Math.floor(Math.random() * 100000000)).toISOString(),
-    donations: Math.floor(Math.random() * 50),
-    upVotes: Math.floor(Math.random() * 100),
-    downVotes: Math.floor(Math.random() * 30),
-    user: {
-      id: randomUserId,
-      name: names[randomIndex],
-      username: usernames[randomIndex],
-      avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${usernames[randomIndex]}`,
-    },
-    upvoted: Math.random() > 0.7,
-    downvoted: Math.random() > 0.8,
-  };
-});
-
-
-const emojis = ["😀", "😂", "😍", "🔥", "💯", "👍", "❤️", "🎉", "🚀", "💪", "��", "🙌"]
-
-interface Comment {
-  _id: string
-  content: string
-  videoId: string
-  repliesCount: number
-  timestamp: string
-  donations: number
-  upVotes: number
-  downVotes: number
-  user: {
-    id: string
-    name: string
-    avatar: string
-  }
-  upvoted?: boolean
-  downvoted?: boolean
-  replies: number
-}
-
-interface reply {
-  _id: string
-  content: string
-  parentId: string
-  timestamp: string
-  donations: number
-  upVotes: number
-  downVotes: number
-  user: {
-    id: string
-    name: string
-    username: string
-    avatar: string
-  }
-  upvoted?: boolean
-  downvoted?: boolean
-}
 interface CommentsSectionProps {
   isOpen: boolean
   onClose: () => void
@@ -190,10 +52,15 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
   }, [])
 
   const fetchComments = async () => {
-    //if (!token || !videoId) return
+    if (!token || !videoId){
+      console.warn("No token or videoId provided, using mock comments")
+      setComments(mockComments)
+      return
+    } 
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}/comments`, {
+        method: "GET",
         credentials: "include",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -201,9 +68,9 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
         },
       })
 
-      //if (!response.ok) {
-      //  throw new Error("Failed to fetch comments")
-      //}
+      if (!response.ok) {
+        throw new Error("Failed to fetch comments")
+      }
 
       const data = await response.json()
       setComments(data)
@@ -225,9 +92,9 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
     }
 
     try {
-      {/*
       setLoadingReplies(commentID)
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}/comments/${commentID}/replies`, {
+        method: "GET",
         credentials: "include",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -236,17 +103,15 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
       })
 
       const data = await response.json()
-      setOpenReplies(prev => ({ ...prev, [commentID]: data }))*/}
-      
-    setLoadingReplies(commentID)
+      setOpenReplies(prev => ({ ...prev, [commentID]: data }))
 
     // Use mock data
-    const filteredReplies = mockReplies.filter(reply => reply.parentId === commentID)
-
+    //const filteredReplies = mockReplies.filter(reply => reply.parentId === commentID)
+    //setLoadingReplies(commentID)
     // Simulate network delay (optional)
-    await new Promise(res => setTimeout(res, 500))
+    //await new Promise(res => setTimeout(res, 500))
+    //setOpenReplies(prev => ({ ...prev, [commentID]: filteredReplies }))
 
-    setOpenReplies(prev => ({ ...prev, [commentID]: filteredReplies }))
     } catch (error) {
       console.error("Error fetching replies:", error)
     } finally {
@@ -260,14 +125,17 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
 
     setIsLoading(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}/comment`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/comment`, {
         method: 'POST',
         credentials: "include",
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ content: comment }),
+        body: JSON.stringify({
+          videoId,
+          content: comment
+        }),
       })
 
 
