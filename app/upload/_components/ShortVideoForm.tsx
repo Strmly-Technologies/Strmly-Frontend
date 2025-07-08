@@ -45,12 +45,12 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 type ShortVideoFormProps = {
+  videoFile: File | null; 
   videoURL: string;
-  videoBlob: Blob;
   onBack: () => void;
 };
 
-const ShortVideoForm = ({ videoURL, videoBlob, onBack }: ShortVideoFormProps) => {
+const ShortVideoForm = ({ videoFile, videoURL, onBack }: ShortVideoFormProps) => {
   const [showCreateCommunityFields, setShowCreateCommunityFields] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -78,7 +78,7 @@ const ShortVideoForm = ({ videoURL, videoBlob, onBack }: ShortVideoFormProps) =>
     
     try {
       const formData = new FormData();
-      formData.append("video", videoBlob, "short-video.mp4");
+      
       formData.append("description", data.description);
       formData.append("community", data.community);
       if (data.tags) formData.append("tags", data.tags);
@@ -89,8 +89,14 @@ const ShortVideoForm = ({ videoURL, videoBlob, onBack }: ShortVideoFormProps) =>
       }
 
       // Append additional data to FormData
-        formData.append("user", JSON.stringify(user));
-
+      formData.append("user", JSON.stringify(user));
+      if (videoFile) {
+        formData.append("video", videoFile);
+      } else {
+        toast.error("No video file found to upload");
+        return;
+      }
+      
       const response = await fetch("/api/upload/long", {
         method: "POST",
         body: formData,

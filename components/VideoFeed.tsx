@@ -70,65 +70,81 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
 
 
   useEffect(() => {
-  videoRefs.current.forEach((ref) => {
-    if (ref.element) {
-      ref.element.playbackRate = videoSpeed;
-    }
-  });
-}, [videoSpeed, videos]);
+    const localRefs = [...videoRefs.current]; // clone it
 
+    localRefs.forEach((ref) => {
+      if (ref.element) {
+        ref.element.playbackRate = videoSpeed;
+      }
+    });
+
+    return () => {
+      localRefs.forEach((ref) => {
+        if (ref.element) {
+          // safely clean up
+        }
+      });
+    };
+  }, [videoSpeed, videos]);
+  
+
+  const loadMore = useCallback(async () => {
+    if (loading || !token || reachedEnd) return;
+    setLoading(true);
+
+    try {
+      const page = offset + 1;
+      const newVideos = await fetchAndTransformVideos(
+        token,
+        page,
+        1,
+        longVideoOnly ? "long" : "short"
+      );
+
+      if (newVideos.length === 0) {
+        console.log("No more videos to load");
+        setReachedEnd(true);
+      }
+
+      console.log("transformed data:", newVideos);
+      setVideos((prev) => [...prev, ...newVideos]);
+      setOffset((prev) => prev + newVideos.length);
+
+      const episodeMap: Record<string, number> = {};
+      newVideos.forEach((v) => {
+        v.videoUrl = "/MockVideos/video.mp4";
+        const defaultEpId = v.episodes?.[0]?.id ?? 1;
+        episodeMap[v._id] = defaultEpId;
+      });
+      setCurrentEpisodeMap((prev) => ({ ...prev, ...episodeMap }));
+
+      const followingMap = await getFollowingMap(user?.id || "", newVideos);
+      setFollowingMap((prev) => ({ ...prev, ...followingMap }));
+    } catch (err) {
+      console.error("Failed to load more videos", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [loading, token, reachedEnd, offset, longVideoOnly, user?.id]); // ← add all dependencies
 
   useEffect(() => {
-    console.log("Load more videos triggered")
-    if (!loadMoreRef.current || loading) return
+    if (!loadMoreRef.current || loading) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          console.log("Load more videos triggered")
-          loadMore()
+          console.log("Load more videos triggered");
+          loadMore();
         }
       },
       { threshold: 1.0, rootMargin: "200px" }
-    )
+    );
 
-    observer.observe(loadMoreRef.current)
+    observer.observe(loadMoreRef.current);
 
-    return () => observer.disconnect()
-  }, [loadMoreRef, loading, playingStates])
+    return () => observer.disconnect();
+  }, [loadMoreRef, loading, loadMore]);
 
-  const loadMore = async () => {
-    if (loading || !token || reachedEnd) return
-    setLoading(true)
-
-    try {
-      const page = offset + 1
-      const newVideos = await fetchAndTransformVideos(token, page, 1, longVideoOnly ? "long" : "short")
-      if (newVideos.length === 0) {
-        console.log("No more videos to load")
-        setReachedEnd(true)
-      }
-      console.log("transformed data:", newVideos);
-      setVideos((prev) => [...prev, ...newVideos])
-      setOffset((prev) => prev + newVideos.length)
-
-      const episodeMap: Record<string, number> = {}
-      newVideos.forEach((v) => {
-        // If episodes exist, default to the first one’s ID
-        v.videoUrl = "/MockVideos/video.mp4";  //TEMPORARY: remove when videos are aded to database
-        const defaultEpId = v.episodes?.[0]?.id ?? 1
-        episodeMap[v._id] = defaultEpId
-      })
-      setCurrentEpisodeMap((prev) => ({ ...prev, ...episodeMap }))
-
-      const followingMap = await getFollowingMap(user?.id || "", newVideos)
-      setFollowingMap((prev) => ({ ...prev, ...followingMap }))
-    } catch (err) {
-      console.error("Failed to load more videos", err)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // Ref to hold the current playingStates, so it's stable within useCallback
   const playingStatesRef = useRef(playingStates);
@@ -373,18 +389,20 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
   }, [setPlayingStates]); // setPlayingStates is a stable reference
 
   useEffect(() => {
+    const refsSnapshot = [...videoRefs.current]; // take snapshot once
+
     const observer = new IntersectionObserver(intersectionObserverCallback, {
       threshold: 0.5, // Trigger when 50% of the video is visible
     })
 
-    videoRefs.current.forEach((ref) => {
+    refsSnapshot.forEach((ref) => {
       if (ref.element) {
-        observer.observe(ref.element)
+        observer.observe(ref.element);
       }
-    })
+    });
 
     return () => {
-      videoRefs.current.forEach((ref) => {
+      refsSnapshot.forEach((ref) => {
         if (ref.element) {
           observer.unobserve(ref.element)
         }
@@ -550,7 +568,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                   onClick={() => handleVideoAction("like", video._id)}
                   className={`bg-transparent text-white rounded-full hover:bg-transparent p-1 ${video.isLiked ? 'text-red-500' : 'hover:text-red-500'} shadow-none`}
                 >
-                  <img src='./assets/SidebarIcons/Like.svg' className={video.isLiked ? 'fill-current' : ''} />
+                  <img alt="icon" src='./assets/SidebarIcons/Like.svg' className={video.isLiked ? 'fill-current' : ''} />
                 </Button>
                 <span className="text-white text-xs font-medium mt-1">
                   {video.likes > 1000 ? `${(video.likes / 1000).toFixed(0)}K` : video.likes}
@@ -562,7 +580,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                   onClick={() => handleVideoAction("comment", video._id)}
                   className="bg-transparent text-white hover:text-primary rounded-full hover:bg-transparent p-1 shadow-none"
                 >
-                  <img src='./assets/SidebarIcons/Comments.svg' />
+                  <img alt="icon" src='./assets/SidebarIcons/Comments.svg' />
                 </Button>
                 <span className="text-white text-xs font-medium mt-1">
                   {video.comments > 1000 ? `${(video.comments / 1000).toFixed(1)}K` : video.comments}
@@ -577,7 +595,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                   }}
                   className="bg-transparent text-white hover:text-primary rounded-full hover:bg-transparent p-1 shadow-none"
                 >
-                  <img src='./assets/SidebarIcons/Share.svg' />
+                  <img alt="icon" src='./assets/SidebarIcons/Share.svg' />
                 </Button>
                 <span className="text-white text-xs font-medium mt-1">{video.shares}</span>
               </div>
@@ -587,7 +605,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                   onClick={() => handleVideoAction("save", video._id)}
                   className="bg-transparent text-white hover:text-primary rounded-full hover:bg-transparent p-1 shadow-none"
                 >
-                  <img src='./assets/SidebarIcons/Rupee.svg' />
+                  <img alt="icon" src='./assets/SidebarIcons/Rupee.svg' />
                 </Button>
                 <span className="text-white text-xs font-medium mt-1 shadow-none">
                   {video.earnings > 1000 ? `${(video.earnings / 1000).toFixed(1)}K` : video.earnings}
@@ -600,7 +618,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                   onClick={() => handleVideoAction("more", video._id)}
                   className="bg-transparent text-white hover:text-primary rounded-full hover:bg-transparent p-1 shadow-none"
                 >
-                  <img src='./assets/SidebarIcons/More.svg' />
+                  <img alt="icon" src='./assets/SidebarIcons/More.svg' />
                 </Button>
               </div>
             </div>
@@ -615,7 +633,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                       <Badge variant="secondary" className="bg-transparent text-white text-[20px] flex gap-3 font-poppins">
                         <div className="flex">
                           <span className="text-[#F1C40F]">#</span>{video.community}
-                        </div><img src='/assets/MiscIcons/FollowButton.svg' />
+                        </div><img alt="icon" src='/assets/MiscIcons/FollowButton.svg' />
                       </Badge>
                     )}
 
@@ -683,17 +701,18 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                                     key={episode.id}
                                     className="flex justify-between cursor-pointer"
                                     onClick={() => {
-                                      currentEpisodeMap[video._id] === episode.id
-                                      setCurrentEpisodeMap((prev) => ({
-                                        ...prev,
-                                        [video._id]: episode.id,
-                                      }));
+                                      if (currentEpisodeMap[video._id] === episode.id) {
+                                        setCurrentEpisodeMap((prev) => ({
+                                          ...prev,
+                                          [video._id]: episode.id,
+                                        }));
+                                      }
                                     }}
                                   >
                                     <span>Episode : {episode.id}</span>
                                     <span>
                                       {currentEpisodeMap[video._id] === episode.id ? (
-                                        <img src="./assets/MiscIcons/TickMark.svg" className="w-5 h-5" />
+                                        <img alt="icon" src="./assets/MiscIcons/TickMark.svg" className="w-5 h-5" />
                                       ) : (
                                         ""
                                       )}
@@ -878,7 +897,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                       onClick={handleFullscreen}
                       className="bg-transparent text-white hover:text-primary rounded-full p-1"
                     >
-                      <img src='./assets/MiscIcons/Fullscreen.svg' className="w-4 h-4" />
+                      <img alt="icon" src='./assets/MiscIcons/Fullscreen.svg' className="w-4 h-4" />
                     </Button>
                   </div>)}
               </div>

@@ -2,32 +2,15 @@
 
 import { useState, useEffect } from "react";
 import {
-  Settings,
-  Grid,
-  Video,
-  Bookmark,
   MapPin,
   LinkIcon,
-  Calendar,
-  Users,
-  BarChart3,
-  Edit,
-  History,
-  List,
-  LogOut,
-  Heart,
-  Eye,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import Image from "next/image";
-import Link from "next/link";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import UserList from "@/components/UserList";
 import ProfileTopbar from "./_components/ProfileTopbar";
 import { toast } from "sonner";
 

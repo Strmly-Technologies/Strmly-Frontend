@@ -1,7 +1,7 @@
 "use client"
 
 import { emojis, Comment, reply } from "@/types/Comments"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Smile, ArrowBigUp, ArrowBigDown, IndianRupee, ChevronDown, SendHorizonal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -31,53 +31,54 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
   const token = useAuthStore((state) => state.token)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (isOpen && videoId) {
-      fetchComments()
+  // 👇 Wrap it in useCallback
+  const fetchComments = useCallback(async () => {
+    if (!token || !videoId) {
+      console.warn("No token or videoId provided, using mock comments");
+      setComments(mockComments);
+      return;
     }
-  }, [isOpen, videoId])
-
-  // Add click outside handler for emoji picker
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
-        setShowEmojiPicker(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
-
-  const fetchComments = async () => {
-    if (!token || !videoId){
-      console.warn("No token or videoId provided, using mock comments")
-      setComments(mockComments)
-      return
-    } 
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}/comments`, {
         method: "GET",
         credentials: "include",
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch comments")
+        throw new Error("Failed to fetch comments");
       }
 
-      const data = await response.json()
-      setComments(data)
+      const data = await response.json();
+      setComments(data);
     } catch (error) {
-      console.error("Error fetching comments:", error)
+      console.error("Error fetching comments:", error);
     }
-  }
+  }, [token, videoId]); // ✅ Add necessary dependencies
+
+
+  useEffect(() => {
+    if (isOpen && videoId) {
+      fetchComments();
+    }
+  }, [isOpen, videoId, fetchComments]); // ✅ now stable
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []); // ✅ fetchComments not needed here
 
 
   const fetchReplies = async (commentID: string) => {

@@ -4,14 +4,15 @@ import ShortVideoForm from "./ShortVideoForm";
 
 type Props = {
   videoURL: string;
+  videoFile: File | null;
   onReset: () => void;
 };
 
-const VideoPreview = ({ videoURL, onReset }: Props) => {
+const VideoPreview = ({ videoFile, videoURL, onReset }: Props) => {
   const [showForm, setShowForm] = useState(false);
 
   if (showForm) {
-    return <ShortVideoForm videoURL={videoURL} onBack={() => setShowForm(false)} />;
+    return <ShortVideoForm videoFile={videoFile} videoURL={videoURL} onBack={() => setShowForm(false)} />;
   }
 
   return (

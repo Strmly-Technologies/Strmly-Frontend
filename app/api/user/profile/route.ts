@@ -1,3 +1,7 @@
+// At the top of the file
+export const dynamic = "force-dynamic";
+
+
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
