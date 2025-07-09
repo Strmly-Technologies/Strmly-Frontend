@@ -23,7 +23,7 @@ type AuthStore = {
   user: User | null
   token: string | null
   isLoggedIn: boolean
-  login: (token: string) => Promise<void>
+  login: (token: string, user?: User) => Promise<void>
   logout: () => void
   setUser: (user: User) => void
 }
@@ -33,7 +33,7 @@ export const useAuthStore = create<AuthStore>()(
     (set) => ({
       user: null,
       token: null,
-      isLoggedIn: true,
+      isLoggedIn: false,
       login: async (token: string) => {
         set({ token, isLoggedIn: true })
       },

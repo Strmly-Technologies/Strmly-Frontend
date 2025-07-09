@@ -17,7 +17,7 @@ const CountdownTimer = ({ seconds, onComplete }: Props) => {
     }
     const timer = setTimeout(() => setTime((t) => t - 1), 1000)
     return () => clearTimeout(timer)
-  }, [time])
+  }, [time, onComplete])
 
   return <div>{time}</div>
 }

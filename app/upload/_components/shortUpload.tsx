@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import CountdownTimer from "./CountdownTimer";
 import VideoPreview from "./VideoPreview";
@@ -16,6 +16,8 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [chunks, setChunks] = useState<Blob[]>([]);
+
+  const [videoFile, setVideoFile] = useState<File | null>(null);
 
   const [isRecording, setIsRecording] = useState(false);
   const [videoURL, setVideoURL] = useState<string | null>(null);
@@ -33,6 +35,12 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  
+  const stopCamera = useCallback(() => {
+    stream?.getTracks().forEach((track) => track.stop());
+    setStream(null);
+  }, [stream]);
+  
   useEffect(() => {
     const startCamera = async () => {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -47,12 +55,7 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
     return () => {
       stopCamera();
     };
-  }, []);
-
-  const stopCamera = () => {
-    stream?.getTracks().forEach((track) => track.stop());
-    setStream(null);
-  };
+  }, [stopCamera]);
 
   const startRecording = () => {
     if (!stream) return;
@@ -67,9 +70,15 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
     recorder.onstop = () => {
       const blob = new Blob(localChunks, { type: "video/webm" });
       const url = URL.createObjectURL(blob);
+
+      // ✅ Convert blob to File for upload
+      const file = new File([blob], "recorded-video.webm", { type: "video/webm" });
+
       setVideoURL(url);
+      setVideoFile(file);
       setChunks([]);
     };
+
 
     recorder.start();
     setChunks(localChunks);
@@ -101,6 +110,7 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
 
   const reset = () => {
     setVideoURL(null);
+    setVideoFile(null);
     setIsRecording(false);
     setCountdown(false);
     setProgress(0);
@@ -225,7 +235,7 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
         </>
       ) : (
         <div className="top-0 h-full">
-          <VideoPreview videoURL={videoURL} onReset={reset} />
+          <VideoPreview videoFile={videoFile} videoURL={videoURL} onReset={reset} />
         </div>
       )}
     </div>
