@@ -1,29 +1,28 @@
 "use client"
 
+import { upvoteComment, downvoteComment, giftComment } from "./api/CommentActions"
 import { emojis, Comment, reply } from "@/types/Comments"
-
 import { useState, useEffect, useRef, useCallback } from "react"
-
-import { Smile, ArrowBigUp, ArrowBigDown, IndianRupee, ChevronDown, SendHorizonal } from "lucide-react"
+import { Smile, ArrowBigUp, ArrowBigDown, IndianRupee, ChevronDown, SendHorizonal, ReplyIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuthStore } from "@/store/useAuthStore"
 import { timeStamp } from "console"
-import { mockComments as DebugComments} from "./debugTools/CommentGenerator"
-import { mockReplies as DebugReplies} from "./debugTools/ReplyGenerator"
+import { mockComments as DebugComments } from "./debugTools/CommentGenerator"
+import { mockReplies as DebugReplies } from "./debugTools/ReplyGenerator"
 
 const mockComments: Comment[] = DebugComments
 
-const mockReplies: reply[] = DebugReplies
 
 interface CommentsSectionProps {
   isOpen: boolean
   onClose: () => void
   videoId: string | null
+  longVideosOnly: boolean
 }
 
-export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSectionProps) {
+export default function CommentsSection({ isOpen, onClose, videoId, longVideosOnly }: CommentsSectionProps) {
   const [comments, setComments] = useState<Comment[]>([])
   const [comment, setComment] = useState("")
   const [openReplies, setOpenReplies] = useState<{ [key: string]: reply[] }>({})
@@ -42,7 +41,7 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}/comments`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/videos/${videoId}/comments?videoType=${longVideosOnly ? "long" : "short"}`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -54,8 +53,8 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
       if (!response.ok) {
         throw new Error("Failed to fetch comments");
       }
-
       const data = await response.json();
+      console.log("Fetched comments", data)
       setComments(data);
     } catch (error) {
       console.error("Error fetching comments:", error);
@@ -96,7 +95,7 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
 
     try {
       setLoadingReplies(commentID)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${videoId}/comments/${commentID}/replies`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/videos/${videoId}/comments/${commentID}/replies`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -107,13 +106,31 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
 
       const data = await response.json()
       setOpenReplies(prev => ({ ...prev, [commentID]: data }))
+    } catch (error) {
+      console.error("Error fetching replies:", error)
+    } finally {
+      setLoadingReplies(null)
+    }
+  }
 
-    // Use mock data
-    //const filteredReplies = mockReplies.filter(reply => reply.parentId === commentID)
-    //setLoadingReplies(commentID)
-    // Simulate network delay (optional)
-    //await new Promise(res => setTimeout(res, 500))
-    //setOpenReplies(prev => ({ ...prev, [commentID]: filteredReplies }))
+
+  const AddReply = async (commentID: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/videos/${videoId}/comments/${commentID}/replies`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          "content": "This is a reply",
+          "videoType": longVideosOnly ? "long" : "short"
+        }),
+      })
+
+      const data = await response.json()
+      console.log("Reply added:", data)
 
     } catch (error) {
       console.error("Error fetching replies:", error)
@@ -122,6 +139,81 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
     }
   }
 
+
+  const handleUpvote = async (commentID: string) => {
+    try {
+      const data = await upvoteComment({
+        token,
+        commentId: commentID,
+        videoId,
+        videoType: longVideosOnly ? "long" : "short"
+      });
+
+      setComments(prev =>
+        prev.map(comment =>
+          comment._id === commentID
+            ? { ...comment, upvotes: data.upvotes, downvotes: data.downvotes }
+            : comment
+        )
+      );
+    } catch (err) {
+      console.error("Upvote error:", err);
+    }
+  };
+
+  const handleDownvote = async (commentID: string) => {
+    try {
+      const data = await downvoteComment({
+        token,
+        commentId: commentID,
+        videoId,
+        videoType: longVideosOnly ? "long" : "short"
+      });
+
+      setComments(prev =>
+        prev.map(comment =>
+          comment._id === commentID
+            ? { ...comment, upvotes: data.upvotes, downvotes: data.downvotes }
+            : comment
+        )
+      );
+    } catch (err) {
+      console.error("Downvote error:", err);
+    }
+  };
+
+  const handleGiftComment = async (commentID: string) => {
+    const amount = prompt("Enter amount to gift:");
+    const giftNote = prompt("Add a note (optional):");
+
+    if (!amount || isNaN(Number(amount))) {
+      alert("Invalid amount.");
+      return;
+    }
+
+    try {
+      await giftComment({
+        token,
+        commentId: commentID,
+        videoId,
+        videoType: longVideosOnly ? "long" : "short",
+        amount: Number(amount),
+        giftNote: giftNote || ""
+      });
+
+      alert("Gift sent!");
+      setComments(prev =>
+        prev.map(comment =>
+          comment._id === commentID
+            ? { ...comment, donations: comment.donations + Number(amount) }
+            : comment
+        )
+      );
+    } catch (err) {
+      console.error("Gift error:", err);
+      alert("Failed to gift comment.");
+    }
+  };
 
   const handleSendComment = async () => {
     if (!token || !videoId || !comment.trim()) return
@@ -137,7 +229,8 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
         },
         body: JSON.stringify({
           videoId,
-          content: comment
+          "videoType": longVideosOnly ? "long" : "short",
+          "comment": comment
         }),
       })
 
@@ -145,7 +238,7 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
       if (!response.ok) {
         throw new Error("Failed to post comment")
       }
-
+      console.log(response)
       const newComment = await response.json()
       setComments(prev => [newComment, ...prev])
       setComment("")
@@ -173,7 +266,7 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
 
       {/* Comments List */}
       <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 lg:space-y-4 bg-[#1A1A1A]">
-        {mockComments.map((comment) => (
+        {comments.map((comment) => (
           <div key={comment._id} className="space-y-2">
             {/* Main Comment */}
             {comment.videoId == videoId ?
@@ -191,11 +284,16 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
                     </span>
                   </div>
                   <p className="text-sm lg:text-base leading-relaxed">{comment.content}</p>
-                  <button onClick={() => fetchReplies(comment._id)} className="flex items-center" >
-                    <span className="text-xs text-muted-foreground ">
-                      View replies ({comment.replies})</span>
-                    <ChevronDown />
-                  </button>
+                  <div className="flex">
+                    <button onClick={() => fetchReplies(comment._id)} className="flex items-center" >
+                      <span className="text-xs text-muted-foreground ">
+                        View replies ({comment.replies})</span>
+                      <ChevronDown />
+                    </button>
+                    <button onClick={() => AddReply(comment._id)} className="flex items-center" >
+                      <ReplyIcon />
+                    </button>
+                  </div>
                   {openReplies[comment._id] && (
                     <div className="ml-10 space-y-2 mt-2">
                       {openReplies[comment._id].length === 0 ? (
@@ -227,14 +325,14 @@ export default function CommentsSection({ isOpen, onClose, videoId }: CommentsSe
                   )}
                 </div>
                 <div className="flex">
-                  <button className="flex flex-col items-center pt-1">
+                  <button onClick={() => handleGiftComment(comment._id)} className="flex flex-col items-center pt-1">
                     <IndianRupee size={18} />{comment.donations}
                   </button>
-                  <button className="flex flex-col items-center">
-                    <ArrowBigUp size={24} />{comment.upVotes}
+                  <button onClick={() => handleUpvote(comment._id)} className="flex flex-col items-center">
+                    <ArrowBigUp size={24} />{comment.upvotes}
                   </button>
-                  <button className="flex flex-col items-center">
-                    <ArrowBigDown size={24} />{comment.downVotes}
+                  <button onClick={() => handleDownvote(comment._id)} className="flex flex-col items-center">
+                    <ArrowBigDown size={24} />{comment.downvotes}
                   </button>
                 </div>
               </div> : ''}</div>

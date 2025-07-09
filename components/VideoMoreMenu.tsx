@@ -50,6 +50,8 @@ export default function VideoMoreMenu({ isOpen, onClose, videoId, videoRefs, set
           </Button>
         </div>
 
+        <Separator />
+
         {/* Speed Settings */}
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
@@ -71,14 +73,6 @@ export default function VideoMoreMenu({ isOpen, onClose, videoId, videoRefs, set
             </SelectContent>
           </Select>
         </div>
-
-        <Separator />
-
-        {/* Download Option */}
-        <Button variant="outline" className="w-full justify-start text-sm lg:text-base py-2 lg:py-3">
-          <Download size={14} className="mr-2 lg:w-4 lg:h-4" />
-          Download Video
-        </Button>
       </div>
     </div>
   )

@@ -23,24 +23,25 @@ export const fetchVideos = async (token : string) => {
   }
 }
 
-export const toggleLike = async (token : string, videoId : string) => {
+export const toggleLike = async (token: string, videoId: string, videoType: string) => {
   try {
-    const response = await fetch(`${API_URL}/api/videos/${videoId}/like`, {
+    const response = await fetch(`${API_URL}/api/v1/interaction/like`, {
       method: "POST",
       credentials: "include",
       headers: {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-    })
+      body: JSON.stringify({ videoId, videoType }),
+    });
 
     if (!response.ok) {
-      throw new Error("Failed to toggle like")
+      throw new Error("Failed to toggle like");
     }
 
-    return await response.json() // { liked: true/false }
+    return await response.json(); // { liked: true/false }
   } catch (error) {
-    console.error("Error toggling like:", error)
-    throw error
+    console.error("Error toggling like:", error);
+    throw error;
   }
-}
+};

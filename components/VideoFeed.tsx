@@ -13,6 +13,7 @@ import VideoMoreMenu from "./VideoMoreMenu"
 import { useAuthStore } from "@/store/useAuthStore"
 import { FaWhatsapp, FaInstagram, FaTelegram, FaSnapchat, FaTwitter, FaFacebook } from "react-icons/fa"
 import { vi } from "zod/v4/locales"
+import { toggleLike } from "./api/VideoFeed"
 
 const socialPlatforms = [
   { name: "WhatsApp", icon: FaWhatsapp, color: "text-green-500" },
@@ -45,6 +46,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
   const [loading, setLoading] = useState(false)
   const [videoSpeed, setVideoSpeed] = useState(1)
   const [showFullDescriptionMap, setShowFullDescriptionMap] = useState<Record<string, boolean>>({});
+  const [isLiked, setIsLiked] = useState<Record<string, boolean>>({});
   const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({})
   const { handleFollow, toggleFullDescription } = useVideoActions(setFollowingMap, setShowFullDescriptionMap);
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
@@ -115,6 +117,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
         v.videoUrl = "/MockVideos/video.mp4";
         const defaultEpId = v.episodes?.[0]?.id ?? 1;
         episodeMap[v._id] = defaultEpId;
+        isLiked[v._id] = v.isLiked || false; // Initialize isLiked state
       });
       setCurrentEpisodeMap((prev) => ({ ...prev, ...episodeMap }));
 
@@ -205,41 +208,35 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
       return
     }
 
-    if (action === "like") {
-      try {
-        console.log("Sending like for video:", videoId, longVideoOnly ? "long" : "short");
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/like`, {
-          method: 'POST',
-          credentials: "include",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            "videoId": videoId,
-            "type": longVideoOnly ? "long" : "short",
-          })
-        })
+if (action === "like" && !isLiked[videoId]) {
+  try {
+    console.log("Sending like for video:", videoId, longVideoOnly ? "long" : "short");
 
-        if (!response.ok) {
-          throw new Error("Failed to toggle like")
-        }
+    const data = await toggleLike(token, videoId, longVideoOnly ? "long" : "short");
 
-        const data = await response.json()
+    console.log(data);
 
-        // Update the video's like count and liked state
-        setVideos(prevVideos =>
-          prevVideos.map(video =>
-            video._id === videoId
-              ? {
-                ...video,
-                likes: data.liked ? video.likes + 1 : video.likes - 1,
-                isLiked: data.liked
-              }
-              : video
-          )
-        )
-      } catch (error) {
+    setVideos(prevVideos =>
+      prevVideos.map(video =>
+        video._id === videoId
+          ? {
+              ...video,
+              likes: data.likes,
+              isLiked: true,
+            }
+          : video
+      )
+    );
+    console.log(videos.map(video =>
+        video._id === videoId
+          ? {
+              ...video,
+              likes: data.likes,
+              isLiked: true,
+            }
+          : video
+      ))
+} catch (error) {
         console.error("Error toggling like:", error)
       }
     } else if (action === "comment") {
@@ -925,7 +922,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
 
       {/* Comments Section */}
       <div ref={commentsRef}>
-        <CommentsSection isOpen={showComments} onClose={() => setShowComments(false)} videoId={selectedVideoId} />
+        <CommentsSection isOpen={showComments} onClose={() => setShowComments(false)} videoId={selectedVideoId} longVideosOnly={longVideoOnly}/>
       </div>
 
       {/* Share Options */}

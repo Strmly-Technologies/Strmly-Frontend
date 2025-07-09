@@ -10,8 +10,8 @@
     parentId: `comment_${Math.floor(Math.random() * 50) + 1}`, // Matches with your mockComments
     timestamp: new Date(Date.now() - Math.floor(Math.random() * 100000000)).toISOString(),
     donations: Math.floor(Math.random() * 50),
-    upVotes: Math.floor(Math.random() * 100),
-    downVotes: Math.floor(Math.random() * 30),
+    upvotes: Math.floor(Math.random() * 100),
+    downvotes: Math.floor(Math.random() * 30),
     user: {
       id: randomUserId,
       name: names[randomIndex],

@@ -118,16 +118,20 @@ export function useVideoActions(
 
 
 
-export const fetchAndTransformNotifications = async (token: string): Promise<Notification[]> => {
+export const fetchAndTransformNotifications = async (token: string, activeTab: string): Promise<Notification[]> => {
   const API_URL = process.env.NEXT_PUBLIC_API_URL
 
   const response = await fetch(`${API_URL}/api/v1/user/notifications`, {
-    method: "GET",
+    method: "POST",
     credentials: "include",
     headers: {
       "Authorization": `Bearer ${token}`,
       "Content-Type": "application/json",
-    }
+    },
+    body: JSON.stringify(
+      { 
+        "group":activeTab == "revenue" ? "revenue" : "non-revenue", 
+      })
   })
 
   if (!response.ok) {
