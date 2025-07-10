@@ -15,6 +15,7 @@ export const SaveVideo = async ({ token, commentId, videoId, videoType }: any) =
 
   if (!res.ok) throw new Error("Failed to save video");
   return await res.json();
+
 };
 
 export const UnSaveVideo = async ({ token, commentId, videoId, videoType }: any) => {
@@ -58,4 +59,5 @@ export const SaveStatus = async ({ token, commentId, videoId, videoType }: any) 
   const data = await res.json();
   console.log("Save status response:", data);
   return data;
+
 };

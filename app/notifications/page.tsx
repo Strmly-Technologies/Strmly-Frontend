@@ -63,6 +63,26 @@ export default function LongVideosPage() {
           </div>
         </div>
       </div>
+      {/* Tabs */}
+      <div className="bg-black min-h-screen text-white pl-3">
+        {/* Custom Tab Buttons */}
+        <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
+          <div className="flex space-x-6 mb-4 border-b border-white/10 pb-2 min-w-max justify-around p-5">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative text-sm font-medium transition-colors duration-200 ${activeTab === tab.id ? 'text-white' : 'text-white'}`}
+              >
+                {tab.label}
+                {activeTab === tab.id && (
+                  <span className="absolute bottom-2 left-0 w-full h-[2px] bg-white rounded-full" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
       {
         data.map((notification: Notification) => (
           <div

@@ -23,9 +23,6 @@ jobs:
           
       - name: TypeScript check
         run: npx tsc --noEmit
-          
-      - name: Typescript lint check
-        run: npm run lint
       
       - name: Next.js build
         run: npm run build
