@@ -17,7 +17,6 @@ export function cn(...inputs: ClassValue[]) {
 
 export const fetchAndTransformVideos = async (token: string, page: number, limit: number, videoType: string): Promise<Video[]> => {
   const API_URL = process.env.NEXT_PUBLIC_API_URL
-
   const response = await fetch(`${API_URL}/api/v1/videos/trending?page=${page}&limit=${limit}&type=${videoType}`, {
     method: "GET",
     credentials: "include",
@@ -37,7 +36,8 @@ export const fetchAndTransformVideos = async (token: string, page: number, limit
   try {
     const data = await response.json();
     console.log("Fetched raw data:", data);
-
+    
+    
     const transformedVideos: Video[] = data.data.map((video: any) => ({
       _id: video._id,
       title: video.name || "Untitled Video",
@@ -56,7 +56,7 @@ export const fetchAndTransformVideos = async (token: string, page: number, limit
       shares: video.shares || 0,
       views: video.views || 0,
       earnings: video.earned_till_date || 0,
-      isLiked: false,
+      isLiked: false, // Default to false, will be updated later
       tags: [video.genre, video.language].filter(Boolean),
       createdAt: video.createdAt,
       community: null,

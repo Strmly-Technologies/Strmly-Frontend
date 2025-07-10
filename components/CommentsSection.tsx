@@ -8,9 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuthStore } from "@/store/useAuthStore"
-import { timeStamp } from "console"
 import { mockComments as DebugComments } from "./debugTools/CommentGenerator"
-import { mockReplies as DebugReplies } from "./debugTools/ReplyGenerator"
 
 const mockComments: Comment[] = DebugComments
 
@@ -152,7 +150,7 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
       setComments(prev =>
         prev.map(comment =>
           comment._id === commentID
-            ? { ...comment, upvotes: data.upvotes, downvotes: data.downvotes }
+            ? { ...comment, upvotes: data.upvotes, downvotes: data.downvotes, upvoted: !comment.upvoted, downvoted: false }
             : comment
         )
       );
@@ -173,7 +171,7 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
       setComments(prev =>
         prev.map(comment =>
           comment._id === commentID
-            ? { ...comment, upvotes: data.upvotes, downvotes: data.downvotes }
+            ? { ...comment, upvotes: data.upvotes, downvotes: data.downvotes, downvoted:!comment.downvoted, upvoted: false}
             : comment
         )
       );
@@ -329,10 +327,10 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
                     <IndianRupee size={18} />{comment.donations}
                   </button>
                   <button onClick={() => handleUpvote(comment._id)} className="flex flex-col items-center">
-                    <ArrowBigUp size={24} />{comment.upvotes}
+                    {comment.upvoted ? <ArrowBigUp size={24} color="[#B0B0B0]" fill="#B0B0B0"/> : <ArrowBigUp size={24} color="#B0B0B0" />}{comment.upvotes}
                   </button>
                   <button onClick={() => handleDownvote(comment._id)} className="flex flex-col items-center">
-                    <ArrowBigDown size={24} />{comment.downvotes}
+                    {comment.downvoted ? <ArrowBigDown size={24} color="[#B0B0B0]" fill="#B0B0B0"/> : <ArrowBigDown size={24} color="#B0B0B0" />}{comment.downvotes}
                   </button>
                 </div>
               </div> : ''}</div>

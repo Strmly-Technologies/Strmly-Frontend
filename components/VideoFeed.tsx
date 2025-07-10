@@ -12,8 +12,7 @@ import CommentsSection from "./CommentsSection"
 import VideoMoreMenu from "./VideoMoreMenu"
 import { useAuthStore } from "@/store/useAuthStore"
 import { FaWhatsapp, FaInstagram, FaTelegram, FaSnapchat, FaTwitter, FaFacebook } from "react-icons/fa"
-import { vi } from "zod/v4/locales"
-import { toggleLike } from "./api/VideoFeed"
+import { AddShare, toggleLike } from "./api/VideoFeed"
 
 const socialPlatforms = [
   { name: "WhatsApp", icon: FaWhatsapp, color: "text-green-500" },
@@ -46,7 +45,6 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
   const [loading, setLoading] = useState(false)
   const [videoSpeed, setVideoSpeed] = useState(1)
   const [showFullDescriptionMap, setShowFullDescriptionMap] = useState<Record<string, boolean>>({});
-  const [isLiked, setIsLiked] = useState<Record<string, boolean>>({});
   const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({})
   const { handleFollow, toggleFullDescription } = useVideoActions(setFollowingMap, setShowFullDescriptionMap);
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
@@ -117,7 +115,6 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
         v.videoUrl = "/MockVideos/video.mp4";
         const defaultEpId = v.episodes?.[0]?.id ?? 1;
         episodeMap[v._id] = defaultEpId;
-        isLiked[v._id] = v.isLiked || false; // Initialize isLiked state
       });
       setCurrentEpisodeMap((prev) => ({ ...prev, ...episodeMap }));
 
@@ -208,21 +205,21 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
       return
     }
 
-if (action === "like" && !isLiked[videoId]) {
+if (action === "like") {
   try {
     console.log("Sending like for video:", videoId, longVideoOnly ? "long" : "short");
 
     const data = await toggleLike(token, videoId, longVideoOnly ? "long" : "short");
 
     console.log(data);
-
+    
     setVideos(prevVideos =>
       prevVideos.map(video =>
         video._id === videoId
           ? {
               ...video,
               likes: data.likes,
-              isLiked: true,
+              isLiked: data.isLiked,
             }
           : video
       )
@@ -409,9 +406,16 @@ if (action === "like" && !isLiked[videoId]) {
   }, [filteredVideos, intersectionObserverCallback]) // Re-run if filteredVideos change
 
 
-  const handleShare = (platform: string, videoId: string) => {
+  const handleShare = async(platform: string, videoId: string) => {
+    if (!token) {
+      console.error("No authentication token found")
+      return
+    }
     const videoUrl = `https://strmly.com/video/${videoId}`
     const shareText = "Check out this video on Strmly!"
+
+    const data = await AddShare(token, videoId, longVideoOnly ? "long" : "short");
+    console.log(data)
 
     switch (platform.toLowerCase()) {
       case "whatsapp":
@@ -441,7 +445,12 @@ if (action === "like" && !isLiked[videoId]) {
     }
   }
 
-  const copyLink = (videoId: string) => {
+  const copyLink = async (videoId: string) => {
+  if (!token) {
+      console.error("No authentication token found")
+      return
+    }
+    const data = await AddShare(token, videoId, longVideoOnly ? "long" : "short");
     const videoUrl = `https://strmly.com/video/${videoId}`
     navigator.clipboard.writeText(videoUrl)
     setIsCopied(true)
@@ -563,9 +572,9 @@ if (action === "like" && !isLiked[videoId]) {
               <div className="flex flex-col items-center">
                 <Button
                   onClick={() => handleVideoAction("like", video._id)}
-                  className={`bg-transparent text-white rounded-full hover:bg-transparent p-1 ${video.isLiked ? 'text-red-500' : 'hover:text-red-500'} shadow-none`}
+                  className={`bg-transparent text-white rounded-full hover:bg-transparent p-1 shadow-none`}
                 >
-                  <img alt="icon" src='./assets/SidebarIcons/Like.svg' className={video.isLiked ? 'fill-current' : ''} />
+                  {video.isLiked ? <img alt="icon" src='./assets/SidebarIcons/Like.svg' /> : <img alt="icon" src='./assets/SidebarIcons/UnLike.svg' />}
                 </Button>
                 <span className="text-white text-xs font-medium mt-1">
                   {video.likes > 1000 ? `${(video.likes / 1000).toFixed(0)}K` : video.likes}
@@ -655,10 +664,12 @@ if (action === "like" && !isLiked[videoId]) {
                         <div className="flex gap-3 mt-1 w-full px-1 items-center pb-1">
                           {/* Avatar */}
                           <div className="relative">
+                          <a href={`./profile/${video.user?.id}`} className="flex items-center">
                             <Avatar className="w-9 h-9">
                               <AvatarImage src={video.user?.avatar || "/placeholder.svg"} />
                               <AvatarFallback className="text-xs">{video.user?.name[0]}</AvatarFallback>
                             </Avatar>
+                          </a>
                           </div>
 
                           {/* Name + Follow */}
@@ -743,10 +754,12 @@ if (action === "like" && !isLiked[videoId]) {
                         <div className="flex gap-3 mt-1 w-full px-1 items-center pb-1">
                           {/* Avatar */}
                           <div className="relative">
+                          <a href={`./profile/${video.user?.id}`} className="flex items-center">
                             <Avatar className="w-9 h-9">
                               <AvatarImage src={video.user?.avatar || "/placeholder.svg"} />
                               <AvatarFallback className="text-xs">{video.user?.name[0]}</AvatarFallback>
                             </Avatar>
+                          </a>
                           </div>
 
                           {/* Name + Follow */}
@@ -815,10 +828,12 @@ if (action === "like" && !isLiked[videoId]) {
                         <div className="flex gap-3 mt-1 w-full px-1 items-center pb-1">
                           {/* Avatar */}
                           <div className="relative">
+                          <a href={`./profile/${video.user?.id}`} className="flex items-center">
                             <Avatar className="w-9 h-9">
                               <AvatarImage src={video.user?.avatar || "/placeholder.svg"} />
                               <AvatarFallback className="text-xs">{video.user?.name[0]}</AvatarFallback>
                             </Avatar>
+                          </a>
                           </div>
 
                           {/* Name + Follow */}
@@ -953,11 +968,11 @@ if (action === "like" && !isLiked[videoId]) {
       )}
 
       {/* Video More Menu */}
-      <VideoMoreMenu isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} videoId={selectedVideoId} setVideoSpeed={setVideoSpeed}videoRefs={{
+      {token? <VideoMoreMenu isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} videoId={selectedVideoId} longVideosOnly={longVideoOnly} token={token} setVideoSpeed={setVideoSpeed} videoRefs={{
         current: Object.fromEntries(
           videoRefs.current.map(({ id, element }) => [id, element])
         ),
-      }} />
+      }} /> : null}
     </>
   )
 }
