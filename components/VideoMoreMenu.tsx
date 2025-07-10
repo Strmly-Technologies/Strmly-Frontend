@@ -4,7 +4,7 @@ import { X, Gauge, Bookmark, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { SaveVideo, SaveStatus } from "./api/MoreOptions"
+import { SaveVideo, UnSaveVideo, SaveStatus } from "./api/MoreOptions"
 
 interface VideoMoreMenuProps {
   isOpen: boolean
@@ -32,6 +32,25 @@ export default function VideoMoreMenu({ isOpen, onClose, videoId, videoRefs, set
         videoType: longVideosOnly ? "long" : "short"
       });
 
+      // Optionally re-check status from backend, or just toggle:
+      setSaved(prev => !prev);
+    } catch (err) {
+      console.error("Save error:", err);
+    }
+  };
+
+  
+  const HandleUnSave = async () => {
+    if (!token || !videoId) return;
+
+    try {
+      const data = await UnSaveVideo({
+        token,
+        commentId: videoId,
+        videoId,
+        videoType: longVideosOnly ? "long" : "short"
+      });
+      
       // Optionally re-check status from backend, or just toggle:
       setSaved(prev => !prev);
     } catch (err) {
@@ -90,7 +109,7 @@ export default function VideoMoreMenu({ isOpen, onClose, videoId, videoRefs, set
         <div className="space-y-2">
           <Button
             variant="outline"
-            onClick={HandleSave}
+            onClick={saved? HandleUnSave : HandleSave}
             className="w-full justify-start text-sm lg:text-base py-2 lg:py-3 font-poppins"
           >
             <Bookmark size={14} className="mr-2 lg:w-4 lg:h-4 font-poppins" />
