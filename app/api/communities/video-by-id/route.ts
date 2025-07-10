@@ -14,6 +14,7 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
+
     const type = searchParams.get("type");
 
     if (!id) {
@@ -30,6 +31,7 @@ export async function GET(req: Request) {
     return NextResponse.json(backendResponse.data);
   } catch (error) {
     console.error('Profile fetch error:', error);
+
     if (axios.isAxiosError(error)) {
       return NextResponse.json(
         { message: error.response?.data?.message || 'Backend request failed' },
@@ -40,3 +42,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }
+

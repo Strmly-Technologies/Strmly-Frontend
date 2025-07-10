@@ -21,6 +21,7 @@ import {
     PlayIcon,
     HeartIcon,
     BookmarkIcon,
+
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -34,6 +35,7 @@ import { api } from "@/lib/api";
 import UserList from "@/components/UserList";
 import { toast } from "sonner";
 import ProfileTopbar from "@/app/profile/_components/ProfileTopbar";
+
 import { useGenerateThumbnails } from "@/utils/useGenerateThumbnails";
 
 const profileData = {

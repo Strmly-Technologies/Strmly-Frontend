@@ -46,6 +46,7 @@ export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState("30d");
   const [activeTab, setActiveTab] = useState<"overview" | "analysis">("overview");
 
+
   const [overviewData, setOverviewData] = useState<any>(null);
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -69,6 +70,7 @@ export default function DashboardPage() {
       try {
         const [analyticsRes] = await Promise.all([
           fetch("/api/dashboard/Analytics", {
+
             method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,
@@ -100,6 +102,7 @@ export default function DashboardPage() {
 
     fetchAllDashboardData();
   }, [token]);
+
 
   return (
     <div className="p-4 pb-20 md:pb-4 max-w-6xl">
@@ -169,6 +172,7 @@ export default function DashboardPage() {
               <span className="text-sm font-medium">Total Views</span>
               <div className="text-md font-bold">
                 {analyticsData?.totalViews}
+
               </div>
             </div>
 
@@ -259,6 +263,7 @@ export default function DashboardPage() {
                 <span className="text-md font-bold">
                   <IndianRupee className="inline size-4" />
                   {analyticsData?.viewsEarnings}
+
                 </span>
                 {/* <span className="text-xs text-green-500">
                   +{mockAnalysisData.trends.commentsPrice}%

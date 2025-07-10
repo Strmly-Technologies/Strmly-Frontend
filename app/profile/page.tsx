@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
 import {
   MapPin,
   LinkIcon,
@@ -10,6 +11,7 @@ import {
   HeartIcon,
   BookmarkIcon,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -18,7 +20,9 @@ import { api } from "@/lib/api";
 import ProfileTopbar from "./_components/ProfileTopbar";
 import { toast } from "sonner";
 import { format } from "date-fns";
+
 import { useGenerateThumbnails } from "@/utils/useGenerateThumbnails";
+
 
 const testVideos = [
   {
@@ -96,6 +100,7 @@ export default function ProfilePage() {
     if (token) {
       fetchUserVideos();
     }
+
   }, [isLoggedIn, token, activeTab]);
 
   useEffect(() => {
@@ -138,6 +143,7 @@ export default function ProfilePage() {
       fetchUserData();
     }
   }, [isLoggedIn, router, token]);
+
 
   const profileData = {
     name: userData?.name || "User",
@@ -205,6 +211,7 @@ export default function ProfilePage() {
                   </span>
                 )}
               </div>
+
             </div>
           </div>
 
@@ -238,6 +245,7 @@ export default function ProfilePage() {
               <span className="font-bold text-lg">800</span>{" "}
               <span className="text-muted-foreground text-lg">Followings</span>
             </div>
+
           </div>
 
           <div className="flex w-full items-center justify-center gap-2 mt-5 md:mt-0">

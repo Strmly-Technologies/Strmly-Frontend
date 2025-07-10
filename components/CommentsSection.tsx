@@ -281,7 +281,9 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
                       {new Date(comment.timestamp).toLocaleDateString()}
                     </span>
                   </div>
-                  <p className="text-sm lg:text-base leading-relaxed font-poppins">{comment.content}</p>
+
+                  <p className="text-sm lg:text-base leading-relaxed">{comment.content}</p>
+
                   <div className="flex">
                     <button onClick={() => fetchReplies(comment._id)} className="flex items-center" >
                       <span className="text-xs text-muted-foreground ">
