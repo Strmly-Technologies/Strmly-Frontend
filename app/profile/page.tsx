@@ -99,6 +99,7 @@ export default function ProfilePage() {
     if (token) {
       fetchUserVideos();
     }
+
   }, [isLoggedIn, router, token, activeTab]);
 
   useEffect(() => {
@@ -141,6 +142,7 @@ export default function ProfilePage() {
       fetchUserData();
     }
   }, [isLoggedIn, router, token]);
+
 
   const profileData = {
     name: userData?.name || "User",
@@ -241,6 +243,7 @@ export default function ProfilePage() {
               <span className="font-bold text-lg">800</span>{" "}
               <span className="text-muted-foreground text-lg">Followings</span>
             </div>
+
           </div>
 
           <div className="flex w-full items-center justify-center gap-2 mt-5 md:mt-0">
@@ -306,11 +309,13 @@ export default function ProfilePage() {
 
       {/* Tabs */}
       <div className="mt-6 px-6">
+
         <div className="flex space-x-8 items-center justify-between">
           <button
             className={`pb-4 flex items-center justify-center ${
               activeTab === "clips"
                 ? "border-b-2 border-white font-medium"
+
                 : "text-muted-foreground"
             }`}
             onClick={() => setActiveTab("clips")}
@@ -325,6 +330,7 @@ export default function ProfilePage() {
             className={`pb-4 flex items-center justify-center ${
               activeTab === "long"
                 ? "border-b-2 border-white font-medium"
+
                 : "text-muted-foreground"
             }`}
             onClick={() => setActiveTab("long")}
@@ -339,6 +345,7 @@ export default function ProfilePage() {
             className={`pb-4 flex items-center justify-center ${
               activeTab === "likes"
                 ? "border-b-2 border-white font-medium"
+
                 : "text-muted-foreground"
             }`}
             onClick={() => setActiveTab("likes")}
@@ -353,6 +360,7 @@ export default function ProfilePage() {
             className={`pb-4 flex items-center justify-center ${
               activeTab === "saved"
                 ? "border-b-2 border-white font-medium"
+
                 : "text-muted-foreground"
             }`}
             onClick={() => setActiveTab("saved")}
@@ -378,6 +386,7 @@ export default function ProfilePage() {
                 <div
                   key={video._id}
                   className="w-full h-[100svh] sm:h-[90vh] relative rounded-lg overflow-hidden"
+
                 >
                   {thumbnails[video._id] ? (
                     <img
@@ -419,6 +428,7 @@ export default function ProfilePage() {
                   </div>
                 );
               })}
+
             </div>
           )}
         </>

@@ -248,6 +248,7 @@ export default function PersonalCommunitiesPage() {
                     <div className="grid grid-cols-2 w-full items-center justify-center gap-2 mt-5 md:mt-0">
                         <Button
                             onClick={() => router.push(`/personalcommunity/edit/${id}`)}
+
                             className="px-4 bg-[#F1C40F] text-black rounded-md"
                         >
                             Edit Community
