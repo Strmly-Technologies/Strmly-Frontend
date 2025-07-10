@@ -17,7 +17,7 @@ export function cn(...inputs: ClassValue[]) {
 //token:Authentication token for the API
 
 export const fetchAndTransformVideos = async (token: string, page: number, limit: number, videoType: string): Promise<Video[]> => {
-  const API_URL = process.env.BACKEND_URL
+  const API_URL = process.env.NEXT_PUBLIC_API_URL
   const response = await fetch(`${API_URL}/api/v1/videos/trending?page=${page}&limit=${limit}&type=${videoType}`, {
     method: "GET",
     credentials: "include",
@@ -134,7 +134,7 @@ export function useVideoActions(
 
 
 export const fetchAndTransformNotifications = async (token: string, activeTab: string): Promise<Notification[]> => {
-  const API_URL = process.env.BACKEND_URL
+  const API_URL = process.env.NEXT_PUBLIC_API_URL
 
   const response = await fetch(`${API_URL}/api/v1/user/notifications`, {
     method: "POST",

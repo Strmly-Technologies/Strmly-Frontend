@@ -39,7 +39,7 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
     }
 
     try {
-      const response = await fetch(`${process.env.BACKEND_URL}/api/v1/interaction/videos/${videoId}/comments?videoType=${longVideosOnly ? "long" : "short"}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/videos/${videoId}/comments?videoType=${longVideosOnly ? "long" : "short"}`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -93,7 +93,7 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
 
     try {
       setLoadingReplies(commentID)
-      const response = await fetch(`${process.env.BACKEND_URL}/api/v1/interaction/videos/${videoId}/comments/${commentID}/replies`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/videos/${videoId}/comments/${commentID}/replies`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -114,7 +114,7 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
 
   const AddReply = async (commentID: string) => {
     try {
-      const response = await fetch(`${process.env.BACKEND_URL}/api/v1/interaction/videos/${videoId}/comments/${commentID}/replies`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/videos/${videoId}/comments/${commentID}/replies`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -218,7 +218,7 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
 
     setIsLoading(true)
     try {
-      const response = await fetch(`${process.env.BACKEND_URL}/api/v1/interaction/comment`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/comment`, {
         method: 'POST',
         credentials: "include",
         headers: {

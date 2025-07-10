@@ -154,7 +154,7 @@ export default function DesktopPage() {
       }
 
       // Upload video
-      const response = await fetch(`${process.env.BACKEND_URL}/api/videos`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos`, {
         method: "POST",
         body: uploadData,
         credentials: "include",

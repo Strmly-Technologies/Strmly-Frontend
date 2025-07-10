@@ -1,6 +1,6 @@
 // utils/api.js
 
-const API_URL = process.env.BACKEND_URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 export const fetchVideos = async (token : string) => {
   try {
