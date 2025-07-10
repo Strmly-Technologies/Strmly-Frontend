@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { fontFamily } from "tailwindcss/defaultTheme";
 
 const config: Config = {
     darkMode: ["class"],
@@ -10,8 +11,10 @@ const config: Config = {
   theme: {
   	extend: {
     fontFamily: {
-      poppins: ['var(--font-poppins)', 'sans-serif'],
-    },
+		sans: ["Inter", ...fontFamily.sans],
+		inter: ["Inter", ...fontFamily.sans],
+		poppins: ["Poppins", ...fontFamily.sans],
+	},
       screens: {
         'xs': '475px',
         'sm': '640px',
@@ -21,8 +24,8 @@ const config: Config = {
         '2xl': '1536px',
       },
   		colors: {
-  			background: 'hsl(var(--background))',
-  			foreground: 'hsl(var(--foreground))',
+			background: 'hsl(var(--background))',
+			foreground: 'hsl(var(--foreground))',
   			card: {
   				DEFAULT: 'hsl(var(--card))',
   				foreground: 'hsl(var(--card-foreground))'

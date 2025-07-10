@@ -43,7 +43,7 @@ const ProfileTopbar = ({ hashtag, name }: ProfileTopbarProps) => {
   };
 
   return (
-    <div className="mx-4 relative top-16">
+    <div className="mx-4 relative top-6">
       <div className="flex items-center justify-between">
         <Image
           onClick={() => router.back()}

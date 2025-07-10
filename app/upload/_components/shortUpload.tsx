@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import CountdownTimer from "./CountdownTimer";
 import VideoPreview from "./VideoPreview";
 import Image from "next/image";
-import { PauseIcon } from "lucide-react";
+import { PauseIcon, CameraIcon } from "lucide-react";
 import CameraSidebar from "./CameraSidebar";
 import CameraTopbar from "./CameraTopbar";
 
@@ -18,7 +18,6 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
   const [chunks, setChunks] = useState<Blob[]>([]);
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
-
   const [isRecording, setIsRecording] = useState(false);
   const [videoURL, setVideoURL] = useState<string | null>(null);
   const [duration, setDuration] = useState(10);
@@ -35,27 +34,45 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+
   const stopCamera = useCallback(() => {
-    stream?.getTracks().forEach((track) => track.stop());
-    setStream(null);
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      setStream(null);
+    }
   }, [stream]);
-  
-  useEffect(() => {
-    const startCamera = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      setStream(stream);
+
+  const startCamera = async (mode: "user" | "environment" = "user") => {
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: mode },
+        audio: true,
+      });
+
+      stopCamera();
+      setStream(newStream);
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+        videoRef.current.srcObject = newStream;
       }
-    };
+    } catch (error) {
+      console.error("Camera access error:", error);
+    }
+  };
 
-    startCamera();
+  const toggleCamera = () => {
+    const newMode = facingMode === "user" ? "environment" : "user";
+    stopCamera();
+    setFacingMode(newMode);
+    startCamera(newMode);
+  };
 
+  useEffect(() => {
+    startCamera(facingMode);
     return () => {
       stopCamera();
     };
-  }, [stopCamera]);
+  }, []);
 
   const startRecording = () => {
     if (!stream) return;
@@ -70,15 +87,12 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
     recorder.onstop = () => {
       const blob = new Blob(localChunks, { type: "video/webm" });
       const url = URL.createObjectURL(blob);
-
-      // ✅ Convert blob to File for upload
       const file = new File([blob], "recorded-video.webm", { type: "video/webm" });
 
       setVideoURL(url);
       setVideoFile(file);
       setChunks([]);
     };
-
 
     recorder.start();
     setChunks(localChunks);
@@ -114,16 +128,8 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
     setIsRecording(false);
     setCountdown(false);
     setProgress(0);
-
-    // Restart camera stream
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((newStream) => {
-      setStream(newStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = newStream;
-      }
-    });
+    startCamera(facingMode);
   };
-
 
   const handleCountdownFinish = () => {
     setCountdown(false);
@@ -161,11 +167,11 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
 
           {countdown && (
             <div className="absolute z-20 text-white text-6xl font-bold animate-pulse">
-              <CountdownTimer seconds={3} onComplete={handleCountdownFinish} />
+              <CountdownTimer seconds={countdownSeconds} onComplete={handleCountdownFinish} />
             </div>
           )}
 
-          <div className="absolute top-96 left-2 z-20">
+          {/* <div className="absolute top-96 left-2 z-20">
             <CameraSidebar
               duration={duration}
               setDuration={setDuration}
@@ -177,15 +183,32 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
               showEffects={showEffects}
               setShowEffects={setShowEffects}
             />
-          </div>
+          </div> */}
+
           <div className="absolute top-16 w-full z-20">
             <CameraTopbar
+              duration={duration}
+              setDuration={setDuration}
+              isRecording={isRecording}
+              countdown={countdown}
+              maxLimit={MAX_LIMIT}
               onToggleCountdownSlider={() => setShowCountdownSlider((prev) => !prev)}
+              setShowTracks={setShowTracks}
+              setShowEffects={setShowEffects}
               fileInputRef={fileInputRef}
               selectedImage={selectedImage}
               onFileChange={handleFileChange}
             />
           </div>
+
+          <button
+            className="absolute bottom-10 right-5 z-30 text-white bg-black/50 p-2 rounded-full"
+            onClick={toggleCamera}
+            disabled={isRecording}
+            aria-label="Flip Camera"
+          >
+            <CameraIcon className="w-6 h-6" />
+          </button>
 
           <div className="absolute bottom-28 z-10 w-full flex flex-col items-center space-y-4">
             <button
@@ -198,15 +221,16 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
                 <div className="bg-primary rounded-full p-2">
                   <PauseIcon className="size-12 text-white" />
                 </div>
-              ) : 
-              !countdown &&
-                <Image
-                  width={70}
-                  height={70}
-                  alt="start recording"
-                  src={"/assets/UploadPageIcons/Icon.png"}
-                />
-              }
+              ) : (
+                !countdown && (
+                  <Image
+                    width={70}
+                    height={70}
+                    alt="start recording"
+                    src={"/assets/UploadPageIcons/Icon.png"}
+                  />
+                )
+              )}
             </button>
           </div>
 
@@ -217,7 +241,7 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
           )}
 
           {showCountdownSlider && (
-            <div className="absolute top-52 left-1/2 transform -translate-x-1/2 z-20 bg-black/60 p-2 rounded-xl">
+            <div className="absolute top-32 left-1/2 transform -translate-x-1/2 z-20 bg-black/60 p-2 rounded-xl">
               <input
                 type="range"
                 min="1"

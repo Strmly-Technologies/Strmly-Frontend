@@ -10,6 +10,14 @@ type CameraTopbarProps = {
   fileInputRef: React.RefObject<HTMLInputElement>;
   selectedImage: string | null;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+
+  duration: number;
+  setDuration: (val: number) => void;
+  isRecording: boolean;
+  countdown: boolean;
+  maxLimit: number;
+  setShowTracks: (val: boolean) => void;
+  setShowEffects: (val: boolean) => void;
 };
 
 const CameraTopbar = ({
@@ -17,8 +25,17 @@ const CameraTopbar = ({
   fileInputRef,
   selectedImage,
   onFileChange,
+
+  duration,
+  setDuration,
+  isRecording,
+  countdown,
+  maxLimit,
+  setShowTracks,
+  setShowEffects,
 }: CameraTopbarProps) => {
   const router = useRouter();
+  const [showSlider, setShowSlider] = useState<boolean>(false);
 
   return (
     <div className="flex w-full items-center justify-between ml-5 mt-2">
@@ -27,7 +44,7 @@ const CameraTopbar = ({
       </div>
 
       <div className="relative right-5 w-full">
-        <div className="flex gap-2 items-center">
+        <div className="grid grid-cols-2 gap-2 items-center">
           {/* <Button type="button" className="bg-transparent w-full" variant="link">
             <img className="size-5" alt="vector" src="/assets/UploadPageIcons/Vector.png" />
           </Button>
@@ -36,16 +53,31 @@ const CameraTopbar = ({
               <span className="text-lg">1</span>x
             </div>
           </Button> */}
+
+          {/* Timer Button */}
+          <Button
+            className="bg-transparent"
+            variant="link"
+            onClick={() => {
+              setShowSlider(!showSlider);
+              setShowTracks(false);
+              setShowEffects(false);
+            }}
+          >
+            <img className="size-6 focus:bg-red-500 rounded-full" alt="timer" src="/assets/UploadPageIcons/timmer.png" />
+          </Button>
+
           <Button
             type="button"
             className="bg-transparent text-white w-full"
             variant="link"
             onClick={onToggleCountdownSlider}
           >
-            <Clock className="size-7" />
+            <Clock className="size-8" />
           </Button>
         </div>
       </div>
+
 
       <div className="w-full flex justify-end relative right-10">
         <div
@@ -70,6 +102,22 @@ const CameraTopbar = ({
           />
         </div>
       </div>
+
+      {/* Timer Slider */}
+      {showSlider && (
+        <div className="absolute top-16 left-20 z-20 bg-black/60 p-2 rounded-xl">
+          <input
+            type="range"
+            min="5"
+            max={maxLimit}
+            value={duration}
+            onChange={(e) => setDuration(parseInt(e.target.value))}
+            className="w-40"
+            disabled={isRecording || countdown}
+          />
+          <div className="text-white text-sm text-center mt-1">{duration}s</div>
+        </div>
+      )}
     </div>
   );
 };

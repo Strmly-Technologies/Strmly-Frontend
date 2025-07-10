@@ -23,7 +23,6 @@ import { format } from "date-fns";
 
 import { useGenerateThumbnails } from "@/utils/useGenerateThumbnails";
 
-
 const testVideos = [
   {
     id: "1",
@@ -171,11 +170,11 @@ export default function ProfilePage() {
   // setUserData(profileData);
 
   return (
-    <div className="min-h-screen bg-background px-6">
+    <div className="min-h-screen bg-background">
       {/* Cover Image */}
 
       {userData && (
-        <div className="h-48 relative">
+        <div className="h-48 px-6 relative">
           <ProfileTopbar hashtag={false} name={userData?.username} />
         </div>
       )}
@@ -186,7 +185,7 @@ export default function ProfilePage() {
           <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="max-w-4xl -mt-20 relative">
+        <div className="max-w-4xl px-6 -mt-20 relative">
           <div className="flex flex-col items-center md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4">
             <div className="relative">
               <Avatar className="size-24 border-4 border-background">
@@ -211,7 +210,6 @@ export default function ProfilePage() {
                   </span>
                 )}
               </div>
-
             </div>
           </div>
 
@@ -310,12 +308,14 @@ export default function ProfilePage() {
       )}
 
       {/* Tabs */}
-      <div className="mt-6 border-b">
+      <div className="mt-6 px-6">
+
         <div className="flex space-x-8 items-center justify-between">
           <button
             className={`pb-4 flex items-center justify-center ${
               activeTab === "clips"
-                ? "border-b-2 border-primary font-medium"
+                ? "border-b-2 border-white font-medium"
+
                 : "text-muted-foreground"
             }`}
             onClick={() => setActiveTab("clips")}
@@ -329,7 +329,8 @@ export default function ProfilePage() {
           <button
             className={`pb-4 flex items-center justify-center ${
               activeTab === "long"
-                ? "border-b-2 border-primary font-medium"
+                ? "border-b-2 border-white font-medium"
+
                 : "text-muted-foreground"
             }`}
             onClick={() => setActiveTab("long")}
@@ -343,7 +344,8 @@ export default function ProfilePage() {
           <button
             className={`pb-4 flex items-center justify-center ${
               activeTab === "likes"
-                ? "border-b-2 border-primary font-medium"
+                ? "border-b-2 border-white font-medium"
+
                 : "text-muted-foreground"
             }`}
             onClick={() => setActiveTab("likes")}
@@ -357,7 +359,8 @@ export default function ProfilePage() {
           <button
             className={`pb-4 flex items-center justify-center ${
               activeTab === "saved"
-                ? "border-b-2 border-primary font-medium"
+                ? "border-b-2 border-white font-medium"
+
                 : "text-muted-foreground"
             }`}
             onClick={() => setActiveTab("saved")}
@@ -378,11 +381,12 @@ export default function ProfilePage() {
       ) : (
         <>
           {activeTab === "clips" ? (
-            <div className="flex flex-col gap-2 mt-4">
+            <div className="flex flex-col gap-2">
               {videos.map((video) => (
                 <div
                   key={video._id}
-                  className="w-full h-[100svh] sm:h-[90vh] relative rounded-lg overflow-hidden bg-black"
+                  className="w-full h-[100svh] sm:h-[90vh] relative rounded-lg overflow-hidden"
+
                 >
                   {thumbnails[video._id] ? (
                     <img
@@ -399,25 +403,32 @@ export default function ProfilePage() {
               ))}
             </div>
           ) : (
-            <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-2">
-              {videos.map((video) => (
-                <div
-                  key={video._id}
-                  className="relative aspect-[9/16] rounded-lg overflow-hidden bg-black"
-                >
-                  {thumbnails[video._id] ? (
-                    <img
-                      src={thumbnails[video._id]}
-                      alt="video thumbnail"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white text-xs">
-                      Loading...
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="grid grid-cols-3 sm:grid-cols-4">
+              {videos.map((video, index) => {
+                const isLastInMobileRow = (index + 1) % 3 === 0; // for mobile (3 cols)
+                const isLastItem = index === videos.length - 2;
+
+                return (
+                  <div
+                    key={video._id}
+                    className={`relative aspect-[12/16] overflow-hidden border-white 
+          ${isLastInMobileRow || isLastItem ? "border-r" : ""}`}
+                  >
+                    {thumbnails[video._id] ? (
+                      <img
+                        src={thumbnails[video._id]}
+                        alt="video thumbnail"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white text-xs">
+                        Loading...
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
             </div>
           )}
         </>
