@@ -57,7 +57,7 @@ const OnBoardingForm = () => {
       router.back()
     }
     setIsRequired(false);
-  }, [token, isLoggedIn])
+  }, [token, router, user, isLoggedIn])
 
   const form = useForm<z.infer<typeof onBoardingFormSchema>>({
     resolver: zodResolver(onBoardingFormSchema),

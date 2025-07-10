@@ -169,9 +169,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
           Description: video.description,
           URL: video.videoUrl
         }))) // Log the transformed videos for debugging
-        transformedVideos.forEach((video: Video) => {
-          video.videoUrl = "/MockVideos/video.mp4";  //TEMPORARY: remove when videos are aded to database
-        });
+        
 
 
         setVideos(transformedVideos);
@@ -183,8 +181,8 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
         });
         setCurrentEpisodeMap(episodeMap);
 
-        //const followingMap = await getFollowingMap(user?.id || "", transformedVideos);
-        //setFollowingMap((prev) => ({ ...prev, ...followingMap }));
+        const followingMap = await getFollowingMap(user?.id || "", transformedVideos);
+        setFollowingMap((prev) => ({ ...prev, ...followingMap }));
       } catch (error) {
         console.error("Failed to fetch videos:", error);
       } finally {
@@ -675,14 +673,17 @@ if (action === "like") {
                           {/* Name + Follow */}
                           <div className="flex flex-col flex-1 w-full">
                             <div className="flex items-center gap-2">
-                              <h3 className="text-white text-[20px]">{video.user?.name}</h3>
+                              <a href={`./profile/${video.user?.id}`}>
+                                <h3 className="text-white text-[20px]">{video.user?.name}</h3>
+                              </a>{user ?
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                onClick={() => handleFollow(video.user?.id || "", user)}
                                 className="text-white border border-white rounded-half px-2 py-0.5 text-[16px] font-medium hover:bg-white/10 h-auto min-h-0"
                               >
                                 Follow
-                              </Button>
+                              </Button> : <p>Login To follow</p>}
                             </div>
                           </div>
                         </div>
@@ -765,7 +766,9 @@ if (action === "like") {
                           {/* Name + Follow */}
                           <div className="flex flex-col flex-1 w-full">
                             <div className="flex items-center gap-2">
-                              <h3 className="text-white text-[20px]">{video.user?.name}</h3>
+                              <a  className="flex items-center" href={`./profile/${video.user?.id}`}>
+                                <h3 className="text-white text-[20px]">{video.user?.name}</h3>
+                              </a>
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -839,14 +842,17 @@ if (action === "like") {
                           {/* Name + Follow */}
                           <div className="flex flex-col flex-1 w-full">
                             <div className="flex items-center gap-2">
-                              <h3 className="text-white text-[20px]">{video.user?.name}</h3>
-                              <Button
+                              <a  className="flex items-center" href={`./profile/${video.user?.id}`}>
+                                <h3 className="text-white text-[20px]">{video.user?.name}</h3>
+                              </a>
+                              {user ? <Button
                                 variant="ghost"
                                 size="sm"
+                                onClick={() => handleFollow(video.user?.id || "", user)}
                                 className="text-white border border-white rounded-half px-2 py-0.5 text-[16px] font-medium hover:bg-white/10 h-auto min-h-0"
                               >
                                 Follow
-                              </Button>
+                              </Button> : <p>Login To follow</p>}
                             </div>
                           </div>
                         </div>

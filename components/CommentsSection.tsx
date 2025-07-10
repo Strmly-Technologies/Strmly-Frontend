@@ -57,7 +57,7 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
     } catch (error) {
       console.error("Error fetching comments:", error);
     }
-  }, [token, videoId]); // ✅ Add necessary dependencies
+  }, [token, longVideosOnly, videoId]); // ✅ Add necessary dependencies
 
 
   useEffect(() => {
@@ -276,25 +276,27 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-1 lg:space-x-2 mb-1">
-                    <span className="font-medium text-sm lg:text-base truncate">{comment.user?.name || "Anonymous User"}</span>
+                    <span className="font-medium text-sm lg:text-base truncate font-poppins text-[#B0B0B0]">{comment.user?.name || "Anonymous User"}</span>
                     <span className="text-xs text-muted-foreground flex-shrink-0">
                       {new Date(comment.timestamp).toLocaleDateString()}
                     </span>
                   </div>
+
                   <p className="text-sm lg:text-base leading-relaxed">{comment.content}</p>
+
                   <div className="flex">
                     <button onClick={() => fetchReplies(comment._id)} className="flex items-center" >
                       <span className="text-xs text-muted-foreground ">
                         View replies ({comment.replies})</span>
                       <ChevronDown />
                     </button>
-                    <button onClick={() => AddReply(comment._id)} className="flex items-center" >
+                    {/*<button onClick={() => AddReply(comment._id)} className="flex items-center" >
                       <ReplyIcon />
-                    </button>
+                    </button>*/}
                   </div>
                   {openReplies[comment._id] && (
                     <div className="ml-10 space-y-2 mt-2">
-                      {openReplies[comment._id].length === 0 ? (
+                      {(!Array.isArray(openReplies[comment._id])) ? (
                         <p className="text-xs text-muted-foreground">No replies yet.</p>
                       ) : (
                         openReplies[comment._id].map(reply => (

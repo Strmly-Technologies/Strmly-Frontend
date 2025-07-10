@@ -1,4 +1,5 @@
 import { useAuthStore } from "@/store/useAuthStore"
+import { User } from "@/types/User"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -47,17 +48,47 @@ export const api = {
   },
 
   // Follow operations
-  async followUser(userId: string) {
+  async followUser(userId: string, user:User) {
     const token = useAuthStore.getState().token
-    const response = await fetch(`${API_URL}/api/users/${userId}/follow`, {
+    console.log("Following user:", userId, user)
+    const response = await fetch(`${API_URL}/api/v1/user/follow`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
       },
+      body: JSON.stringify({
+        'followUserId':user.id,
+        user: {
+          id: userId
+        },
+      }),
     })
     if (!response.ok) throw new Error("Failed to follow user")
     return response.json()
   },
+
+    // UnFollow operations
+  async unfollowUser(userId: string, user:User) {
+    const token = useAuthStore.getState().token
+    console.log("Unfollowing user:", userId, user)
+    const response = await fetch(`${API_URL}/api/v1/user/unfollow`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        'followUserId':user.id,
+        user: {
+          id: userId
+        },
+      }),
+    })
+    if (!response.ok) throw new Error("Failed to follow user")
+    return response.json()
+  },
+
 
   async getFollowers(userId: string, page = 1, limit = 20) {
     const token = useAuthStore.getState().token
@@ -90,11 +121,13 @@ export const api = {
   async isFollowing(userId: string, targetUserId: string) {
     const token = useAuthStore.getState().token
     const response = await fetch(
-      `${API_URL}/api/users/${userId}/is-following/${targetUserId}`,
+      `${API_URL}/api/v1/user/following`,
       {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({ userId, targetUserId }),
       }
     )
     if (!response.ok) throw new Error("Failed to check following status")
