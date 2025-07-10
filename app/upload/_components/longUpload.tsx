@@ -38,7 +38,7 @@ const formSchema = z
     access: z.string().min(1, "Access type is required"),
     videoFile: z.instanceof(File, { message: "Video file is required" }),
     language: z.string().min(1, "Language is required"),
-    ageRestriction: z.string().min(1, "Age restriction is required"),
+    age_restriction: z.string().min(1, "Age restriction is required"),
 
     // Optional fields
     series: z.string().optional(),
@@ -112,7 +112,7 @@ const LongVideoUpload = () => {
       access: "",
       price: "",
       language: "",
-      ageRestriction: "",
+      age_restriction: "",
     },
   });
 
@@ -167,7 +167,8 @@ const LongVideoUpload = () => {
       formData.append("genre", data.genre);
       formData.append("access", data.access);
       formData.append("language", data.language);
-      formData.append("ageRestriction", data.ageRestriction);
+      formData.append("age_restriction", data.age_restriction);
+      formData.append("videoType", 'long');
 
       // Optional fields
       if (data.series) formData.append("series", data.series);
@@ -193,8 +194,8 @@ const LongVideoUpload = () => {
         body: formData,
         headers: {
           "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
         },
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -657,7 +658,7 @@ const LongVideoUpload = () => {
               {/* Age Restriction Dropdown */}
               <FormField
                 control={form.control}
-                name="ageRestriction"
+                name="age_restriction"
                 render={({ field }) => (
                   <FormItem>
                     <Select

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { loginSchema } from "@/lib/schemas/authSchemas";
 import { FaGoogle } from "react-icons/fa";
 import { useAuthStore } from "@/store/useAuthStore";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -46,17 +47,22 @@ export default function LoginPage() {
       useAuthStore.getState().setUser(data.user);
 
       toast.success("Login successful");
-      // router.push("/");
+      if(data?.user?.isOnboarded){
+        router.push("/");
+      }
+      router.push("/onboarding");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An unknown error occurred");
     }
   }
 
   return (
-    <div className="flex mt-16 justify-center">
+    <div className="flex mt-32 justify-center">
       <div className="w-full max-w-md p-8 space-y-10 rounded-lg">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold font-serif text-primary">Strmly</h1>
+        <div className="flex items-center justify-center">
+          <h1 className="text-3xl text-[#F1C40F] font-bold font-serif [text-shadow:_0_5px_8px_var(--tw-shadow-color)] shadow-[#F1C40F]">
+            Strmly
+          </h1>
         </div>
 
         <Form {...form}>
@@ -87,7 +93,7 @@ export default function LoginPage() {
               )}
             />
 
-            <Button type="submit" className="w-full bg-[#F1C40F]">
+            <Button type="submit" className="w-full text-black bg-[#F1C40F]">
               Sign In
             </Button>
           </form>
@@ -102,10 +108,10 @@ export default function LoginPage() {
 
         <div className="flex flex-col gap-5">
             <button type="button" className="w-full flex items-center justify-center gap-2">
-                <div className="p-1 rounded-full">
-                    <FaGoogle className="size-4 text-red-400"/>
+                <div className="">
+                    <Image src={'/google.png'} alt="google-icon" width={30} height={30} className="size-6"/>
                 </div>
-                <h2 className="text-red-500">Log in with Google</h2>
+                <h2 className="text-muted-foreground">Log in with Google</h2>
             </button>
 
             <div className="flex justify-center w-full items-center">
@@ -117,7 +123,7 @@ export default function LoginPage() {
 
         <div className="text-center text-sm">
           Don't have an account?{" "}
-          <Link href="/auth/signup" className="font-medium text-[#F1C40F] hover:underline">
+          <Link href="/signup" className="font-medium text-[#F1C40F] hover:underline">
             Sign up
           </Link>
         </div>

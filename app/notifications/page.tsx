@@ -11,7 +11,11 @@ import { useAuthStore } from "@/store/useAuthStore"
 const mockNotifications = debugNotifications
 
 export default function LongVideosPage() {
-
+  const [activeTab, setActiveTab] = useState("Non Revenue")
+  const tabs = [
+    { id: "Non Revenue", label: "Non Revenue" },
+    { id: "Revenue", label: "Revenue" },
+  ];
   const token = useAuthStore((state) => state.token)
   const [data, setData] = useState<Notification[]>([])
   useEffect(() => {
@@ -23,7 +27,7 @@ export default function LongVideosPage() {
       }
 
       try {
-        const notifications = await fetchAndTransformNotifications(token)
+        const notifications = await fetchAndTransformNotifications(token, activeTab)
         setData(notifications)
       } catch (error) {
         console.error("Failed to load notifications", error)
@@ -31,7 +35,7 @@ export default function LongVideosPage() {
     }
 
     loadNotifications()
-  }, [token])
+  }, [token,activeTab])
 
   return (
     <div className="h-screen">
@@ -39,8 +43,28 @@ export default function LongVideosPage() {
       <div className="flex items-center justify-center p-3 lg:p-4 flex-col bg-[#1A1A1A]">
         <h3 className="text-base text-[24px] font-semibold">Notifications</h3>
       </div>
+      {/* Tabs */}
+      <div className="bg-black min-h-screen text-white pl-3">
+        {/* Custom Tab Buttons */}
+        <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
+          <div className="flex space-x-6 mb-4 border-b border-white/10 pb-2 min-w-max justify-around p-5">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative text-sm font-medium transition-colors duration-200 ${activeTab === tab.id ? 'text-white' : 'text-white'}`}
+              >
+                {tab.label}
+                {activeTab === tab.id && (
+                  <span className="absolute bottom-2 left-0 w-full h-[2px] bg-white rounded-full" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
       {
-        data.map((notification : Notification) => (
+        data.map((notification: Notification) => (
           <div
             key={notification._id}
             className="p-3 rounded-xl bg-[#1A1A1A] hover:bg-[#222222] transition-colors flex items-start space-x-3 shadow-sm mt-1"

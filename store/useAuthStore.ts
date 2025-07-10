@@ -11,6 +11,7 @@ type User = {
   providerAccountId?: string
   username?: string
   bio?: string
+  isOnboarded?: boolean
   isVerified?: boolean
   location?: string
   website?: string
@@ -23,6 +24,7 @@ type AuthStore = {
   user: User | null
   token: string | null
   isLoggedIn: boolean
+  isOnboarded: boolean
   login: (token: string, user?: User) => Promise<void>
   logout: () => void
   setUser: (user: User) => void
@@ -34,6 +36,7 @@ export const useAuthStore = create<AuthStore>()(
       user: null,
       token: null,
       isLoggedIn: false,
+      isOnboarded: false,
       login: async (token: string) => {
         set({ token, isLoggedIn: true })
       },

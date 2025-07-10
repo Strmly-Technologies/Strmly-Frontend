@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Video,
   IndianRupee,
@@ -10,14 +10,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import Link from "next/link";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import UserList from "@/components/UserList";
 import ProfileTopbar from "@/app/profile/_components/ProfileTopbar";
+import { toast } from "sonner";
 
 const profileData = {
   id: 1,
@@ -42,60 +39,146 @@ const profileData = {
 
 export default function OthersCommunitiesPage() {
   const [activeTab, setActiveTab] = useState("posts");
-  const [userData, setUserData] = useState<any>(null);
+  const [communityData, setCommunityData] = useState<any>(null);
   const [videos, setVideos] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingVideos, setIsLoadingVideos] = useState(false);
   const { user, isLoggedIn, token, logout } = useAuthStore();
   const router = useRouter();
 
-  const handleLogout = async () => {
-    logout();
-    router.push("/auth");
-  };
+  const params = useParams();
 
-  const fetchUserVideos = async () => {
-    if (!userData?.id) return;
-    setIsLoadingVideos(true);
-    try {
-      const data = await api.getUserVideos(userData.id);
-      const transformedVideos = data.map((video: any) => ({
-        _id: video._id,
-        title: video.title,
-        description: video.description || "",
-        thumbnail: video.thumbnailUrl || "/placeholder.svg",
-        likes: video.likesCount || 0,
-        views: video.viewsCount || 0,
-        createdAt: video.createdAt,
-      }));
-      setVideos(transformedVideos);
-    } catch (err) {
-      console.error("Error fetching user videos:", err);
-    } finally {
-      setIsLoadingVideos(false);
+  const id = params?.id;
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
     }
-  };
+
+    const fetchUserVideos = async () => {
+      // if (!communityData.id) return;
+      setIsLoadingVideos(true);
+      try {
+        const params = new URLSearchParams();
+        params.append("type", activeTab);
+        console.log(activeTab);
+
+        const response = await fetch(
+          `/api/communities/video-by-id?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch user profile");
+        }
+
+        console.log("videos");
+        console.log(data);
+
+        // const transformedVideos = data.map((video: any) => ({
+        //   _id: video._id,
+        //   title: video.title,
+        //   description: video.description || "",
+        //   thumbnail: video.thumbnailUrl || "/placeholder.svg",
+        //   likes: video.likesCount || 0,
+        //   views: video.viewsCount || 0,
+        //   createdAt: video.createdAt,
+        // }));
+        // setVideos(transformedVideos);
+      } catch (err) {
+        console.error("Error fetching user videos:", err);
+      } finally {
+        setIsLoadingVideos(false);
+      }
+    };
+
+    if (token) {
+      fetchUserVideos();
+    }
+
+  }, [isLoggedIn, token]);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
+    }
+
+    const fetchUserData = async () => {
+      try {
+        // Login API call
+        const response = await fetch(`/api/communities/by-id?id=${id}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch user profile");
+        }
+
+        console.log(data);
+        setCommunityData(data);
+      } catch (error) {
+        console.log(error);
+        toast.error(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (token) {
+      fetchUserData();
+    }
+  }, [isLoggedIn, token]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background px-6">
       {/* Cover Image */}
-      <div className="h-48 relative">
-        <ProfileTopbar  hashtag={true} name={profileData.name}/>
-      </div>
 
-      {/* Profile Info */}
-      <div className="max-w-4xl px-6 -mt-20 relative">
-        <div className="flex flex-col items-center md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4">
-          <div className="relative">
-            <Avatar className="size-24 border-4 border-background">
-              <AvatarImage src={profileData.image} alt={profileData.name} />
-              <AvatarFallback>{profileData.name[0]}</AvatarFallback>
-            </Avatar>
-          </div>
-          <div className="flex-1">
-            <div className="flex flex-col md:flex-row md:items-center justify-between">
-              <div>
-                <p className="text-muted-foreground">By @{profileData.owner.name}</p>
+      {!isLoading && (
+        <div className="h-48 relative">
+          <ProfileTopbar hashtag={true} name={communityData?.name} />
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="w-full h-96 flex items-center justify-center -mt-20 relative">
+          <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        <div className="max-w-4xl -mt-20 relative">
+          <div className="flex flex-col items-center md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4">
+            <div className="relative flex flex-col items-center w-full">
+              <Avatar className="size-24 border-4 border-background">
+                <AvatarImage
+                  src={communityData?.profile_photo || profileData.image}
+                  alt={"community-icon"}
+                />
+                <AvatarFallback>
+                  {communityData?.name[0] || profileData.name[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex items-center justify-center w-full">
+                <p className="text-muted-foreground">
+                  By @
+                  {communityData?.founder?.username || profileData.owner.name}
+                </p>
                 {profileData.isPrivate && (
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                     Private
@@ -104,58 +187,80 @@ export default function OthersCommunitiesPage() {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Stats */}
-        <div className="mt-6 grid grid-cols-3 items-center">
-          <div
-            className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
-            onClick={() => setActiveTab("followers")}
-          >
-            {/* <span className="font-bold text-lg">{profileData.followers}</span>{" "} */}
-            <span className="font-bold text-lg">3.4M</span>{" "}
-            <span className="text-muted-foreground text-lg">Followers</span>
+          {/* Stats */}
+          <div className="mt-6 grid grid-cols-3 items-center">
+            <div
+              className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
+              onClick={() => setActiveTab("followers")}
+            >
+              {/* <span className="font-bold text-lg">{profileData.followers}</span>{" "} */}
+              <span className="font-bold text-lg">
+                {communityData?.followers?.length}
+              </span>{" "}
+              <span className="text-muted-foreground text-md">Followers</span>
+            </div>
+            <div
+              className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
+              onClick={() => setActiveTab("following")}
+            >
+              {/* <span className="font-bold text-lg">{profileData.following}</span>{" "} */}
+              <span className="font-bold text-lg">
+                {communityData?.creators.length}
+              </span>{" "}
+              <span className="text-muted-foreground text-md">Creators</span>
+            </div>
+            <div
+              className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
+              onClick={() => setActiveTab("posts")}
+            >
+              {/* <span className="font-bold text-lg">{profileData.posts}</span>{" "} */}
+              <span className="font-bold text-lg">
+                {communityData?.total_uploads}
+              </span>{" "}
+              <span className="text-muted-foreground text-md">Videos</span>
+            </div>
           </div>
-          <div
-            className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
-            onClick={() => setActiveTab("following")}
-          >
-            {/* <span className="font-bold text-lg">{profileData.following}</span>{" "} */}
-            <span className="font-bold text-lg">102</span>{" "}
-            <span className="text-muted-foreground text-lg">Community</span>
+
+          <div className="grid grid-cols-2 w-full items-center justify-center gap-2 mt-5 md:mt-0">
+            <Button
+              variant={"outline"}
+              className="px-4 rounded-md bg-transparent border-gray-400"
+            >
+              Follow
+            </Button>
+
+            <Button
+              variant={"outline"}
+              className="px-4 rounded-md bg-transparent border-gray-400"
+            >
+              {communityData?.community_fee_type === "free" ? (
+                "Free"
+              ) : (
+                <>
+                  Join at <IndianRupee className="size-5" />
+                  {communityData?.community_fee_amount}/month
+                </>
+              )}
+            </Button>
           </div>
-          <div
-            className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
-            onClick={() => setActiveTab("posts")}
-          >
-            {/* <span className="font-bold text-lg">{profileData.posts}</span>{" "} */}
-            <span className="font-bold text-lg">800</span>{" "}
-            <span className="text-muted-foreground text-lg">Posts</span>
+
+          {/* Bio */}
+          <div className="mt-6 flex flex-col items-center justify-center">
+            <p className="text-muted-foreground text-xs">
+              {communityData?.bio}
+            </p>
           </div>
         </div>
+      )}
 
-        <div className="flex w-full items-center justify-center gap-2 mt-5 md:mt-0">
-          <Button
-            variant={"outline"}
-            className="px-4 border-black py-2 text-black rounded-md"
-          >
-            Follow
-          </Button>
-          <Button
-            variant={"outline"}
-            className="px-4  border-black py-2 text-black rounded-md"
-          >
-            Joain at <IndianRupee className="size-5"/>{profileData.communityFee}/month
-          </Button>
+      {/* Tabs */}
+      {isLoadingVideos ? (
+        <div className="w-full h-96 flex items-center justify-center -mt-20 relative">
+          <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
         </div>
-
-        {/* Bio */}
-        <div className="mt-6 flex flex-col items-center justify-center">
-          <p className="text-muted-foreground text-xs">{profileData.description}</p>
-        </div>
-
-        {/* Tabs */}
-        <div className="mt-8 border-b">
+      ) : (
+        <div className="mt-6 border-b">
           <div className="flex space-x-8 items-center justify-between">
             <button
               className={`pb-4 flex items-center justify-center ${
@@ -165,7 +270,11 @@ export default function OthersCommunitiesPage() {
               }`}
               onClick={() => setActiveTab("posts")}
             >
-              <PlayIcon className="size-7 text-black cursor-pointer"/>
+              <PlayIcon
+                className={`size-7 cursor-pointer ${
+                  activeTab == "posts" && "fill-white"
+                }`}
+              />
             </button>
             <button
               className={`pb-4 flex items-center justify-center ${
@@ -175,7 +284,11 @@ export default function OthersCommunitiesPage() {
               }`}
               onClick={() => setActiveTab("clips")}
             >
-              <Video className="size-7 text-black cursor-pointer"/>
+              <Video
+                className={`size-7 cursor-pointer ${
+                  activeTab == "clips" && "fill-white"
+                } `}
+              />
             </button>
             <button
               className={`pb-4 flex items-center justify-center ${
@@ -185,7 +298,11 @@ export default function OthersCommunitiesPage() {
               }`}
               onClick={() => setActiveTab("likes")}
             >
-              <HeartIcon className="size-7 text-black cursor-pointer"/>
+              <HeartIcon
+                className={`size-7 cursor-pointer ${
+                  activeTab == "likes" && "fill-white"
+                }`}
+              />
             </button>
             <button
               className={`pb-4 flex items-center justify-center ${
@@ -195,11 +312,15 @@ export default function OthersCommunitiesPage() {
               }`}
               onClick={() => setActiveTab("saved")}
             >
-              <BookmarkIcon className="size-7 text-black cursor-pointer"/>
+              <BookmarkIcon
+                className={`size-7 cursor-pointer ${
+                  activeTab == "saved" && "fill-white"
+                }`}
+              />
             </button>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

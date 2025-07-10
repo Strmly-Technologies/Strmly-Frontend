@@ -12,7 +12,7 @@ import CommentsSection from "./CommentsSection"
 import VideoMoreMenu from "./VideoMoreMenu"
 import { useAuthStore } from "@/store/useAuthStore"
 import { FaWhatsapp, FaInstagram, FaTelegram, FaSnapchat, FaTwitter, FaFacebook } from "react-icons/fa"
-import { vi } from "zod/v4/locales"
+import { AddShare, toggleLike } from "./api/VideoFeed"
 
 const socialPlatforms = [
   { name: "WhatsApp", icon: FaWhatsapp, color: "text-green-500" },
@@ -205,41 +205,35 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
       return
     }
 
-    if (action === "like") {
-      try {
-        console.log("Sending like for video:", videoId, longVideoOnly ? "long" : "short");
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/like`, {
-          method: 'POST',
-          credentials: "include",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            "videoId": videoId,
-            "type": longVideoOnly ? "long" : "short",
-          })
-        })
+if (action === "like") {
+  try {
+    console.log("Sending like for video:", videoId, longVideoOnly ? "long" : "short");
 
-        if (!response.ok) {
-          throw new Error("Failed to toggle like")
-        }
+    const data = await toggleLike(token, videoId, longVideoOnly ? "long" : "short");
 
-        const data = await response.json()
-
-        // Update the video's like count and liked state
-        setVideos(prevVideos =>
-          prevVideos.map(video =>
-            video._id === videoId
-              ? {
-                ...video,
-                likes: data.liked ? video.likes + 1 : video.likes - 1,
-                isLiked: data.liked
-              }
-              : video
-          )
-        )
-      } catch (error) {
+    console.log(data);
+    
+    setVideos(prevVideos =>
+      prevVideos.map(video =>
+        video._id === videoId
+          ? {
+              ...video,
+              likes: data.likes,
+              isLiked: data.isLiked,
+            }
+          : video
+      )
+    );
+    console.log(videos.map(video =>
+        video._id === videoId
+          ? {
+              ...video,
+              likes: data.likes,
+              isLiked: true,
+            }
+          : video
+      ))
+} catch (error) {
         console.error("Error toggling like:", error)
       }
     } else if (action === "comment") {
@@ -412,9 +406,16 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
   }, [filteredVideos, intersectionObserverCallback]) // Re-run if filteredVideos change
 
 
-  const handleShare = (platform: string, videoId: string) => {
+  const handleShare = async(platform: string, videoId: string) => {
+    if (!token) {
+      console.error("No authentication token found")
+      return
+    }
     const videoUrl = `https://strmly.com/video/${videoId}`
     const shareText = "Check out this video on Strmly!"
+
+    const data = await AddShare(token, videoId, longVideoOnly ? "long" : "short");
+    console.log(data)
 
     switch (platform.toLowerCase()) {
       case "whatsapp":
@@ -444,7 +445,12 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
     }
   }
 
-  const copyLink = (videoId: string) => {
+  const copyLink = async (videoId: string) => {
+  if (!token) {
+      console.error("No authentication token found")
+      return
+    }
+    const data = await AddShare(token, videoId, longVideoOnly ? "long" : "short");
     const videoUrl = `https://strmly.com/video/${videoId}`
     navigator.clipboard.writeText(videoUrl)
     setIsCopied(true)
@@ -566,9 +572,9 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
               <div className="flex flex-col items-center">
                 <Button
                   onClick={() => handleVideoAction("like", video._id)}
-                  className={`bg-transparent text-white rounded-full hover:bg-transparent p-1 ${video.isLiked ? 'text-red-500' : 'hover:text-red-500'} shadow-none`}
+                  className={`bg-transparent text-white rounded-full hover:bg-transparent p-1 shadow-none`}
                 >
-                  <img alt="icon" src='./assets/SidebarIcons/Like.svg' className={video.isLiked ? 'fill-current' : ''} />
+                  {video.isLiked ? <img alt="icon" src='./assets/SidebarIcons/Like.svg' /> : <img alt="icon" src='./assets/SidebarIcons/UnLike.svg' />}
                 </Button>
                 <span className="text-white text-xs font-medium mt-1">
                   {video.likes > 1000 ? `${(video.likes / 1000).toFixed(0)}K` : video.likes}
@@ -658,10 +664,12 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                         <div className="flex gap-3 mt-1 w-full px-1 items-center pb-1">
                           {/* Avatar */}
                           <div className="relative">
+                          <a href={`./profile/${video.user?.id}`} className="flex items-center">
                             <Avatar className="w-9 h-9">
                               <AvatarImage src={video.user?.avatar || "/placeholder.svg"} />
                               <AvatarFallback className="text-xs">{video.user?.name[0]}</AvatarFallback>
                             </Avatar>
+                          </a>
                           </div>
 
                           {/* Name + Follow */}
@@ -746,10 +754,12 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                         <div className="flex gap-3 mt-1 w-full px-1 items-center pb-1">
                           {/* Avatar */}
                           <div className="relative">
+                          <a href={`./profile/${video.user?.id}`} className="flex items-center">
                             <Avatar className="w-9 h-9">
                               <AvatarImage src={video.user?.avatar || "/placeholder.svg"} />
                               <AvatarFallback className="text-xs">{video.user?.name[0]}</AvatarFallback>
                             </Avatar>
+                          </a>
                           </div>
 
                           {/* Name + Follow */}
@@ -818,10 +828,12 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
                         <div className="flex gap-3 mt-1 w-full px-1 items-center pb-1">
                           {/* Avatar */}
                           <div className="relative">
+                          <a href={`./profile/${video.user?.id}`} className="flex items-center">
                             <Avatar className="w-9 h-9">
                               <AvatarImage src={video.user?.avatar || "/placeholder.svg"} />
                               <AvatarFallback className="text-xs">{video.user?.name[0]}</AvatarFallback>
                             </Avatar>
+                          </a>
                           </div>
 
                           {/* Name + Follow */}
@@ -925,7 +937,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
 
       {/* Comments Section */}
       <div ref={commentsRef}>
-        <CommentsSection isOpen={showComments} onClose={() => setShowComments(false)} videoId={selectedVideoId} />
+        <CommentsSection isOpen={showComments} onClose={() => setShowComments(false)} videoId={selectedVideoId} longVideosOnly={longVideoOnly}/>
       </div>
 
       {/* Share Options */}
@@ -956,11 +968,11 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
       )}
 
       {/* Video More Menu */}
-      <VideoMoreMenu isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} videoId={selectedVideoId} setVideoSpeed={setVideoSpeed}videoRefs={{
+      {token? <VideoMoreMenu isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} videoId={selectedVideoId} longVideosOnly={longVideoOnly} token={token} setVideoSpeed={setVideoSpeed} videoRefs={{
         current: Object.fromEntries(
           videoRefs.current.map(({ id, element }) => [id, element])
         ),
-      }} />
+      }} /> : null}
     </>
   )
 }

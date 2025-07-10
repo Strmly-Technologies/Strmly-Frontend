@@ -12,8 +12,8 @@ export const mockComments = Array.from({ length: 50 }, (_, i) => {
     repliesCount: Math.floor(Math.random() * 10),
     timestamp: new Date(Date.now() - Math.floor(Math.random() * 100000000)).toISOString(),
     donations: Math.floor(Math.random() * 100),
-    upVotes: Math.floor(Math.random() * 200),
-    downVotes: Math.floor(Math.random() * 50),
+    upvotes: Math.floor(Math.random() * 200),
+    downvotes: Math.floor(Math.random() * 50),
     user: {
       id: randomUserId,
       name: names[randomIndex],

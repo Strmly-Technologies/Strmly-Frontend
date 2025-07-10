@@ -100,13 +100,13 @@ const ShortVideoForm = ({ videoFile, videoURL, onBack }: ShortVideoFormProps) =>
       }
      
 
-      const response = await fetch("/api/upload/long", {
+      const response = await fetch("/api/upload/short", {
         method: "POST",
         body: formData,
         headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
+        credentials: 'include'
       });
 
       if (!response.ok) {

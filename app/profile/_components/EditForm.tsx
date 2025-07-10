@@ -14,10 +14,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState, useRef } from "react";
-import { Loader2, PencilIcon } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Loader2, PencilIcon, CalendarIcon, MoveLeft } from "lucide-react";
 import { profileFormSchema } from "@/lib/schemas/ProfileSchema";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useRouter } from "next/navigation";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface ProfileFormProps {
   defaultValues?: Partial<z.infer<typeof profileFormSchema>>;
@@ -26,12 +37,15 @@ interface ProfileFormProps {
 const EditForm = ({ defaultValues }: ProfileFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user, token, isLoggedIn } = useAuthStore();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       username: defaultValues?.username || "",
       bio: defaultValues?.bio || "",
+      dob: defaultValues?.dob ? new Date(defaultValues.dob) : null,
     },
   });
 
@@ -56,13 +70,22 @@ const EditForm = ({ defaultValues }: ProfileFormProps) => {
       const formData = new FormData();
       formData.append("username", data.username);
       formData.append("bio", data.bio);
+
+      if (data.dob) {
+        formData.append("date_of_birth", data.dob.toISOString());
+      }
+
       if (data.profile_photo) {
         formData.append("profile_photo", data.profile_photo);
       }
 
-      const response = await fetch("/api/profile", {
+      const response = await fetch("/api/user/profile/edit", {
         method: "PUT",
         body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -70,6 +93,10 @@ const EditForm = ({ defaultValues }: ProfileFormProps) => {
       }
 
       toast.success("Profile updated successfully");
+      // useAuthStore.getState().setUser(response.user);
+      setTimeout(() => {
+        router.push("/profile");
+      }, 500);
     } catch (error) {
       toast.error("There was an error updating your profile.");
     } finally {
@@ -78,13 +105,27 @@ const EditForm = ({ defaultValues }: ProfileFormProps) => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-20 my-10">
-      <div>
-        <h2 className="text-xl font-semibold text-primary">Update Your Profile</h2>
+    <div className="flex flex-col items-center justify-center space-y-20 my-10 mx-10">
+      <div className="flex relative items-center w-full justify-between">
+        <Image
+          onClick={() => router.back()}
+          width={16}
+          height={16}
+          src={"/assets/Back.png"}
+          alt="arrow_back"
+          className="text-black"
+        />
+        <h2 className="text-xl text-[#F1C40F] font-semibold">
+          Update Your Profile
+        </h2>
+        <div></div>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <div className="flex  flex-col items-center justify-center">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-8 w-full max-w-md"
+        >
+          <div className="flex flex-col items-center justify-center">
             <Avatar className="size-28">
               <AvatarImage src={previewImage || ""} />
               <AvatarFallback>
@@ -148,6 +189,52 @@ const EditForm = ({ defaultValues }: ProfileFormProps) => {
                     {...field}
                   />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="dob"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date (optional)</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value || undefined}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      autoFocus
+                      captionLayout="dropdown-years" // This adds year/month dropdowns
+                      defaultMonth={
+                        field.value ||
+                        new Date(new Date().getFullYear() - 20, 0)
+                      } // Default to 20 years ago
+                    />
+                  </PopoverContent>
+                </Popover>
                 <FormMessage />
               </FormItem>
             )}

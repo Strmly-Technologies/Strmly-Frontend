@@ -20,6 +20,8 @@ import { FaGoogle } from "react-icons/fa";
 import { useState } from "react";
 import { ApiError } from "next/dist/server/api-utils";
 import { Loader2Icon } from "lucide-react";
+import { useAuthStore } from "@/store/useAuthStore";
+import Image from "next/image";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -54,7 +56,15 @@ export default function SignupPage() {
       }
 
       toast.success("Account created successfully");
-        // router.push("/");
+      // Update the auth store with user data and token
+      useAuthStore.getState().login(data.token);
+      useAuthStore.getState().setUser(data.user);
+
+      toast.success("Signup Successful successful");
+
+      setTimeout(()=> {
+        router.push("/onboarding");
+      }, 500);
     } catch (error) {
       console.error("Signup error:", error);
       toast.error(
@@ -68,11 +78,13 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold font-serif text-primary">Strmly</h1>
-        </div>
+    <div className="min-h-screen flex mt-32 justify-center">
+      <div className="w-full max-w-md p-8 space-y-8 rounded-lg">
+      <div className="flex items-center justify-center">
+        <h1 className="text-3xl text-[#F1C40F] font-bold font-serif [text-shadow:_0_5px_8px_var(--tw-shadow-color)] shadow-[#F1C40F]">
+          Strmly
+        </h1>
+      </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -107,7 +119,7 @@ export default function SignupPage() {
               )}
             />
 
-            <Button type="submit" disabled={isLoading} className="w-full bg-[#F1C40F]">
+            <Button type="submit" disabled={isLoading} className="w-full text-black hover:shadow-md hover:shadow-[#F1C40F] bg-[#F1C40F]">
             {isLoading ? (
               <div className="flex items-center gap-2">
                 <Loader2Icon className="size-4 animate-spin" />
@@ -121,8 +133,8 @@ export default function SignupPage() {
         </Form>
 
         <div className="relative">
-          <hr className="w-72 ml-8" />
-          <div className="absolute -bottom-5 left-[45%] bg-white p-2 text-black rounded-full">
+          <hr className="w-full" />
+          <div className="absolute -bottom-5 left-[45%] p-2 rounded-full">
             <span className="tracking-wider">OR</span>
           </div>
         </div>
@@ -132,10 +144,10 @@ export default function SignupPage() {
             type="button"
             className="w-full flex items-center justify-center gap-2"
           >
-            <div className="p-2 rounded-full bg-gray-100">
-              <FaGoogle className="size-4 text-red-500" />
+            <div className="">
+              <Image src={'/google.png'} alt="google-icon" width={30} height={30} className="size-6 text-red-500" />
             </div>
-            <h2 className="text-blue-500">Signup with Google</h2>
+            <h2 className="text-muted-foreground">Signup with Google</h2>
           </button>
         </div>
 

@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  MapPin,
-  LinkIcon,
-  Calendar
-} from "lucide-react";
+import { MapPin, LinkIcon, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -13,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import ProfileTopbar from "./_components/ProfileTopbar";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 const mockPosts = [
   { id: 1, image: "/placeholder.svg?height=300&width=300", type: "image" },
@@ -32,33 +29,61 @@ export default function ProfilePage() {
   const { user, isLoggedIn, token, logout } = useAuthStore();
   const router = useRouter();
 
-
-  const fetchUserVideos = async () => {
-    if (!userData?.id) return;
-    setIsLoadingVideos(true);
-    try {
-      const data = await api.getUserVideos(userData.id);
-      const transformedVideos = data.map((video: any) => ({
-        _id: video._id,
-        title: video.title,
-        description: video.description || "",
-        thumbnail: video.thumbnailUrl || "/placeholder.svg",
-        likes: video.likesCount || 0,
-        views: video.viewsCount || 0,
-        createdAt: video.createdAt,
-      }));
-      setVideos(transformedVideos);
-    } catch (err) {
-      console.error("Error fetching user videos:", err);
-    } finally {
-      setIsLoadingVideos(false);
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
     }
-  };
+
+    const fetchUserVideos = async () => {
+      setIsLoadingVideos(true);
+      try {
+        const params = new URLSearchParams();
+        params.append('type', activeTab);
+        console.log(activeTab)
+
+        const response = await fetch(`/api/user/profile/videos?${params.toString()}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch user profile");
+        }
+
+        console.log("videos");
+        console.log(data);
+
+        // const transformedVideos = data.map((video: any) => ({
+        //   _id: video._id,
+        //   title: video.title,
+        //   description: video.description || "",
+        //   thumbnail: video.thumbnailUrl || "/placeholder.svg",
+        //   likes: video.likesCount || 0,
+        //   views: video.viewsCount || 0,
+        //   createdAt: video.createdAt,
+        // }));
+        // setVideos(transformedVideos);
+      } catch (err) {
+        console.error("Error fetching user videos:", err);
+      } finally {
+        setIsLoadingVideos(false);
+      }
+    };
+
+    if (token) {
+      fetchUserVideos();
+    }
+  }, [isLoggedIn, token, activeTab]);
 
   useEffect(() => {
     if (!isLoggedIn) {
-      router.push("/auth")
-      return
+      router.push("/login");
+      return;
     }
 
     const fetchUserData = async () => {
@@ -67,10 +92,10 @@ export default function ProfilePage() {
         const response = await fetch("/api/user/profile", {
           method: "GET",
           headers: {
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: 'include'
+          credentials: "include",
         });
 
         const data = await response.json();
@@ -83,30 +108,25 @@ export default function ProfilePage() {
         setUserData(data.user);
       } catch (error) {
         console.log(error);
-        toast.error(error instanceof Error ? error.message : "An unknown error occurred");
-      } finally{
+        toast.error(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
+      } finally {
         setIsLoading(false);
       }
-    }
+    };
 
     if (token) {
-      fetchUserData()
+      fetchUserData();
     }
-  }, [isLoggedIn, router, token])
-  
-
-  // useEffect(() => {
-  //   if (userData?.id) {
-  //     fetchUserVideos()
-  //   }
-  // }, [userData?.id])
+  }, [isLoggedIn, router, token]);
 
   // if (isLoading || !userData) {
   //   return (
   //     <div className="min-h-screen bg-background flex items-center justify-center">
-  //       <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+  //       <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
   //     </div>
-  //   )
+  //   );
   // }
 
   const profileData = {
@@ -135,165 +155,197 @@ export default function ProfilePage() {
   // setUserData(profileData);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background px-6">
       {/* Cover Image */}
-      <div className="h-48 relative">
-
-        <ProfileTopbar hashtag={false} name={'Gabar Singh'}/>
-
-      </div>
+      
+      {userData && 
+        <div className="h-48 relative">
+          <ProfileTopbar hashtag={false} name={userData?.username} />
+        </div>
+      }
 
       {/* Profile Info */}
-      <div className="max-w-4xl px-6 -mt-20 relative">
-        <div className="flex flex-col items-center md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4">
-          <div className="relative">
-            <Avatar className="size-24 border-4 border-background">
-              <AvatarImage src={profileData.image} alt={profileData.name} />
-              <AvatarFallback>{profileData.name[0]}</AvatarFallback>
-            </Avatar>
-          </div>
-          <div className="flex-1">
-            <div className="flex flex-col md:flex-row md:items-center justify-between">
-              <div>
-                <p className="text-muted-foreground">@{profileData.username}</p>
-                {profileData.isVerified && (
+      {isLoading ? (
+        <div className="w-full h-96 flex items-center justify-center -mt-20 relative">
+          <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        <div className="max-w-4xl -mt-20 relative">
+          <div className="flex flex-col items-center md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4">
+            <div className="relative">
+              <Avatar className="size-24 border-4 border-background">
+                <AvatarImage
+                  src={userData?.profile_photo || profileData.image}
+                  alt={"profile_photo"}
+                />
+                <AvatarFallback>
+                  {userData?.username[0] || profileData.name[0]}
+                </AvatarFallback>
+              </Avatar>
+
+              <div className="flex gap-2 items-center">
+                <p className="text-muted-foreground">
+                  @{userData?.username || profileData.username}
+                </p>
+                {(userData?.creator_profile?.verification_status !=
+                  "unverified" ||
+                  profileData.isVerified) && (
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                     Verified
                   </span>
                 )}
               </div>
+
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="mt-6 grid grid-cols-3 items-center">
+            <div
+              className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
+              onClick={() => router.push("/communities?type=followers")}
+            >
+              {/* <span className="font-bold text-lg">{profileData.followers}</span>{" "} */}
+              <span className="font-bold text-lg">
+                {userData?.followers.length}M
+              </span>{" "}
+              <span className="text-muted-foreground text-lg">Followers</span>
+            </div>
+            <div
+              className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
+              onClick={() => router.push("/communities?type=community")}
+            >
+              {/* <span className="font-bold text-lg">{profileData.following}</span>{" "} */}
+              <span className="font-bold text-lg">
+                {userData?.community.length}
+              </span>{" "}
+              <span className="text-muted-foreground text-lg">Community</span>
+            </div>
+            <div
+              className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
+              onClick={() => router.push("/communities?type=following")}
+            >
+              {/* <span className="font-bold text-lg">{profileData.posts}</span>{" "} */}
+              <span className="font-bold text-lg">800</span>{" "}
+              <span className="text-muted-foreground text-lg">Followings</span>
+            </div>
+          </div>
+
+          <div className="flex w-full items-center justify-center gap-2 mt-5 md:mt-0">
+            <Button
+              onClick={() => router.push("/communities")}
+              className="px-4 text-black bg-[#F1C40F] py-2 rounded-md"
+            >
+              My Community
+            </Button>
+            <Button
+              onClick={() => router.push("/profile/dashboard")}
+              className="px-4 text-black bg-[#F1C40F] py-2 rounded-md"
+            >
+              Dashboard
+            </Button>
+          </div>
+
+          <div className="flex w-full items-center justify-center gap-2 mt-5 md:mt-0">
+            <Button
+              onClick={() => router.push("/profile/edit")}
+              variant={"outline"}
+              className="px-4 py-2 rounded-md"
+            >
+              Edit Profile
+            </Button>
+            <Button variant={"outline"} className="px-4 py-2 rounded-md">
+              History
+            </Button>
+          </div>
+
+          {/* Bio */}
+          <div className="mt-6 flex flex-col items-center justify-center">
+            <p className="text-muted-foreground text-center">{userData?.bio}</p>
+            <div className="mt-2 flex flex-wrap gap-4 text-muted-foreground">
+              {/* {profileData.location && (
+                <span className="flex items-center">
+                  <MapPin className="w-4 h-4 mr-1" />
+                  {profileData.location}
+                </span>
+              )} */}
+              {profileData.website && (
+                <a
+                  href={profileData.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary flex items-center"
+                >
+                  <LinkIcon className="w-4 h-4 mr-1" />
+                  {profileData.website}
+                </a>
+              )}
+              {/* <span className="flex items-center">
+                <Calendar className="w-4 h-4 mr-1" />
+                Joined{" "}
+                {userData?.createdAt &&
+                  (format(new Date(userData?.createdAt), "MMMM yyyy") ||
+                    profileData.joinedDate)}
+              </span> */}
             </div>
           </div>
         </div>
+      )}
 
-        {/* Stats */}
-        <div className="mt-6 grid grid-cols-3 items-center">
-          <div
-            className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
-            onClick={() => setActiveTab("followers")}
-          >
-            {/* <span className="font-bold text-lg">{profileData.followers}</span>{" "} */}
-            <span className="font-bold text-lg">3.4M</span>{" "}
-            <span className="text-muted-foreground text-lg">Followers</span>
-          </div>
-          <div
-            className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
-            onClick={() => setActiveTab("following")}
-          >
-            {/* <span className="font-bold text-lg">{profileData.following}</span>{" "} */}
-            <span className="font-bold text-lg">102</span>{" "}
-            <span className="text-muted-foreground text-lg">Community</span>
-          </div>
-          <div
-            className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
-            onClick={() => setActiveTab("posts")}
-          >
-            {/* <span className="font-bold text-lg">{profileData.posts}</span>{" "} */}
-            <span className="font-bold text-lg">800</span>{" "}
-            <span className="text-muted-foreground text-lg">Posts</span>
-          </div>
+      {isLoadingVideos ? (
+        <div className="w-full h-96 flex items-center justify-center -mt-20 relative">
+          <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
         </div>
-
-        <div className="flex w-full items-center justify-center gap-2 mt-5 md:mt-0">
-          <Button className="px-4 bg-[#F1C40F] py-2 text-primary-foreground rounded-md">
-            My Community
-          </Button>
-          <Button className="px-4 bg-[#F1C40F] py-2 text-primary-foreground rounded-md">
-            Dashboard
-          </Button>
-        </div>
-
-        <div className="flex w-full items-center justify-center gap-2 mt-5 md:mt-0">
-          <Button
-            variant={"outline"}
-            className="px-4 border-black py-2 text-black rounded-md"
-          >
-            Edit Profile
-          </Button>
-          <Button
-            variant={"outline"}
-            className="px-4  border-black py-2 text-black rounded-md"
-          >
-            History
-          </Button>
-        </div>
-
-        {/* Bio */}
-        <div className="mt-6 flex flex-col items-center justify-center">
-          <p className="text-muted-foreground">{profileData.bio}</p>
-          <div className="mt-2 flex flex-wrap gap-4 text-muted-foreground">
-            {profileData.location && (
-              <span className="flex items-center">
-                <MapPin className="w-4 h-4 mr-1" />
-                {profileData.location}
-              </span>
-            )}
-            {profileData.website && (
-              <a
-                href={profileData.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary flex items-center"
+      ) : (
+        <>
+          {/* Tabs */}
+          <div className="mt-4 border-b">
+            <div className="flex space-x-8 items-center justify-between">
+              <button
+                className={`pb-4 ${
+                  activeTab === "posts"
+                    ? "border-b-2 border-primary font-medium"
+                    : "text-muted-foreground"
+                }`}
+                onClick={() => setActiveTab("long")}
               >
-                <LinkIcon className="w-4 h-4 mr-1" />
-                {profileData.website}
-              </a>
-            )}
-            <span className="flex items-center">
-              <Calendar className="w-4 h-4 mr-1" />
-              Joined {profileData.joinedDate}
-            </span>
+                Posts
+              </button>
+              <button
+                className={`pb-4 ${
+                  activeTab === "clips"
+                    ? "border-b-2 border-primary font-medium"
+                    : "text-muted-foreground"
+                }`}
+                onClick={() => setActiveTab("clips")}
+              >
+                Clips
+              </button>
+              <button
+                className={`pb-4 ${
+                  activeTab === "likes"
+                    ? "border-b-2 border-primary font-medium"
+                    : "text-muted-foreground"
+                }`}
+                onClick={() => setActiveTab("liked")}
+              >
+                Likes
+              </button>
+              <button
+                className={`pb-4 ${
+                  activeTab === "saved"
+                    ? "border-b-2 border-primary font-medium"
+                    : "text-muted-foreground"
+                }`}
+                onClick={() => setActiveTab("saved")}
+              >
+                Saved
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Tabs */}
-        <div className="mt-8 border-b">
-          <div className="flex space-x-8 items-center justify-between">
-            <button
-              className={`pb-4 ${
-                activeTab === "posts"
-                  ? "border-b-2 border-primary font-medium"
-                  : "text-muted-foreground"
-              }`}
-              onClick={() => setActiveTab("posts")}
-            >
-              Posts
-            </button>
-            <button
-              className={`pb-4 ${
-                activeTab === "clips"
-                  ? "border-b-2 border-primary font-medium"
-                  : "text-muted-foreground"
-              }`}
-              onClick={() => setActiveTab("clips")}
-            >
-              Clips
-            </button>
-            <button
-              className={`pb-4 ${
-                activeTab === "likes"
-                  ? "border-b-2 border-primary font-medium"
-                  : "text-muted-foreground"
-              }`}
-              onClick={() => setActiveTab("likes")}
-            >
-              Likes
-            </button>
-            <button
-              className={`pb-4 ${
-                activeTab === "saved"
-                  ? "border-b-2 border-primary font-medium"
-                  : "text-muted-foreground"
-              }`}
-              onClick={() => setActiveTab("saved")}
-            >
-              Saved
-            </button>
-          </div>
-        </div>
-
-        {/* Content */}
-        {/* <div className="mt-8">
+          {/* Content */}
+          {/* <div className="mt-8">
           {activeTab === "posts" && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {isLoadingVideos ? (
@@ -399,7 +451,8 @@ export default function ProfilePage() {
             </div>
           )}
         </div> */}
-      </div>
+        </>
+      )}
     </div>
   );
 }
