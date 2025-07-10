@@ -1,9 +1,10 @@
 "use client"
 import { useEffect, useState, useRef } from "react"
-import { X, Settings, Gauge, Download, Bookmark } from "lucide-react"
+import { X, Gauge, Bookmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
+import { SaveVideo } from "./api/MoreOptions"
 
 interface VideoMoreMenuProps {
   isOpen: boolean
@@ -11,12 +12,28 @@ interface VideoMoreMenuProps {
   videoId: string | null
   videoRefs: React.MutableRefObject<{ [id: string]: HTMLVideoElement | null }>
   setVideoSpeed: (value: number | ((prev: number) => number)) => void
+  longVideosOnly: boolean
+  token: string
 }
 
-export default function VideoMoreMenu({ isOpen, onClose, videoId, videoRefs, setVideoSpeed }: VideoMoreMenuProps) {
-  const [saved, setSaved] = useState("false")
+export default function VideoMoreMenu({ isOpen, onClose, videoId, videoRefs, setVideoSpeed, longVideosOnly, token }: VideoMoreMenuProps) {
+  const [saved, setSaved] = useState(false)
   const [speed, setSpeed] = useState("1")
 
+  const HandleSave = async () => {
+  if (!token || !videoId) return;
+
+  try {
+    const data = await SaveVideo({
+      token,
+      commentId: videoId,
+      videoId,
+      videoType: longVideosOnly ? "long" : "short"
+    });
+  } catch (err) {
+    console.error("Save error:", err);
+  }
+};
   useEffect(() => {
     // Load saved state from localStorage or set default
     setVideoSpeed(parseFloat(speed));
@@ -44,11 +61,13 @@ export default function VideoMoreMenu({ isOpen, onClose, videoId, videoRefs, set
 
         {/* Save Settings */}
         <div className="space-y-2">
-          <Button variant="outline" className="w-full justify-start text-sm lg:text-base py-2 lg:py-3">
+          <Button variant="outline" onClick={HandleSave} className="w-full justify-start text-sm lg:text-base py-2 lg:py-3">
             <Bookmark size={14} className="mr-2 lg:w-4 lg:h-4" />
-            {true ? "Removed from Saved" : "Save Video"}
+            {saved ? "Removed from Saved" : "Save Video"}
           </Button>
         </div>
+
+        <Separator />
 
         {/* Speed Settings */}
         <div className="space-y-2">
@@ -71,14 +90,6 @@ export default function VideoMoreMenu({ isOpen, onClose, videoId, videoRefs, set
             </SelectContent>
           </Select>
         </div>
-
-        <Separator />
-
-        {/* Download Option */}
-        <Button variant="outline" className="w-full justify-start text-sm lg:text-base py-2 lg:py-3">
-          <Download size={14} className="mr-2 lg:w-4 lg:h-4" />
-          Download Video
-        </Button>
       </div>
     </div>
   )

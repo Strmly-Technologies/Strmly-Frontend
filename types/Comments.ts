@@ -7,8 +7,8 @@ export interface Comment {
   repliesCount: number
   timestamp: string
   donations: number
-  upVotes: number
-  downVotes: number
+  upvotes: number
+  downvotes: number
   user: {
     id: string
     name: string
@@ -25,8 +25,8 @@ export interface reply {
   parentId: string
   timestamp: string
   donations: number
-  upVotes: number
-  downVotes: number
+  upvotes: number
+  downvotes: number
   user: {
     id: string
     name: string
