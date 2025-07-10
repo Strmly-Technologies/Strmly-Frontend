@@ -1,5 +1,5 @@
 export const SaveVideo = async ({ token, commentId, videoId, videoType }: any) => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/save`, {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/interaction/save`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -19,7 +19,7 @@ export const SaveVideo = async ({ token, commentId, videoId, videoType }: any) =
 };
 
 export const UnSaveVideo = async ({ token, commentId, videoId, videoType }: any) => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/unsave`, {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/interaction/unsave`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -38,7 +38,7 @@ export const UnSaveVideo = async ({ token, commentId, videoId, videoType }: any)
 };
 
 export const SaveStatus = async ({ token, commentId, videoId, videoType }: any) => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/saved/status`, {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/interaction/saved/status`, {
     method: "POST",
     credentials: "include",
     headers: {

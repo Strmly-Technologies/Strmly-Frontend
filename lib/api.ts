@@ -1,7 +1,7 @@
 import { useAuthStore } from "@/store/useAuthStore"
 import { User } from "@/types/User"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL
+const API_URL = process.env.BACKEND_URL
 
 export const api = {
   // User profile
@@ -120,9 +120,7 @@ export const api = {
 
   async isFollowing(userId: string, targetUserId: string) {
     const token = useAuthStore.getState().token
-    const response = await fetch(
-      `${API_URL}/api/v1/user/following`,
-      {
+    const response = await fetch(`${API_URL}/api/v1/user/following`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

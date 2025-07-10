@@ -1,6 +1,6 @@
 // lib/commentActions.ts
 export const upvoteComment = async ({ token, commentId, videoId, videoType }: any) => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/comments/upvote`, {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/interaction/comments/upvote`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -15,7 +15,7 @@ export const upvoteComment = async ({ token, commentId, videoId, videoType }: an
 };
 
 export const downvoteComment = async ({ token, commentId, videoId, videoType }: any) => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/comments/downvote`, {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/interaction/comments/downvote`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -30,7 +30,7 @@ export const downvoteComment = async ({ token, commentId, videoId, videoType }: 
 };
 
 export const giftComment = async ({ token, commentId, videoId, videoType, amount, giftNote }: any) => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/gift-comment`, {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/interaction/gift-comment`, {
     method: "POST",
     credentials: "include",
     headers: {
