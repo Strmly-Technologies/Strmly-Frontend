@@ -4,6 +4,7 @@ import { Video } from "@/types/VideoFeed"
 import { api } from "./api"
 import dotenv from "dotenv"
 import { Notification } from "@/types/Notification"
+import { User } from "@/types/User"
 dotenv.config()
 
 export function cn(...inputs: ClassValue[]) {
@@ -94,9 +95,23 @@ export function useVideoActions(
   setFollowingMap: React.Dispatch<React.SetStateAction<Record<string, boolean>>>,
   setShowFullDescriptionMap: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
 ) {
-  const handleFollow = async (targetUserId: string) => {
+  const handleFollow = async (targetUserId: string, user:User) => {
     try {
-      const result = await api.followUser(targetUserId);
+      const result = await api.followUser(targetUserId, user);
+      console.log("Follow result:", result);
+      setFollowingMap(prev => ({
+        ...prev,
+        [targetUserId]: result.following
+      }));
+    } catch (error) {
+      console.error("Error following user:", error);
+    }
+  };
+
+  const handleUnfollow = async (targetUserId: string, user:User) => {
+    try {
+      const result = await api.unfollowUser(targetUserId, user);
+      console.log("Unfollow result:", result);
       setFollowingMap(prev => ({
         ...prev,
         [targetUserId]: result.following

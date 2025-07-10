@@ -40,11 +40,11 @@ export default function LongVideosPage() {
   return (
     <div className="h-screen">
       <MobileBottomNav progress={0} />
-      <div className="flex items-center justify-center p-3 lg:p-4 flex-col bg-[#1A1A1A]">
-        <h3 className="text-base text-[24px] font-semibold">Notifications</h3>
+      <div className="flex items-center justify-center p-3 lg:p-4 flex-col">
+        <h3 className="text-base text-[32px] pt-3 font-inter">Notifications</h3>
       </div>
       {/* Tabs */}
-      <div className="bg-black min-h-screen text-white pl-3">
+      <div className="min-h-screen text-white pl-3">
         {/* Custom Tab Buttons */}
         <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
           <div className="flex space-x-6 mb-4 border-b border-white/10 pb-2 min-w-max justify-around p-5">
