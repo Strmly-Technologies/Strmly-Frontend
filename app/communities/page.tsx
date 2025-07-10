@@ -477,7 +477,7 @@ if(isMobile){
                 <p className="text-xs text-gray-400">Followers</p>
               </div>
 
-              <button className="bg-yellow-500 text-black px-3 py-1 rounded-md text-sm font-semibold">
+              <button className="bg-yellow-500 text-black px-6 rounded-md text-sm font-semibold">
                 Edit
               </button>
             </div>
@@ -562,14 +562,14 @@ if(isMobile){
                 {/* Right: Creators and Followers */}
                 <div className="flex items-center space-x-6">
                   <div className="text-right">
-                    <p className="text-m font-semibold text-white">
-                      {community.creators?.toLocaleString?.() || '—'}
+                    <p className="text-m font-semibold text-white text-center">
+                      {community.creators?.length.toLocaleString?.() || '0'}
                     </p>
                     <p className="text-xs text-gray-400">Creators</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-m font-semibold text-white">
-                      {community.followers ? community.followers.length.toLocaleString() : '—'}
+                    <p className="text-m font-semibold text-white text-center">
+                      {community.followers ? community.followers.length.toLocaleString() : '0'}
                     </p>
                     <p className="text-xs text-gray-400">Followers</p>
                   </div>
