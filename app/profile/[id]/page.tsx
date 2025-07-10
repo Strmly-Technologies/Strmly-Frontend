@@ -6,10 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/api";
-import ProfileTopbar from "./_components/ProfileTopbar";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import ProfileTopbar from "../_components/ProfileTopbar";
 
 const mockPosts = [
   { id: 1, image: "/placeholder.svg?height=300&width=300", type: "image" },
@@ -20,7 +18,7 @@ const mockPosts = [
   { id: 6, image: "/placeholder.svg?height=300&width=300", type: "video" },
 ];
 
-export default function ProfilePage() {
+export default function ProfileIdPage() {
   const [activeTab, setActiveTab] = useState("posts");
   const [userData, setUserData] = useState<any>(null);
   const [videos, setVideos] = useState<any[]>([]);
@@ -121,14 +119,6 @@ export default function ProfilePage() {
     }
   }, [isLoggedIn, router, token]);
 
-  // if (isLoading || !userData) {
-  //   return (
-  //     <div className="min-h-screen bg-background flex items-center justify-center">
-  //       <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
-  //     </div>
-  //   );
-  // }
-
   const profileData = {
     name: userData?.name || "User",
     email: userData?.email || "",
@@ -200,7 +190,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Stats */}
-          <div className="mt-6 grid grid-cols-3 items-center">
+          <div className="mt-6 grid grid-cols-3 gap-2 items-center">
             <div
               className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
               onClick={() => router.push("/communities?type=followers")}
@@ -211,38 +201,16 @@ export default function ProfilePage() {
               </span>{" "}
               <span className="text-muted-foreground text-lg">Followers</span>
             </div>
-            <div
-              className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
-              onClick={() => router.push("/communities?type=community")}
-            >
-              {/* <span className="font-bold text-lg">{profileData.following}</span>{" "} */}
-              <span className="font-bold text-lg">
-                {userData?.community.length}
-              </span>{" "}
-              <span className="text-muted-foreground text-lg">Community</span>
-            </div>
-            <div
-              className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
-              onClick={() => router.push("/communities?type=following")}
-            >
-              {/* <span className="font-bold text-lg">{profileData.posts}</span>{" "} */}
-              <span className="font-bold text-lg">800</span>{" "}
-              <span className="text-muted-foreground text-lg">Followings</span>
-            </div>
-          </div>
-
-          <div className="flex w-full items-center justify-center gap-2 mt-5 md:mt-0">
             <Button
               onClick={() => router.push("/communities")}
-              className="px-4 text-black bg-[#F1C40F] py-2 rounded-md"
+              className="px-4 bg-[#F1C40F] py-2 rounded-md"
             >
-              My Community
+              Follow
             </Button>
             <Button
-              onClick={() => router.push("/profile/dashboard")}
-              className="px-4 text-black bg-[#F1C40F] py-2 rounded-md"
-            >
-              Dashboard
+                className="px-4 bg-[#F1C40F] py-2 rounded-md"
+                >
+                Access at ₹{userData?.creator_profile?.creator_pass_price}
             </Button>
           </div>
 
