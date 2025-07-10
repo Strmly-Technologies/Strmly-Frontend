@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MapPin, LinkIcon, Calendar } from "lucide-react";
+import {
+  MapPin,
+  LinkIcon,
+  Calendar,
+  PlayIcon,
+  Video,
+  HeartIcon,
+  BookmarkIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -10,24 +18,40 @@ import { api } from "@/lib/api";
 import ProfileTopbar from "./_components/ProfileTopbar";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useGenerateThumbnails } from "@/utils/useGenerateThumbnails";
 
-const mockPosts = [
-  { id: 1, image: "/placeholder.svg?height=300&width=300", type: "image" },
-  { id: 2, image: "/placeholder.svg?height=300&width=300", type: "video" },
-  { id: 3, image: "/placeholder.svg?height=300&width=300", type: "image" },
-  { id: 4, image: "/placeholder.svg?height=300&width=300", type: "video" },
-  { id: 5, image: "/placeholder.svg?height=300&width=300", type: "image" },
-  { id: 6, image: "/placeholder.svg?height=300&width=300", type: "video" },
+const testVideos = [
+  {
+    id: "1",
+    url: "https://www.w3schools.com/html/mov_bbb.mp4",
+  },
+  {
+    id: "2",
+    url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+  },
+  {
+    id: "3",
+    url: "https://media.w3.org/2010/05/sintel/trailer.mp4",
+  },
 ];
 
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState("posts");
+  const [activeTab, setActiveTab] = useState("clips");
   const [userData, setUserData] = useState<any>(null);
   const [videos, setVideos] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingVideos, setIsLoadingVideos] = useState(false);
   const { user, isLoggedIn, token, logout } = useAuthStore();
   const router = useRouter();
+
+  // const thumbnails = useGenerateThumbnails(testVideos);
+
+  const thumbnails = useGenerateThumbnails(
+    videos.map((video) => ({
+      id: video._id,
+      url: video.videoUrl,
+    }))
+  );
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -39,15 +63,18 @@ export default function ProfilePage() {
       setIsLoadingVideos(true);
       try {
         const params = new URLSearchParams();
-        params.append('type', activeTab);
-        console.log(activeTab)
+        params.append("type", activeTab);
+        console.log(activeTab);
 
-        const response = await fetch(`/api/user/profile/videos?${params.toString()}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-        });
+        const response = await fetch(
+          `/api/user/profile/videos?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         const data = await response.json();
 
@@ -58,16 +85,7 @@ export default function ProfilePage() {
         console.log("videos");
         console.log(data);
 
-        // const transformedVideos = data.map((video: any) => ({
-        //   _id: video._id,
-        //   title: video.title,
-        //   description: video.description || "",
-        //   thumbnail: video.thumbnailUrl || "/placeholder.svg",
-        //   likes: video.likesCount || 0,
-        //   views: video.viewsCount || 0,
-        //   createdAt: video.createdAt,
-        // }));
-        // setVideos(transformedVideos);
+        setVideos(data.videos);
       } catch (err) {
         console.error("Error fetching user videos:", err);
       } finally {
@@ -121,14 +139,6 @@ export default function ProfilePage() {
     }
   }, [isLoggedIn, router, token]);
 
-  // if (isLoading || !userData) {
-  //   return (
-  //     <div className="min-h-screen bg-background flex items-center justify-center">
-  //       <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
-  //     </div>
-  //   );
-  // }
-
   const profileData = {
     name: userData?.name || "User",
     email: userData?.email || "",
@@ -157,12 +167,12 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-background px-6">
       {/* Cover Image */}
-      
-      {userData && 
+
+      {userData && (
         <div className="h-48 relative">
           <ProfileTopbar hashtag={false} name={userData?.username} />
         </div>
-      }
+      )}
 
       {/* Profile Info */}
       {isLoading ? (
@@ -195,7 +205,6 @@ export default function ProfilePage() {
                   </span>
                 )}
               </div>
-
             </div>
           </div>
 
@@ -292,165 +301,117 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* Tabs */}
+      <div className="mt-6 border-b">
+        <div className="flex space-x-8 items-center justify-between">
+          <button
+            className={`pb-4 flex items-center justify-center ${
+              activeTab === "clips"
+                ? "border-b-2 border-primary font-medium"
+                : "text-muted-foreground"
+            }`}
+            onClick={() => setActiveTab("clips")}
+          >
+            <PlayIcon
+              className={`size-7 cursor-pointer ${
+                activeTab == "clips" && "fill-white"
+              }`}
+            />
+          </button>
+          <button
+            className={`pb-4 flex items-center justify-center ${
+              activeTab === "long"
+                ? "border-b-2 border-primary font-medium"
+                : "text-muted-foreground"
+            }`}
+            onClick={() => setActiveTab("long")}
+          >
+            <Video
+              className={`size-7 cursor-pointer ${
+                activeTab == "long" && "fill-white"
+              } `}
+            />
+          </button>
+          <button
+            className={`pb-4 flex items-center justify-center ${
+              activeTab === "likes"
+                ? "border-b-2 border-primary font-medium"
+                : "text-muted-foreground"
+            }`}
+            onClick={() => setActiveTab("likes")}
+          >
+            <HeartIcon
+              className={`size-7 cursor-pointer ${
+                activeTab == "likes" && "fill-white"
+              }`}
+            />
+          </button>
+          <button
+            className={`pb-4 flex items-center justify-center ${
+              activeTab === "saved"
+                ? "border-b-2 border-primary font-medium"
+                : "text-muted-foreground"
+            }`}
+            onClick={() => setActiveTab("saved")}
+          >
+            <BookmarkIcon
+              className={`size-7 cursor-pointer ${
+                activeTab == "saved" && "fill-white"
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
       {isLoadingVideos ? (
         <div className="w-full h-96 flex items-center justify-center -mt-20 relative">
           <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <>
-          {/* Tabs */}
-          <div className="mt-4 border-b">
-            <div className="flex space-x-8 items-center justify-between">
-              <button
-                className={`pb-4 ${
-                  activeTab === "posts"
-                    ? "border-b-2 border-primary font-medium"
-                    : "text-muted-foreground"
-                }`}
-                onClick={() => setActiveTab("long")}
-              >
-                Posts
-              </button>
-              <button
-                className={`pb-4 ${
-                  activeTab === "clips"
-                    ? "border-b-2 border-primary font-medium"
-                    : "text-muted-foreground"
-                }`}
-                onClick={() => setActiveTab("clips")}
-              >
-                Clips
-              </button>
-              <button
-                className={`pb-4 ${
-                  activeTab === "likes"
-                    ? "border-b-2 border-primary font-medium"
-                    : "text-muted-foreground"
-                }`}
-                onClick={() => setActiveTab("liked")}
-              >
-                Likes
-              </button>
-              <button
-                className={`pb-4 ${
-                  activeTab === "saved"
-                    ? "border-b-2 border-primary font-medium"
-                    : "text-muted-foreground"
-                }`}
-                onClick={() => setActiveTab("saved")}
-              >
-                Saved
-              </button>
-            </div>
-          </div>
-
-          {/* Content */}
-          {/* <div className="mt-8">
-          {activeTab === "posts" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {isLoadingVideos ? (
-                <div className="col-span-full flex justify-center py-8">
-                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                </div>
-              ) : (
-                <>
-                  {videos.map((video) => (
-                    <div key={video._id} className="relative aspect-square group">
-                      <img
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                        <div className="flex items-center space-x-4 text-white">
-                          <div className="flex items-center">
-                            <Heart className="w-5 h-5 mr-1" />
-                            <span>{video.likes}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Eye className="w-5 h-5 mr-1" />
-                            <span>{video.views}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {videos.length === 0 && (
-                    <div className="col-span-full text-center text-muted-foreground py-8">
-                      No posts yet
+          {activeTab === "clips" ? (
+            <div className="flex flex-col gap-2 mt-4">
+              {videos.map((video) => (
+                <div
+                  key={video._id}
+                  className="w-full h-[100svh] sm:h-[90vh] relative rounded-lg overflow-hidden bg-black"
+                >
+                  {thumbnails[video._id] ? (
+                    <img
+                      src={thumbnails[video._id]}
+                      alt="video thumbnail"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white text-xs">
+                      Loading...
                     </div>
                   )}
-                </>
-              )}
-            </div>
-          )}
-          {activeTab === "followers" && (
-            <UserList userId={userData.id} type="followers" />
-          )}
-          {activeTab === "following" && (
-            <UserList userId={userData.id} type="following" />
-          )}
-          {activeTab === "likes" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userData.likedVideos?.map((video: any) => (
-                <div key={video.id} className="relative aspect-square group">
-                  <img
-                    src={video.thumbnail || "/placeholder.svg"}
-                    alt={video.title}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                    <div className="flex items-center space-x-4 text-white">
-                      <div className="flex items-center">
-                        <Heart className="w-5 h-5 mr-1" />
-                        <span>{video.likes || 0}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Eye className="w-5 h-5 mr-1" />
-                        <span>{video.views || 0}</span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               ))}
-              {(!userData.likedVideos || userData.likedVideos.length === 0) && (
-                <div className="col-span-full text-center text-muted-foreground py-8">
-                  No liked posts yet
-                </div>
-              )}
             </div>
-          )}
-          {activeTab === "saved" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userData.savedVideos?.map((video: any) => (
-                <div key={video.id} className="relative aspect-square group">
-                  <img
-                    src={video.thumbnail || "/placeholder.svg"}
-                    alt={video.title}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                    <div className="flex items-center space-x-4 text-white">
-                      <div className="flex items-center">
-                        <Heart className="w-5 h-5 mr-1" />
-                        <span>{video.likes || 0}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Eye className="w-5 h-5 mr-1" />
-                        <span>{video.views || 0}</span>
-                      </div>
+          ) : (
+            <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {videos.map((video) => (
+                <div
+                  key={video._id}
+                  className="relative aspect-[9/16] rounded-lg overflow-hidden bg-black"
+                >
+                  {thumbnails[video._id] ? (
+                    <img
+                      src={thumbnails[video._id]}
+                      alt="video thumbnail"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white text-xs">
+                      Loading...
                     </div>
-                  </div>
+                  )}
                 </div>
               ))}
-              {(!userData.savedVideos || userData.savedVideos.length === 0) && (
-                <div className="col-span-full text-center text-muted-foreground py-8">
-                  No saved posts yet
-                </div>
-              )}
             </div>
           )}
-        </div> */}
         </>
       )}
     </div>

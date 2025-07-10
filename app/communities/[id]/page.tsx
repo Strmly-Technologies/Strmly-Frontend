@@ -264,11 +264,11 @@ export default function OthersCommunitiesPage() {
           <div className="flex space-x-8 items-center justify-between">
             <button
               className={`pb-4 flex items-center justify-center ${
-                activeTab === "posts"
+                activeTab === "clips"
                   ? "border-b-2 border-primary font-medium"
                   : "text-muted-foreground"
               }`}
-              onClick={() => setActiveTab("posts")}
+              onClick={() => setActiveTab("clips")}
             >
               <PlayIcon
                 className={`size-7 cursor-pointer ${
@@ -278,11 +278,11 @@ export default function OthersCommunitiesPage() {
             </button>
             <button
               className={`pb-4 flex items-center justify-center ${
-                activeTab === "clips"
+                activeTab === "long"
                   ? "border-b-2 border-primary font-medium"
                   : "text-muted-foreground"
               }`}
-              onClick={() => setActiveTab("clips")}
+              onClick={() => setActiveTab("long")}
             >
               <Video
                 className={`size-7 cursor-pointer ${

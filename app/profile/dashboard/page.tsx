@@ -44,9 +44,7 @@ const mockAnalysisData = {
 
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState("30d");
-  const [activeTab, setActiveTab] = useState<"overview" | "analysis">(
-    "overview"
-  );
+  const [activeTab, setActiveTab] = useState<"overview" | "analysis">("overview");
 
   const [overviewData, setOverviewData] = useState<any>(null);
   const [analyticsData, setAnalyticsData] = useState<any>(null);
@@ -55,84 +53,53 @@ export default function DashboardPage() {
   const { isLoggedIn, token } = useAuthStore();
   const router = useRouter();
 
+  // Redirect if not logged in
   useEffect(() => {
     if (!isLoggedIn || !token) {
       router.push("/login");
-      return;
     }
   }, [isLoggedIn, token]);
 
+  // Fetch both overview and analytics on page load
   useEffect(() => {
-    if (activeTab == "analysis") {
-      const fetchAnalyticsData = async () => {
-        try {
-          // Login API call
-          const response = await fetch("/api/dashboard/Analytics", {
+    if (!token) return;
+
+    const fetchAllDashboardData = async () => {
+      setIsLoading(true);
+      try {
+        const [analyticsRes] = await Promise.all([
+          fetch("/api/dashboard/Analytics", {
             method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
             credentials: "include",
-          });
+          }),
+        ]);
 
-          const data = await response.json();
+        // const overviewData = await overviewRes.json();
+        const analyticsData = await analyticsRes.json();
 
-          if (!response.ok) {
-            throw new Error(data.message || "Failed to fetch user profile");
-          }
+        // if (!overviewRes.ok) throw new Error(overviewData.message || "Failed to fetch overview");
+        if (!analyticsRes.ok) throw new Error(analyticsData.message || "Failed to fetch analytics");
 
-          console.log(data);
-          // setAnalyticsData(data.earnings);
-        } catch (error) {
-          console.log(error);
-          toast.error(
-            error instanceof Error ? error.message : "An unknown error occurred"
-          );
-        } finally {
-          setIsLoading(false);
-        }
-      };
+        console.log("Analytics:", analyticsData);
 
-      if (token) {
-        fetchAnalyticsData();
+        // setOverviewData(overviewData.interactions); // or overviewData.interactions
+        setAnalyticsData(analyticsData.earnings); // or analyticsData.earnings
+      } catch (error) {
+        console.error(error);
+        toast.error(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
+      } finally {
+        setIsLoading(false);
       }
-    } else {
-      const fetchOverviewData = async () => {
-        try {
-          // Login API call
-          const response = await fetch("/api/dashboard/Overview", {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-          });
+    };
 
-          const data = await response.json();
-
-          if (!response.ok) {
-            throw new Error(data.message || "Failed to fetch user profile");
-          }
-
-          console.log(data);
-          // setOverviewData(data.interactions);
-        } catch (error) {
-          console.log(error);
-          toast.error(
-            error instanceof Error ? error.message : "An unknown error occurred"
-          );
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      if (token) {
-        fetchOverviewData();
-      }
-    }
-  }, [activeTab, token]);
+    fetchAllDashboardData();
+  }, [token]);
 
   return (
     <div className="p-4 pb-20 md:pb-4 max-w-6xl">
@@ -201,28 +168,28 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Total Views</span>
               <div className="text-md font-bold">
-                {mockAnalytics.totalViews.toLocaleString()}
+                {analyticsData?.totalViews}
               </div>
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Total Likes</span>
               <div className="text-md font-bold">
-                {mockAnalytics.totalLikes.toLocaleString()}
+                {analyticsData?.totalLikes}
               </div>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Followers</span>
+              <span className="text-sm font-medium">Total Shares</span>
               <div className="text-md font-bold">
-                {mockAnalytics.totalFollowers.toLocaleString()}
+                {analyticsData?.totalShares}
               </div>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Earnings</span>
+              <span className="text-sm font-medium">Total Videos</span>
               <div className="text-md font-bold">
-                {mockAnalytics.totalEarnings.toFixed(2)}
+                {analyticsData?.totalVideos}
               </div>
             </div>
           </div>
@@ -237,7 +204,7 @@ export default function DashboardPage() {
                   <h2 className="text-xl font-semibold">Revenue</h2>
                   <h2 className="flex text-2xl items-center font-semibold">
                     <IndianRupee className="size-7" />
-                    {mockAnalysisData.totalRevenue.toLocaleString()}
+                    {analyticsData?.totalEarnings}
                   </h2>
                 </div>
               </div>
@@ -278,7 +245,20 @@ export default function DashboardPage() {
               <div className="flex gap-1">
                 <span className="text-md font-bold">
                   <IndianRupee className="inline size-4" />
-                  {mockAnalysisData.commentsPrice.toLocaleString()}
+                  {analyticsData?.engagementBonus}
+                </span>
+                {/* <span className="text-xs text-green-500">
+                  +{mockAnalysisData.trends.commentsPrice}%
+                </span> */}
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-md font-medium">Views</span>
+              <div className="flex gap-1">
+                <span className="text-md font-bold">
+                  <IndianRupee className="inline size-4" />
+                  {analyticsData?.viewsEarnings}
                 </span>
                 {/* <span className="text-xs text-green-500">
                   +{mockAnalysisData.trends.commentsPrice}%

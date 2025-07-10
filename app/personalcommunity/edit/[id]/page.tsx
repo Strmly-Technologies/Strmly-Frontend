@@ -78,7 +78,7 @@ const EditCommunityForm = () => {
 
       if (allSuccessful) {
         toast.success("Community updated successfully");
-        router.push("/");
+        router.push("/profile");
       } else {
         toast.error("Some updates failed");
       }
