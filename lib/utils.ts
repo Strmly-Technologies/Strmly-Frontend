@@ -114,10 +114,10 @@ export function useVideoActions(
       console.log("Unfollow result:", result);
       setFollowingMap(prev => ({
         ...prev,
-        [targetUserId]: result.following
+        [targetUserId]: result.un
       }));
     } catch (error) {
-      console.error("Error following user:", error);
+      console.error("Error unfollowing user:", error);
     }
   };
 
@@ -128,7 +128,7 @@ export function useVideoActions(
     }));
   };
 
-  return { handleFollow, toggleFullDescription };
+  return { handleFollow,handleUnfollow, toggleFullDescription };
 }
 
 

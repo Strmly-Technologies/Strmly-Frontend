@@ -290,9 +290,9 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
                         View replies ({comment.replies})</span>
                       <ChevronDown />
                     </button>
-                    <button onClick={() => AddReply(comment._id)} className="flex items-center" >
+                    {/*<button onClick={() => AddReply(comment._id)} className="flex items-center" >
                       <ReplyIcon />
-                    </button>
+                    </button>*/}
                   </div>
                   {openReplies[comment._id] && (
                     <div className="ml-10 space-y-2 mt-2">
