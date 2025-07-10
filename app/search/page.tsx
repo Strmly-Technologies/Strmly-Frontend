@@ -235,7 +235,7 @@ export default function SearchPage() {
  const tabs = [
   { id: "for-you", label: "For You" },
   { id: "long-videos", label: "Long Videos" },
-  { id: "short-videos", label: "Short Video" },
+  { id: "short-videos", label: "Series" },
   { id: "communities", label: "Communities" },
    { id: "accounts", label: "Accounts" },
 ];
