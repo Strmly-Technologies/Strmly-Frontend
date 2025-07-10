@@ -272,7 +272,7 @@ export default function OthersCommunitiesPage() {
             >
               <PlayIcon
                 className={`size-7 cursor-pointer ${
-                  activeTab == "posts" && "fill-white"
+                  activeTab == "clips" && "fill-white"
                 }`}
               />
             </button>
@@ -286,7 +286,7 @@ export default function OthersCommunitiesPage() {
             >
               <Video
                 className={`size-7 cursor-pointer ${
-                  activeTab == "clips" && "fill-white"
+                  activeTab == "long" && "fill-white"
                 } `}
               />
             </button>

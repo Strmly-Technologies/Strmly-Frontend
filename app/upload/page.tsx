@@ -42,9 +42,9 @@ const UploadPage = () => {
         <SwitchUpload switchVideo={switchVideo} setSwitchVideo={setSwitchVideo}/>
       </div>
 
-      <div className={`absolute bottom-0 w-full ${switchVideo ? 'bg-white' : 'bg-black'}}`}>
-        <div className={`${switchVideo ? 'bg-white' : 'bg-black'} flex items-end justify-center h-8 w-full`}>
-          <div className={`${switchVideo ? 'bg-black' : 'bg-white'} h-1 w-32 rounded-xl`}>
+      <div className={`flex w-full}`}>
+        <div className={`flex items-center justify-center w-full`}>
+          <div className={`bg-white h-2 w-32 rounded-xl`}>
 
           </div>
         </div>
