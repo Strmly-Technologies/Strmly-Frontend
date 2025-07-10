@@ -690,7 +690,7 @@ export default function WalletPage() {
           <ChevronLeft size={28} />
         </button>
       </div>
-      <h1 className="text-xl absolute left-1/2 -translate-x-1/2 ">My Wallet</h1>
+      <h1 className="text-2xl absolute left-1/2 -translate-x-1/2 ">My Wallet</h1>
       <div className="ml-auto">
         <button>
           <MoreHorizontal size={22} />
@@ -700,42 +700,68 @@ export default function WalletPage() {
 
     {/* Balance Card */}
     <Card className="bg-black/80 backdrop-blur-md border border-gray-500/30 rounded-xl shadow">
+  <CardContent className="pt-4">
+    <div className="flex items-center justify-between">
+      <p className="text-m text-gray-400">Total Balance</p>
+      {/* <select className="bg-black text-white text-sm border border-gray-600 rounded-lg px-4 py-1 focus:outline-none">
+        <option>Last Week</option>
+        <option>Last Month</option>
+        <option>Last 3 Month</option>
+        <option>Last 6 Month</option>
+        <option>All</option>
+      </select> */}
+    </div>
+
+    <div className="flex items-center justify-between mt-2">
+      <div className="flex items-center space-x-2">
+        <h3 className="text-3xl font-bold text-white">{`₹${balance.toFixed(2)}`}</h3>
+        <button onClick={() => console.log("Watch clicked")} className="text-gray-400 hover:text-white">
+          <Clock className="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+  <div className="flex items-center justify-between space-x-3">
+  <div className="w-1/2">
+    <Card className="bg-black/80 backdrop-blur-md border border-gray-500/30 rounded-xl shadow">
       <CardContent className="pt-4">
-        <p className="text-sm text-gray-400">Available Balance</p>
-        <div className="flex items-center justify-between mt-1">
-          <h3 className="text-2xl font-bold text-white">
-            {showBalance ? `₹${balance.toFixed(2)}` : "₹****"}
-          </h3>
-          <button
-            onClick={() => setShowBalance(!showBalance)}
-            className="p-1 h-6 text-white hover:text-gray-300 active:scale-95 transition-transform"
-          >
-            {showBalance ? <Eye size={14} /> : <EyeOff size={14} />}
-          </button>
+        <div className="flex items-center justify-between">
+          <p className="text-m text-gray-400">Wallet Balance</p>
         </div>
-        <p className="text-xs text-gray-400 mt-1">
-          Pending: ₹{pendingBalance.toFixed(2)}
-        </p>
+
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center space-x-2">
+            <h3 className="text-3xl font-bold text-white">{`₹${balance.toFixed(2)}`}</h3>
+            <button onClick={() => console.log("Watch clicked")} className="text-gray-400 hover:text-white">
+              <Clock className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
       </CardContent>
     </Card>
+  </div>
 
-    {/* Tabs */}
-    <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid grid-cols-2 w-full bg-[#1f2937] rounded-xl overflow-hidden h-12 p-1 shadow-inner mt-2">
-        <TabsTrigger
-          value="overview"
-          className="h-full w-full flex items-center justify-center font-semibold text-sm text-white rounded-lg data-[state=active]:bg-white data-[state=active]:text-black transition-all"
-        >
-          Overview
-        </TabsTrigger>
-        <TabsTrigger
-          value="transactions"
-          className="h-full w-full flex items-center justify-center font-semibold text-sm text-white rounded-lg data-[state=active]:bg-white data-[state=active]:text-black transition-all"
-        >
-          Transactions
-        </TabsTrigger>
-      </TabsList>
-    </Tabs>
+  <div className="w-1/2">
+    <Card className="bg-black/80 backdrop-blur-md border border-gray-500/30 rounded-xl shadow">
+      <CardContent className="pt-4">
+        <div className="flex items-center justify-between">
+          <p className="text-m text-gray-400">Revenue</p>
+        </div>
+
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center space-x-2">
+            <h3 className="text-3xl font-bold text-white">{`₹${balance.toFixed(2)}`}</h3>
+            <button onClick={() => console.log("Watch clicked")} className="text-gray-400 hover:text-white">
+              <Clock className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+</div>
+
   </div>
 
 

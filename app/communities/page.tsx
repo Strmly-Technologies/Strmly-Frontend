@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState,useEffect } from "react"
 import { Plus, Users, Crown, Shield, Star, Search,Home, Heart,ChevronLeft} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,19 +13,28 @@ import Image from "next/image"
 import { useRouter } from 'next/navigation';
 import { useIsMobile } from "@/hooks/useIsMobile"
 import { useAuthStore } from "@/store/useAuthStore" 
+import axios from 'axios';
+import { METHODS } from "http"
 
 
 
-
+type Community = {
+  _id: string;
+  name: string;
+  bio?: string;
+  profile_photo: string;
+  creators?: any[];
+  followers?: any[];
+};
 
 
 // Followers (users who follow you)
 const mockFollowers = [
-  { id: 1, name: "Alice Johnson", avatar: "https://i.pravatar.cc/40?img=11", mutual: "12 mutuals" },
-  { id: 2, name: "Bob Smith", avatar: "https://i.pravatar.cc/40?img=12", mutual: "5 mutuals" },
-  { id: 3, name: "Caroline Lee", avatar: "https://i.pravatar.cc/40?img=13", mutual: "8 mutuals" },
-  { id: 4, name: "David Chen", avatar: "https://i.pravatar.cc/40?img=14", mutual: "3 mutuals" },
-  { id: 5, name: "Eva Martínez", avatar: "https://i.pravatar.cc/40?img=15", mutual: "20 mutuals" },
+  { id: 1, name: "Alice Johnson", avatar: "https://i.pravatar.cc/40?img=11", followers: "12M" },
+  { id: 2, name: "Bob Smith", avatar: "https://i.pravatar.cc/40?img=12", followers: "3.6M" },
+  { id: 3, name: "Caroline Lee", avatar: "https://i.pravatar.cc/40?img=13", followers: "2.1M" },
+  { id: 4, name: "David Chen", avatar: "https://i.pravatar.cc/40?img=14", followers: "1.2K" },
+  { id: 5, name: "Eva Martínez", avatar: "https://i.pravatar.cc/40?img=15", followers: "205" },
 ];
 
 // Following (users you follow)
@@ -237,6 +246,89 @@ const mockMyCommunities = mockCommunities.filter((c) => c.isJoined);
 
 const mockAllCommunities = mockCommunities;
 
+const myCommunities =
+[
+  {
+    "user_id": "u001",
+    "user_name": "Alice",
+    "communities_created": [
+      {
+        community_name: "Tech Geeks",
+        "tags": ["Technology", "Programming"],
+        "description": "For UI/UX designers to share case studies, prototyping tips, and feedback.",
+        avatar: "https://i.pravatar.cc/60?img=52",
+       banner: "https://picsum.photos/seed/design/400/200",
+        followers: 1500,
+        creators: 150,
+        "isPrivate":"false",
+        "category":"programming"
+      },
+      {
+        community_name: "AI Enthusiasts",
+        "tags": ["Artificial Intelligence", "ML", "Data Science"],
+         "description": "Private community for verified startup founders to collaborate and mentor.",
+        avatar: "https://i.pravatar.cc/60?img=42",
+        banner: "https://picsum.photos/seed/founders/400/200",
+        followers: 1900,
+        creators: 180,
+        "isPrivate":"false",
+        "category":"AI"
+      }
+    ],
+    "communities_joined": [
+      {
+        community:"Startup India",
+        creators: "2K",
+        followers:"7.2M",
+          role: null,
+        " tags": ["founder", "exclusive", "fundraising"],
+         owner: {
+           name: "David Chen",
+           avatar: "https://i.pravatar.cc/32?img=14",
+          }
+        },
+        {
+        community:"Startup India",
+        creators: "500",
+        followers:"3.1M",
+          role: null,
+        " tags":  ["wellness", "fitness", "mindfulness"],
+         owner: {
+           name: "Lara Chen",
+           avatar: "https://i.pravatar.cc/32?img=14",
+          }
+        }
+    ]
+  },
+  // {
+  //   "user_id": "u002",
+  //   "user_name": "Bob",
+  //   "communities_created": [
+  //     {
+  //       "community_name": "Fitness Freaks",
+  //       "tags": ["Health", "Exercise"],
+  //       "followers": 1200
+  //     }
+  //   ],
+  //   "communities_joined": [
+  //     "Tech Geeks",
+  //     "AI Enthusiasts",
+  //     "Fitness Freaks"
+  //   ]
+  // },
+  // {
+  //   "user_id": "u003",
+  //   "user_name": "Charlie",
+  //   "communities_created": [],
+  //   "communities_joined": [
+  //     "Tech Geeks",
+  //     "AI Enthusiasts",
+  //     "Fitness Freaks",
+  //     "Photography World"
+  //   ]
+  // }
+]
+
 
 
 export default function CommunitiesPage() {
@@ -247,6 +339,8 @@ export default function CommunitiesPage() {
   const [activeTab, setActiveTab] = useState("my-community")
   const router = useRouter();
   const [submittedQuery, setSubmittedQuery] = useState("")
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const [loading, setLoading] = useState(true);
   const categories = ["all", "Technology", "Business", "Education", "Entertainment", "Lifestyle"]
    function handleSearch(q: string) {
     setSubmittedQuery(q.trim())
@@ -264,12 +358,37 @@ export default function CommunitiesPage() {
    const currentUser = { name: "Rahul Gupta" }
 
     const tabs = [
+  { id: "followers", label: "Followers" },
   { id: "my-community", label: "My  Community" },
   { id: "community", label: "Community" },
-  { id: "followers", label: "Followers" },
   { id: "following", label: "Following" },
-   { id: "creater", label: "Creater" },
 ];
+
+useEffect(() => {
+  const fetchCommunities = async () => {
+    try {
+      const response = await fetch('/api/auth/community', { method: "GET" });
+      const data = await response.json();
+      console.log('Community data:', data);
+
+
+      if (Array.isArray(data.communities)) {
+        setCommunities(data.communities);
+      } else {
+        console.error('Invalid data format from API');
+      }
+    } catch (error) {
+      console.error('Error fetching communities:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (activeTab === 'community') {
+    fetchCommunities();
+  }
+}, [activeTab]);
+
 
 if(isMobile){
     return (
@@ -290,8 +409,8 @@ if(isMobile){
       <button
         key={tab.id}
         onClick={() => setActiveTab(tab.id)}
-        className={`relative text-sm font-medium transition-colors duration-200 ${
-          activeTab === tab.id ? 'text-white' : 'text-white'
+       className={`relative min-w-[45vw] text-l font-medium transition-colors duration-200 ${
+          activeTab === tab.id ? 'text-white' : 'text-white/70'
         }`}
       >
         {tab.label}
@@ -323,48 +442,87 @@ if(isMobile){
 
     {/* Scrollable List */}
   <div className="flex-1 overflow-y-auto space-y-3 pr-1 mt-1">
-  {mockMyCommunities
-    .filter((community) =>
-      community.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .map((community) => (
-      <div
-        key={community.id}
-        className="flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-[#121212]"
-      >
-        {/* Left Section - Avatar + Name */}
-        <div className="flex items-center space-x-3">
-          <Avatar className="w-10 h-10">
-            <AvatarImage src={community.avatar} />
-            <AvatarFallback>{community.name.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <span className="text-sm font-medium text-white leading-4">
-              {community.name}
-            </span>
-          </div>
-        </div>
+      {myCommunities[0].communities_created
+        .filter((community) =>
+          community.community_name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .map((community, idx) => (
+          <div
+            key={`created-${idx}`}
+            className="flex items-center justify-between px-3 py-2"
+          >
+            <div className="flex items-center space-x-3">
+              <Avatar className="w-10 h-10">
+                <AvatarImage src={community.avatar} />
+                <AvatarFallback>{community.community_name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col">
+                <p className="text-sm font-medium text-white">
+                  {community.community_name}
+                </p>
+              </div>
+            </div>
 
-        {/* Right Section - Creators, Followers, Edit */}
-        <div className="flex items-center space-x-4">
-          <div className="text-right">
-            <p className="text-sm font-semibold text-white">5K</p>
-            <p className="text-[11px] text-gray-400">Creators</p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm font-semibold text-white">3.4M</p>
-            <p className="text-[11px] text-gray-400">Followers</p>
-          </div>
-         <Button
-  className="text-[13px] px-5 py-2 h-auto min-h-0 leading-none font-medium text-black rounded-md"
-  style={{ backgroundColor: "#F1C40F" }}
->
-  Edit
-</Button>
+            <div className="flex items-center space-x-6">
+              <div className="text-right">
+                <p className="text-sm font-semibold text-white">
+                  {community.creators?.toLocaleString?.() || "—"}
+                </p>
+                <p className="text-xs text-gray-400">Creators</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-white">
+                  {community.followers?.toLocaleString?.() || "—"}
+                </p>
+                <p className="text-xs text-gray-400">Followers</p>
+              </div>
 
+              <button className="bg-yellow-500 text-black px-3 py-1 rounded-md text-sm font-semibold">
+                Edit
+              </button>
+            </div>
+          </div>
+        ))}
+    </div>
 
-        </div>
-      </div>
+    <div className="space-y-3">
+      <p className="text-lg font-semibold text-white"></p>
+      {myCommunities[0].communities_joined
+        .filter((community) =>
+          community.community.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .map((community, idx) => (
+          <div
+            key={`joined-${idx}`}
+            className="flex items-center justify-between px-3 py-2"
+          >
+            <div className="flex items-center space-x-3">
+              <Avatar className="w-10 h-10">
+                <AvatarImage src={community.owner.avatar} />
+                <AvatarFallback>{community.community.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col">
+                <p className="text-sm font-medium text-white">
+                  {community.community}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-6">
+              <div className="text-right">
+                <p className="text-sm font-semibold text-white">
+                  {community.creators}
+                </p>
+                <p className="text-xs text-gray-400">Creators</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-white">
+                  {community.followers}
+                </p>
+                <p className="text-xs text-gray-400">Followers</p>
+              </div>
+            </div>
+          </div>
     ))}
 </div>
     {/* Create Button pinned to bottom */}
@@ -380,44 +538,45 @@ if(isMobile){
 
 {activeTab === "community" && (
   <div className="flex-1 flex flex-col px-2 pt-4 pb-6">
-    <div className="space-y-3">
-      {mockAllCommunities
-        .filter((community) =>
-          community.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        .map((community) => (
-          <div
-            key={community.id}
-            className="flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-[#121212] hover:bg-white/5 transition-colors"
-          >
-            {/* Left: Avatar + Name */}
-            <div className="flex items-center space-x-3">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={community.avatar} />
-                <AvatarFallback>{community.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <p className="text-sm font-medium text-white">{community.name}</p>
-              </div>
-            </div>
+      <div className="space-y-3">
+        {loading ? (
+          <p className="text-white text-sm">Loading communities...</p>
+        ) : (
+          communities
+            .filter((community) =>
+              community.name.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .map((community) => (
+              <div key={community._id} className="flex items-center justify-between px-3 py-2">
+                {/* Left: Avatar + Name */}
+                <div className="flex items-center space-x-3">
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage src={community.profile_photo} />
+                    <AvatarFallback>{community.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <p className="text-sm font-medium text-white">{community.name}</p>
+                  </div>
+                </div>
 
-            {/* Right: Creators and Followers side by side */}
-            <div className="flex items-center space-x-6">
-              <div className="text-right">
-                <p className="text-sm font-semibold text-white">
-                  {community.creators?.toLocaleString?.() || "—"}
-                </p>
-                <p className="text-xs text-gray-400">Creators</p>
+                {/* Right: Creators and Followers */}
+                <div className="flex items-center space-x-6">
+                  <div className="text-right">
+                    <p className="text-m font-semibold text-white">
+                      {community.creators?.toLocaleString?.() || '—'}
+                    </p>
+                    <p className="text-xs text-gray-400">Creators</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-m font-semibold text-white">
+                      {community.followers ? community.followers.length.toLocaleString() : '—'}
+                    </p>
+                    <p className="text-xs text-gray-400">Followers</p>
+                  </div>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-white">
-                  {community.followers?.toLocaleString?.() || "—"}
-                </p>
-                <p className="text-xs text-gray-400">Followers</p>
-              </div>
-            </div>
-          </div>
-        ))}
+            ))
+        )}
     </div>
   </div>
 )}
@@ -432,7 +591,7 @@ if(isMobile){
         .map((community) => (
           <div
             key={community.id}
-            className="flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-[#121212] hover:bg-white/5 transition-colors"
+            className="flex items-center justify-between px-3 py-2"
           >
             {/* Left side: Community Info */}
             <div className="flex items-center space-x-3">
@@ -467,59 +626,23 @@ if(isMobile){
         .map((user) => (
           <div
             key={user.id}
-            className="flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-[#121212]"
+            className="flex items-center justify-between px-3 py-2"
           >
             <div className="flex items-center space-x-3">
               <Avatar className="w-10 h-10">
                 <AvatarImage src={user.avatar} />
                 <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
               </Avatar>
-              <div>
-                <p className="text-sm font-medium text-white">{user.name}</p>
-                <p className="text-xs text-white/70">{user.mutual}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-    </div>
-  </div>
-)}
-{activeTab === "creater" && (
-  <div className="flex-1 flex flex-col px-2 pt-4 pb-6">
-    <div className="space-y-3">
-      {mockCreatedCommunities
-        .filter((community) =>
-          community.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        .map((community) => (
-          <div
-            key={community.id}
-            className="flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-[#121212]"
-          >
-            {/* Left: Community avatar + name + creator username */}
-            <div className="flex items-center space-x-3">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={community.avatar} />
-                <AvatarFallback>{community.name.charAt(0)}</AvatarFallback>
-              </Avatar>
               <div className="flex flex-col">
-                <p className="text-sm font-medium text-white">
-                  {community.name}
-                </p>
-                <div className="flex items-center space-x-2 text-xs text-white/70">
-                  <p className="text-xs">@{community.owner.name}</p>
-                </div>
+                <p className="text-sm font-medium text-white">{user.name}</p>
+                <p className="text-xs text-white/70">@rahulsingh09</p>
               </div>
+              </div>
+                 <div className="flex flex-col items-end text-white/70 text-xs leading-tight">
+              <span className="text-base font-medium text-white">{user.followers}</span>
+              <span>Followers</span>
             </div>
-
-            {/* Right: Follower count */}
-            <div className="text-right">
-              <p className="text-sm font-semibold text-white">
-                {community.members.toLocaleString()}
-              </p>
-              <p className="text-xs text-gray-400">Followers</p>
             </div>
-          </div>
         ))}
     </div>
   </div>
