@@ -75,8 +75,9 @@ export default function UserList({ userId, type }: UserListProps) {
   }, [fetchUsers])
 
   const handleFollow = async (targetUserId: string) => {
+    if (!user) return;
     try {
-      const result = await api.followUser(targetUserId)
+      const result = await api.followUser(targetUserId, user)
       setFollowingMap(prev => ({
         ...prev,
         [targetUserId]: result.following

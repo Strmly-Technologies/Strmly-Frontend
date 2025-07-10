@@ -104,7 +104,7 @@ export default function OthersCommunitiesPage() {
       fetchUserVideos();
     }
 
-  }, [isLoggedIn, token]);
+  }, [isLoggedIn, activeTab, router, token]);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -145,7 +145,7 @@ export default function OthersCommunitiesPage() {
     if (token) {
       fetchUserData();
     }
-  }, [isLoggedIn, token]);
+  }, [isLoggedIn, router, id, token]);
 
   return (
     <div className="min-h-screen bg-background px-6">

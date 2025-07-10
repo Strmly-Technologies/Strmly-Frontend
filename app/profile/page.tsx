@@ -101,7 +101,7 @@ export default function ProfilePage() {
       fetchUserVideos();
     }
 
-  }, [isLoggedIn, token, activeTab]);
+  }, [isLoggedIn, router, token, activeTab]);
 
   useEffect(() => {
     if (!isLoggedIn) {

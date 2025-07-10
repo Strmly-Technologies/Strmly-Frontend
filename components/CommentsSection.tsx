@@ -57,7 +57,7 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
     } catch (error) {
       console.error("Error fetching comments:", error);
     }
-  }, [token, videoId]); // ✅ Add necessary dependencies
+  }, [token, longVideosOnly, videoId]); // ✅ Add necessary dependencies
 
 
   useEffect(() => {

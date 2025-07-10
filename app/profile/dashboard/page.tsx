@@ -59,7 +59,7 @@ export default function DashboardPage() {
     if (!isLoggedIn || !token) {
       router.push("/login");
     }
-  }, [isLoggedIn, token]);
+  }, [isLoggedIn, token, router]);
 
   // Fetch both overview and analytics on page load
   useEffect(() => {
