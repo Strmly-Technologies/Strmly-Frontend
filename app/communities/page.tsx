@@ -412,7 +412,6 @@ useEffect(() => {
       if (json.status === "success") {
         setFollowers(json.data);
       }
-      console.log("m huj follower",followers)
     } catch (err) {
       console.error("Failed to fetch followers", err);
     } finally {

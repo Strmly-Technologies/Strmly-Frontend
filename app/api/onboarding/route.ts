@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import axios from 'axios';
 import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
+export async function PUT(req: Request) {
   try {
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.split(' ')[1];
@@ -17,6 +17,7 @@ export async function POST(req: Request) {
 
     // Get the FormData from the request
     const formData = await req.formData();
+    console.log(formData)
 
     // Make the request to your backend
     const backendResponse = await axios.put(
@@ -35,15 +36,15 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('Onboarding error:', error);
 
-    // if (axios.isAxiosError(error)) {
-    //   return NextResponse.json(
-    //     { 
-    //       message: error.response?.data?.message || 'Backend request failed',
-    //       details: error.response?.data 
-    //     },
-    //     { status: error.response?.status || 500 }
-    //   );
-    // }
+    if (axios.isAxiosError(error)) {
+      return NextResponse.json(
+        { 
+          message: error.response?.data?.message || 'Backend request failed',
+          details: error.response?.data 
+        },
+        { status: error.response?.status || 500 }
+      );
+    }
 
     return NextResponse.json(
       { message: 'Internal server error', error: error instanceof Error ? error.message : String(error) },

@@ -50,6 +50,8 @@
 }
 
 
+
+
 @layer base {
   * {
     @apply border-border;
@@ -60,6 +62,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    -ms-overflow-style: none;  /* IE & Edge */
+    scrollbar-width: none; 
   }
   
   button, a, [role="button"] {
@@ -78,6 +82,12 @@
   
   html {
     scroll-behavior: smooth;
+    -ms-overflow-style: none;  /* IE & Edge */
+    scrollbar-width: none; 
+  }
+
+  html::-webkit-scrollbar, body::-webkit-scrollbar {
+    display: none;             /* Chrome, Safari, Opera */
   }
   
   *:focus-visible {

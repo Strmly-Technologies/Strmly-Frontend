@@ -155,7 +155,7 @@ export default function OthersCommunitiesPage() {
   }, [isLoggedIn, router, id, token]);
 
   return (
-    <div className="min-h-screen bg-background px-6">
+    <div className="bg-background px-6">
       {/* Cover Image */}
 
       {!isLoading && (
@@ -169,7 +169,7 @@ export default function OthersCommunitiesPage() {
           <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="max-w-4xl -mt-20 relative">
+        <div className="max-w-4xl -mt-28 relative">
           <div className="flex flex-col items-center md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4">
             <div className="relative flex flex-col items-center w-full">
               <Avatar className="size-24 border-4 border-background">

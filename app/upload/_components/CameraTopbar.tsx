@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Clock, X } from "lucide-react";
+import { Clock, FileVideo2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useRef, useState } from "react";
 
@@ -81,25 +81,22 @@ const CameraTopbar = ({
 
       <div className="w-full flex justify-end relative right-10">
         <div
-          className="size-16 rounded-lg bg-gray-700/50 flex items-center justify-center cursor-pointer hover:bg-gray-600/50 transition-colors duration-200 overflow-hidden"
+          className="size-16 rounded-lg border border-muted-foreground flex items-center justify-center cursor-pointer hover:bg-gray-600/50 transition-colors duration-200 overflow-hidden"
           onClick={() => fileInputRef.current?.click()}
         >
           {selectedImage ? (
-            <img src={selectedImage} alt="Selected preview" className="size-full object-cover" />
+            <video src={selectedImage} muted autoPlay loop className="size-full object-cover" />
           ) : (
-            <img
-              className="size-full object-cover"
-              alt="Gallery"
-              src="/assets/UploadPageIcons/Galery.png"
-            />
+            <FileVideo2 className="size-5"/>
           )}
           <input
             type="file"
             ref={fileInputRef}
             onChange={onFileChange}
-            accept="image/*"
+            accept="video/mp4"
             className="hidden"
           />
+
         </div>
       </div>
 

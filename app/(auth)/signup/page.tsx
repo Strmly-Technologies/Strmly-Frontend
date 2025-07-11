@@ -89,8 +89,8 @@ export default function SignupPage() {
   return (
     <div className="flex flex-col mt-10 px-6 space-y-20">
       <div className="w-full max-w-sm space-y-16 rounded-lg">
-        <div className="flex items-center text-primary justify-center">
-          <h1 className="text-3xl flex flex-col text-center font-poppins font-semibold">
+        <div className="flex items-center text-white justify-center">
+          <h1 className="text-xl flex flex-col text-center font-poppins">
             Create account to <span className="">Strmly</span>
           </h1>
         </div>

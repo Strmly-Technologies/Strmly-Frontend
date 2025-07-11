@@ -170,7 +170,7 @@ export default function PersonalCommunitiesPage() {
   }, [isLoggedIn, id, router, token]);
 
   return (
-    <div className="min-h-screen px-6">
+    <div className="px-6">
       {/* Cover Image */}
       {!isLoading && (
         <div className="h-48 relative">
@@ -185,7 +185,7 @@ export default function PersonalCommunitiesPage() {
           <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="max-w-4xl -mt-20 relative">
+        <div className="max-w-4xl -mt-28 relative">
           <div className="flex flex-col items-center md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4">
             <div className="relative flex items-center flex-col">
               <Avatar className="size-24 border-4 border-background">
