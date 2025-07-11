@@ -85,7 +85,7 @@ export const getFollowingMap = async (
     videos.map(async (video) => {
       if (video.user.id === userId) return { id: video.user.id, isFollowing: false }
       const following = await getFollowStatus(userId, video.user.id)
-      return { id: video.user.id, isFollowing: following }
+      return { id: video.user.id, isFollowing: following.following }
     })
   )
 
