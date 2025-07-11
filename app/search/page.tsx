@@ -1,7 +1,7 @@
 "use client"
 import { useIsMobile } from "@/hooks/useIsMobile"
 
-import { useState } from "react"
+import { useState , useEffect} from "react"
 import { useRouter } from 'next/navigation';
 import { Search, TrendingUp, Hash, Users, Filter, X,ChevronLeft } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import Image from "next/image"
 import trending1 from "./trending1.jpg"
 import Link from 'next/link'
+import axios from "axios";
 
 const trendingHashtags = [
   { tag: "#StartupIndia", posts: "125K posts" },
@@ -232,13 +233,18 @@ export default function SearchPage() {
     sortBy: "relevance",
     category: "all",
   })
- const tabs = [
-  { id: "for-you", label: "For You" },
-  { id: "long-videos", label: "Long Videos" },
-  { id: "short-videos", label: "Short Video" },
-  { id: "communities", label: "Communities" },
-   { id: "accounts", label: "Accounts" },
-];
+  const [topResults, setTopResults] = useState<{ video: any[]; series: any[] }>({
+  video: [],
+  series: [],
+});
+const [loading, setLoading] = useState(false);
+//  const tabs = [
+//   { id: "for-you", label: "For You" },
+//   { id: "long-videos", label: "Long Videos" },
+//   { id: "short-videos", label: "Series" },
+//   { id: "communities", label: "Communities" },
+//    { id: "accounts", label: "Accounts" },
+// ];
 
   const [showFilters, setShowFilters] = useState(false)
    const isMobile = useIsMobile()
@@ -249,6 +255,60 @@ export default function SearchPage() {
     // Perform search API call
     console.log("Searching for:", query, "with filters:", filters)
   }
+
+  const fetchTopResults = async () => {
+  setLoading(true);
+  try {
+    const stored = localStorage.getItem("auth-storage");
+    let token = null;
+    if(stored){
+         const parsed = JSON.parse(stored) ;
+     token = parsed?.state?.token;
+    console.log("sh",token)
+
+    }
+
+    const res = await fetch("/api/auth/search", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+
+    console.log("svshd",res)
+
+    if (!res.ok) {
+      throw new Error(`Request failed with status ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    console.log("sh",data)
+
+    const videos = data?.data?.personalized?.video ?? [];
+    const series = data?.data?.personalized?.series ?? [];
+
+    if (Array.isArray(videos) && Array.isArray(series)) {
+      setTopResults({
+        video: videos,
+        series: series,
+      });
+    } else {
+      console.error("Invalid API format", data);
+    }
+  } catch (err) {
+    console.error("Failed to fetch top results", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  if (activeTab === "for-you") {
+    fetchTopResults();
+  }
+}, [activeTab]);
 
   const clearFilters = () => {
     setFilters({
@@ -291,7 +351,7 @@ export default function SearchPage() {
   />
 
   {/* Filter Button */}
-  <Sheet open={showFilters} onOpenChange={setShowFilters}>
+  {/* <Sheet open={showFilters} onOpenChange={setShowFilters}>
     <SheetTrigger asChild>
       <Button
         variant="ghost"
@@ -307,7 +367,7 @@ export default function SearchPage() {
       </Button>
     </SheetTrigger>
 
-    {/* Filter Content */}
+
     <SheetContent>
       <div className="flex items-center mb-4">
         <Button
@@ -325,7 +385,7 @@ export default function SearchPage() {
       
 
       <div className="space-y-6 mt-2">
-        {/* Duration Filter */}
+        
         <div>
           <label className="text-sm font-medium mb-2 block">Duration</label>
           <Select
@@ -346,7 +406,7 @@ export default function SearchPage() {
           </Select>
         </div>
 
-        {/* Upload Time Filter */}
+        
         <div>
           <label className="text-sm font-medium mb-2 block">Upload time</label>
           <Select
@@ -369,7 +429,6 @@ export default function SearchPage() {
           </Select>
         </div>
 
-        {/* Sort By Filter */}
         <div>
           <label className="text-sm font-medium mb-2 block">Sort by</label>
           <Select
@@ -390,7 +449,6 @@ export default function SearchPage() {
           </Select>
         </div>
 
-        {/* Category Filter */}
         <div>
           <label className="text-sm font-medium mb-2 block">Category</label>
           <Select
@@ -413,7 +471,6 @@ export default function SearchPage() {
           </Select>
         </div>
 
-        {/* Clear and Apply Buttons */}
         <div className="flex space-x-2">
           <Button onClick={clearFilters} variant="outline" className="flex-1">
             Clear
@@ -424,7 +481,7 @@ export default function SearchPage() {
         </div>
       </div>
     </SheetContent>
-  </Sheet>
+  </Sheet> */}
 </div>
 </div>
 
@@ -434,11 +491,11 @@ export default function SearchPage() {
   {/* Custom Tab Buttons */}
  <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
   <div className="flex space-x-6 mb-4 border-b border-white/10 pb-2 min-w-max">
-    {tabs.map((tab) => (
+    {/* {tabs.map((tab) => (
       <button
         key={tab.id}
         onClick={() => setActiveTab(tab.id)}
-        className={`relative text-sm font-medium transition-colors duration-200 ${
+        className={`relative text-sm font-large transition-colors duration-200 ${
           activeTab === tab.id ? 'text-white' : 'text-white'
         }`}
       >
@@ -447,7 +504,7 @@ export default function SearchPage() {
           <span className="absolute bottom-2 left-0 w-full h-[2px] bg-white rounded-full" />
         )}
       </button>
-    ))}
+    ))} */}
   </div>
 </div>
 
@@ -455,60 +512,59 @@ export default function SearchPage() {
   {/* Tab Content */}
  {activeTab === "for-you" && (
   <div className="space-y-6">
-    {/* Top Results */}
-    <div>
-      <h3 className="font-semibold mb-3">Top Results</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {dummyVideos.slice(0, 2).map((video) => (
-  <Card
-    key={video._id}
-    onClick={() => window.open(video.videoUrl, "_blank")}
-    className="cursor-pointer bg-black hover:bg-white/5 transition-colors"
-  >
-    <CardContent className="p-3">
-      <div className="flex space-x-3">
-        {/* Thumbnail */}
-        <div className="relative w-[120px] h-[80px] flex-shrink-0">
-          <Image
-            src={video.thumbnailUrl || "/placeholder.svg"}
-            alt={video.title}
-            fill
-            className="rounded-lg object-cover"
-          />
-          <span className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
-            {video.episodes?.[video.currentEpisode || 0]?.duration || "4:20"}
-          </span>
-        </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+      {[...topResults.video.slice(0, 2), ...topResults.series?.slice(0, 2)].map((video, index) => (
+        <Card
+          key={video._id || index}
+          onClick={() => window.open(video.videoUrl || video.watchUrl, "_blank")}
+          className="cursor-pointer bg-black hover:bg-white/5 transition-colors"
+        >
+          <CardContent className="p-3">
+            <div className="flex space-x-3">
+              {/* Thumbnail */}
+              <div className="relative w-[120px] h-[80px] flex-shrink-0">
+                <Image
+                  src={video.thumbnailUrl || "/placeholder.svg"}
+                  alt={video.title || video.name}
+                  fill
+                  className="rounded-lg object-cover"
+                />
+                <span className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
+                  {video.duration || video.episodes?.[0]?.duration || "4:20"}
+                </span>
+              </div>
 
-        {/* Text Info */}
-        <div className="flex-1 min-w-0">
-          <h4 className="font-medium line-clamp-2 mb-1 text-white">{video.title}</h4>
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Avatar className="w-4 h-4">
-              <AvatarImage src={video.user.avatar || "/placeholder.svg"} />
-              <AvatarFallback>{video.user.name[0]}</AvatarFallback>
-            </Avatar>
-            <span>{video.user.name}</span>
-          </div>
-          <div className="text-sm text-muted-foreground mt-1">
-            {video.views.toLocaleString()} views •{" "}
-            {new Date(video.createdAt).toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}
-          </div>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-))}
-
-      </div>
-      </div>
-
-      {/* Users */}
-      <div>
+              {/* Text Info */}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium line-clamp-2 mb-1 text-white">
+                  {video.title || video.name}
+                </h4>
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                  <Avatar className="w-4 h-4">
+                    <AvatarImage src={video.user?.avatar || video.created_by?.profile_photo || "/placeholder.svg"} />
+                    <AvatarFallback>
+                      {video.user?.name?.[0] || video.created_by?.username?.[0] || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span>{video.user?.name || video.created_by?.username || "Unknown"}</span>
+                </div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  {(video.views ?? 0).toLocaleString()} views •{" "}
+                  {video.createdAt
+                    ? new Date(video.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "Date Unknown"}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+      {/* <div>
         <h3 className="font-semibold mb-3">Users</h3>
         <div className="space-y-3">
           {searchResults.users.slice(0, 3).map((user) => (
@@ -540,8 +596,8 @@ export default function SearchPage() {
             </div>
           ))}
         </div>
-      </div>
-    </div>
+      </div> */}
+  </div>
   )}
 
 {activeTab === "long-videos" && (
@@ -670,7 +726,7 @@ export default function SearchPage() {
           onKeyDown={(e) => e.key === "Enter" && handleSearch(searchQuery)}
           className="pl-10 pr-12"
         />
-        <Sheet open={showFilters} onOpenChange={setShowFilters}>
+        {/* <Sheet open={showFilters} onOpenChange={setShowFilters}>
           <SheetTrigger asChild>
             <Button
               variant="ghost"
@@ -765,7 +821,7 @@ export default function SearchPage() {
               </div>
             </div>
           </SheetContent>
-        </Sheet>
+        </Sheet> */}
       </div>
 
       {/* Active Filters */}
