@@ -67,7 +67,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
   const shareOptionsRef = useRef<HTMLDivElement>(null)
   const descriptionRef = useRef<HTMLDivElement>(null);
   const { user } = useAuthStore()
-
+  const [isFollowing, setisFollowing] = useState(false)
 
   useEffect(() => {
     const localRefs = [...videoRefs.current]; // clone it

@@ -5,6 +5,7 @@ import { api } from "./api"
 import dotenv from "dotenv"
 import { Notification } from "@/types/Notification"
 import { User } from "@/types/User"
+import { getFollowStatus } from "@/components/api/FollowUser"
 dotenv.config()
 
 export function cn(...inputs: ClassValue[]) {
@@ -83,7 +84,7 @@ export const getFollowingMap = async (
   const statuses = await Promise.all(
     videos.map(async (video) => {
       if (video.user.id === userId) return { id: video.user.id, isFollowing: false }
-      const following = await api.isFollowing(userId, video.user.id)
+      const following = await getFollowStatus(userId, video.user.id)
       return { id: video.user.id, isFollowing: following }
     })
   )
