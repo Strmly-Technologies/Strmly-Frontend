@@ -7,7 +7,7 @@ const Topbar = () => {
   const router = useRouter();
   
   return (
-    <div className='mx-4 relative top-6'>
+    <div className='mx-4 relative top-6 font-poppins'>
         <div className='flex items-center justify-between'>
             <Image 
               onClick={()=> router.back()}

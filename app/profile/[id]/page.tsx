@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MapPin, LinkIcon, Calendar } from "lucide-react";
+import { MapPin, LinkIcon, Calendar, PlayIcon, Video, HeartIcon, BookmarkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import ProfileTopbar from "../_components/ProfileTopbar";
+import { useGenerateThumbnails } from "@/utils/useGenerateThumbnails";
 
 const mockPosts = [
   { id: 1, image: "/placeholder.svg?height=300&width=300", type: "image" },
@@ -27,6 +28,13 @@ export default function ProfileIdPage() {
   const { user, isLoggedIn, token, logout } = useAuthStore();
   const router = useRouter();
 
+  const thumbnails = useGenerateThumbnails(
+    videos.map((video) => ({
+      id: video._id,
+      url: video.videoUrl,
+    }))
+  );
+
   useEffect(() => {
     if (!isLoggedIn) {
       router.push("/login");
@@ -37,15 +45,18 @@ export default function ProfileIdPage() {
       setIsLoadingVideos(true);
       try {
         const params = new URLSearchParams();
-        params.append('type', activeTab);
-        console.log(activeTab)
+        params.append("type", activeTab);
+        console.log(activeTab);
 
-        const response = await fetch(`/api/user/profile/videos?${params.toString()}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-        });
+        const response = await fetch(
+          `/api/user/profile/videos?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         const data = await response.json();
 
@@ -147,12 +158,12 @@ export default function ProfileIdPage() {
   return (
     <div className="min-h-screen bg-background px-6">
       {/* Cover Image */}
-      
-      {userData && 
+
+      {userData && (
         <div className="h-48 relative">
           <ProfileTopbar hashtag={false} name={userData?.username} />
         </div>
-      }
+      )}
 
       {/* Profile Info */}
       {isLoading ? (
@@ -173,19 +184,18 @@ export default function ProfileIdPage() {
                 </AvatarFallback>
               </Avatar>
 
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-2 items-center justify-center font-poppins">
                 <p className="text-muted-foreground">
                   @{userData?.username || profileData.username}
                 </p>
                 {(userData?.creator_profile?.verification_status !=
                   "unverified" ||
                   profileData.isVerified) && (
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
                     Verified
                   </span>
                 )}
               </div>
-
             </div>
           </div>
 
@@ -196,40 +206,42 @@ export default function ProfileIdPage() {
               onClick={() => router.push("/communities?type=followers")}
             >
               {/* <span className="font-bold text-lg">{profileData.followers}</span>{" "} */}
-              <span className="font-bold text-lg">
+              <span className="font-poppins text-lg">
                 {userData?.followers.length}M
               </span>{" "}
-              <span className="text-muted-foreground text-lg">Followers</span>
+              <span className="text-muted-foreground text-md">Followers</span>
             </div>
             <Button
               onClick={() => router.push("/communities")}
-              className="px-4 bg-[#F1C40F] py-2 rounded-md"
+              className="px-4 bg-[#F1C40F] py-2 font-poppins rounded-md"
             >
               Follow
             </Button>
-            <Button
-                className="px-4 bg-[#F1C40F] py-2 rounded-md"
-                >
-                Access at ₹{userData?.creator_profile?.creator_pass_price}
+            <Button className="px-4 bg-[#F1C40F] font-poppins py-2 rounded-md">
+              Access at ₹{userData?.creator_profile?.creator_pass_price}/m
             </Button>
           </div>
 
-          <div className="flex w-full items-center justify-center gap-2 mt-5 md:mt-0">
+          <div className="flex flex-wrap w-full text-lg items-center font-poppins justify-center gap-2 mt-5 md:mt-0">
             <Button
-              onClick={() => router.push("/profile/edit")}
               variant={"outline"}
-              className="px-4 py-2 rounded-md"
+              className="px-4 py-2 border-muted-foreground rounded-md"
             >
-              Edit Profile
+              #{"Edit"}
             </Button>
-            <Button variant={"outline"} className="px-4 py-2 rounded-md">
-              History
+            <Button
+              variant={"outline"}
+              className="px-4 py-2 border-muted-foreground rounded-md"
+            >
+              #{"Fun"}
             </Button>
           </div>
 
           {/* Bio */}
           <div className="mt-6 flex flex-col items-center justify-center">
-            <p className="text-muted-foreground text-center">{userData?.bio}</p>
+            <p className="text-muted-foreground font-poppins text-center">
+              {userData?.bio}
+            </p>
             <div className="mt-2 flex flex-wrap gap-4 text-muted-foreground">
               {/* {profileData.location && (
                 <span className="flex items-center">
@@ -260,165 +272,123 @@ export default function ProfileIdPage() {
         </div>
       )}
 
+      {/* Tabs */}
+      <div className="mt-8 border-b">
+        <div className="flex space-x-8 items-center justify-between">
+          <button
+            className={`pb-4 flex items-center justify-center ${
+              activeTab === "posts"
+                ? "border-b-2 border-primary font-medium"
+                : "text-muted-foreground"
+            }`}
+            onClick={() => setActiveTab("posts")}
+          >
+            <PlayIcon
+              className={`size-7 cursor-pointer ${
+                activeTab == "posts" && "fill-white"
+              }`}
+            />
+          </button>
+          <button
+            className={`pb-4 flex items-center justify-center ${
+              activeTab === "clips"
+                ? "border-b-2 border-primary font-medium"
+                : "text-muted-foreground"
+            }`}
+            onClick={() => setActiveTab("clips")}
+          >
+            <Video
+              className={`size-7 cursor-pointer ${
+                activeTab == "clips" && "fill-white"
+              }`}
+            />
+          </button>
+          <button
+            className={`pb-4 flex items-center justify-center ${
+              activeTab === "likes"
+                ? "border-b-2 border-primary font-medium"
+                : "text-muted-foreground"
+            }`}
+            onClick={() => setActiveTab("likes")}
+          >
+            <HeartIcon
+              className={`size-7 cursor-pointer ${
+                activeTab == "likes" && "fill-white"
+              }`}
+            />
+          </button>
+          <button
+            className={`pb-4 flex items-center justify-center ${
+              activeTab === "saved"
+                ? "border-b-2 border-primary font-medium"
+                : "text-muted-foreground"
+            }`}
+            onClick={() => setActiveTab("saved")}
+          >
+            <BookmarkIcon
+              className={`size-7 cursor-pointer ${
+                activeTab == "saved" && "fill-white"
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
       {isLoadingVideos ? (
         <div className="w-full h-96 flex items-center justify-center -mt-20 relative">
           <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <>
-          {/* Tabs */}
-          <div className="mt-4 border-b">
-            <div className="flex space-x-8 items-center justify-between">
-              <button
-                className={`pb-4 ${
-                  activeTab === "posts"
-                    ? "border-b-2 border-primary font-medium"
-                    : "text-muted-foreground"
-                }`}
-                onClick={() => setActiveTab("long")}
-              >
-                Posts
-              </button>
-              <button
-                className={`pb-4 ${
-                  activeTab === "clips"
-                    ? "border-b-2 border-primary font-medium"
-                    : "text-muted-foreground"
-                }`}
-                onClick={() => setActiveTab("clips")}
-              >
-                Clips
-              </button>
-              <button
-                className={`pb-4 ${
-                  activeTab === "likes"
-                    ? "border-b-2 border-primary font-medium"
-                    : "text-muted-foreground"
-                }`}
-                onClick={() => setActiveTab("liked")}
-              >
-                Likes
-              </button>
-              <button
-                className={`pb-4 ${
-                  activeTab === "saved"
-                    ? "border-b-2 border-primary font-medium"
-                    : "text-muted-foreground"
-                }`}
-                onClick={() => setActiveTab("saved")}
-              >
-                Saved
-              </button>
-            </div>
-          </div>
-
-          {/* Content */}
-          {/* <div className="mt-8">
-          {activeTab === "posts" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {isLoadingVideos ? (
-                <div className="col-span-full flex justify-center py-8">
-                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                </div>
-              ) : (
-                <>
-                  {videos.map((video) => (
-                    <div key={video._id} className="relative aspect-square group">
-                      <img
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                        <div className="flex items-center space-x-4 text-white">
-                          <div className="flex items-center">
-                            <Heart className="w-5 h-5 mr-1" />
-                            <span>{video.likes}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Eye className="w-5 h-5 mr-1" />
-                            <span>{video.views}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {videos.length === 0 && (
-                    <div className="col-span-full text-center text-muted-foreground py-8">
-                      No posts yet
+          {activeTab === "clips" ? (
+            <div className="flex flex-col gap-2">
+              {videos.map((video) => (
+                <div
+                  key={video._id}
+                  className="w-full h-[100svh] sm:h-[90vh] relative rounded-lg overflow-hidden"
+                >
+                  {thumbnails[video._id] ? (
+                    <img
+                      src={thumbnails[video._id]}
+                      alt="video thumbnail"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white text-xs">
+                      Loading...
                     </div>
                   )}
-                </>
-              )}
-            </div>
-          )}
-          {activeTab === "followers" && (
-            <UserList userId={userData.id} type="followers" />
-          )}
-          {activeTab === "following" && (
-            <UserList userId={userData.id} type="following" />
-          )}
-          {activeTab === "likes" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userData.likedVideos?.map((video: any) => (
-                <div key={video.id} className="relative aspect-square group">
-                  <img
-                    src={video.thumbnail || "/placeholder.svg"}
-                    alt={video.title}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                    <div className="flex items-center space-x-4 text-white">
-                      <div className="flex items-center">
-                        <Heart className="w-5 h-5 mr-1" />
-                        <span>{video.likes || 0}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Eye className="w-5 h-5 mr-1" />
-                        <span>{video.views || 0}</span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               ))}
-              {(!userData.likedVideos || userData.likedVideos.length === 0) && (
-                <div className="col-span-full text-center text-muted-foreground py-8">
-                  No liked posts yet
-                </div>
-              )}
             </div>
-          )}
-          {activeTab === "saved" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userData.savedVideos?.map((video: any) => (
-                <div key={video.id} className="relative aspect-square group">
-                  <img
-                    src={video.thumbnail || "/placeholder.svg"}
-                    alt={video.title}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                    <div className="flex items-center space-x-4 text-white">
-                      <div className="flex items-center">
-                        <Heart className="w-5 h-5 mr-1" />
-                        <span>{video.likes || 0}</span>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4">
+              {videos.map((video, index) => {
+                const isLastInMobileRow = (index + 1) % 3 === 0; // for mobile (3 cols)
+                const isLastItem = index === videos.length - 2;
+
+                return (
+                  <div
+                    key={video._id}
+                    className={`relative aspect-[12/16] overflow-hidden border-white 
+          ${isLastInMobileRow || isLastItem ? "border-r" : ""}`}
+                  >
+                    {thumbnails[video._id] ? (
+                      <img
+                        src={thumbnails[video._id]}
+                        alt="video thumbnail"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white text-xs">
+                        Loading...
                       </div>
-                      <div className="flex items-center">
-                        <Eye className="w-5 h-5 mr-1" />
-                        <span>{video.views || 0}</span>
-                      </div>
-                    </div>
+                    )}
                   </div>
-                </div>
-              ))}
-              {(!userData.savedVideos || userData.savedVideos.length === 0) && (
-                <div className="col-span-full text-center text-muted-foreground py-8">
-                  No saved posts yet
-                </div>
-              )}
+                );
+              })}
             </div>
           )}
-        </div> */}
         </>
       )}
     </div>

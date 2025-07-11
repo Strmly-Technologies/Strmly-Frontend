@@ -109,12 +109,12 @@ export default function DashboardPage() {
       <Topbar />
 
       {/* Tab Navigation */}
-      <div className="w-full grid grid-cols-2 border-b mt-20">
+      <div className="w-full grid grid-cols-2 font-poppins border-b mt-20">
         <button
           className={`px-4 py-2 font-medium ${
             activeTab === "overview"
               ? "text-primary border-b-2 border-primary"
-              : "text-muted-foreground"
+              : "text-white"
           }`}
           onClick={() => setActiveTab("overview")}
         >
@@ -124,7 +124,7 @@ export default function DashboardPage() {
           className={`px-4 py-2 font-medium ${
             activeTab === "analysis"
               ? "text-primary border-b-2 border-primary"
-              : "text-muted-foreground"
+              : "text-white"
           }`}
           onClick={() => setActiveTab("analysis")}
         >
@@ -138,12 +138,12 @@ export default function DashboardPage() {
         </div>
       ) : activeTab === "overview" ? (
         /* Overview Content */
-        <div className="border-2 flex flex-col gap-5 p-4 rounded-lg mt-4">
+        <div className="border-2 flex flex-col gap-5 p-4 rounded-lg mt-10">
           <div className="flex flex-col gap-2">
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex gap-2">
-                  <h2 className="text-xl font-semibold">Overview</h2>
+                  <h2 className="text-xl text-muted-foreground font-semibold">Overview</h2>
                   <h2 className="flex text-2xl items-center font-semibold">
                     <Clock className="size-4" />
                   </h2>
@@ -200,12 +200,12 @@ export default function DashboardPage() {
         </div>
       ) : (
         /* Analysis Content */
-        <div className="border-2 flex flex-col gap-5 p-4 rounded-lg mt-4">
+        <div className="border-2 flex flex-col gap-5 p-4 rounded-lg mt-10">
           <div className="flex flex-col gap-2">
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex flex-col gap-4">
-                  <h2 className="text-xl font-semibold">Revenue</h2>
+                  <h2 className="text-xl text-muted-foreground font-semibold">Revenue</h2>
                   <h2 className="flex text-2xl items-center font-semibold">
                     <IndianRupee className="size-7" />
                     {analyticsData?.totalEarnings}
@@ -231,18 +231,15 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="flex items-center justify-between gap-1">
+            {/* <div className="flex items-center justify-between gap-1">
               <span className="text-md font-medium">Gifting</span>
               <div className="flex items-center gap-1">
                 <span className="text-md font-bold">
                   <IndianRupee className="inline size-4" />
                   {mockAnalysisData.gifting.toLocaleString()}
                 </span>
-                {/* <span className="text-xs text-green-500">
-                  +{mockAnalysisData.trends.gifting}%
-                </span> */}
               </div>
-            </div>
+            </div> */}
 
             <div className="flex items-center justify-between gap-1">
               <span className="text-md font-medium">Comments</span>
@@ -251,9 +248,6 @@ export default function DashboardPage() {
                   <IndianRupee className="inline size-4" />
                   {analyticsData?.engagementBonus}
                 </span>
-                {/* <span className="text-xs text-green-500">
-                  +{mockAnalysisData.trends.commentsPrice}%
-                </span> */}
               </div>
             </div>
             
@@ -265,37 +259,28 @@ export default function DashboardPage() {
                   {analyticsData?.viewsEarnings}
 
                 </span>
-                {/* <span className="text-xs text-green-500">
-                  +{mockAnalysisData.trends.commentsPrice}%
-                </span> */}
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-1">
+            {/* <div className="flex items-center justify-between gap-1">
               <span className="text-md font-medium">Content Buy</span>
               <div className="flex items-baseline gap-1">
                 <span className="text-md font-bold">
                   <IndianRupee className="inline size-4" />
                   {mockAnalysisData.contentBuy.toLocaleString()}
                 </span>
-                {/* <span className="text-xs text-green-500">
-                  +{mockAnalysisData.trends.contentBuy}%
-                </span> */}
               </div>
-            </div>
+            </div> */}
 
-            <div className="flex items-center justify-between gap-1">
+            {/* <div className="flex items-center justify-between gap-1">
               <span className="text-md font-medium">Creator Pass</span>
               <div className="flex items-baseline gap-1">
                 <span className="text-md font-bold">
                   <IndianRupee className="inline size-4" />
                   {mockAnalysisData.creatorPass.toLocaleString()}
                 </span>
-                {/* <span className="text-xs text-green-500">
-                  +{mockAnalysisData.trends.creatorPass}%
-                </span> */}
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       )}

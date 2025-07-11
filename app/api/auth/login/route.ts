@@ -107,13 +107,13 @@ export async function POST(req: Request) {
     }
     
     // Handle generic errors
-    if (err instanceof Error) {
-      const error = err as NextApiError;
-      return NextResponse.json<BackendErrorResponse>(
-        { message: error.message },
-        { status: error.statusCode || 500 }
-      );
-    }
+    // if (err instanceof Error) {
+    //   const error = err as NextApiError;
+    //   return NextResponse.json<BackendErrorResponse>(
+    //     { message: error.message },
+    //     { status: error.statusCode || 500 }
+    //   );
+    // }
 
     // Fallback for unknown errors
     return NextResponse.json<BackendErrorResponse>(

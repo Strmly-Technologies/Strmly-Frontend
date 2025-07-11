@@ -15,6 +15,7 @@ import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import ProfileTopbar from "@/app/profile/_components/ProfileTopbar";
 import { toast } from "sonner";
+import { useGenerateThumbnails } from "@/utils/useGenerateThumbnails";
 
 const profileData = {
   id: 1,
@@ -49,6 +50,13 @@ export default function OthersCommunitiesPage() {
   const params = useParams();
 
   const id = params?.id;
+
+  const thumbnails = useGenerateThumbnails(
+    videos.map((video) => ({
+      id: video._id,
+      url: video.videoUrl,
+    }))
+  );
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -103,7 +111,6 @@ export default function OthersCommunitiesPage() {
     if (token) {
       fetchUserVideos();
     }
-
   }, [isLoggedIn, activeTab, router, token]);
 
   useEffect(() => {
@@ -251,75 +258,121 @@ export default function OthersCommunitiesPage() {
               {communityData?.bio}
             </p>
           </div>
+
+          {/* Tabs */}
+          <div className="mt-6 border-b">
+            <div className="flex space-x-8 items-center justify-between">
+              <button
+                className={`pb-4 flex items-center justify-center ${
+                  activeTab === "clips"
+                    ? "border-b-2 border-primary font-medium"
+                    : "text-muted-foreground"
+                }`}
+                onClick={() => setActiveTab("clips")}
+              >
+                <PlayIcon
+                  className={`size-7 cursor-pointer ${
+                    activeTab == "clips" && "fill-white"
+                  }`}
+                />
+              </button>
+              <button
+                className={`pb-4 flex items-center justify-center ${
+                  activeTab === "long"
+                    ? "border-b-2 border-primary font-medium"
+                    : "text-muted-foreground"
+                }`}
+                onClick={() => setActiveTab("long")}
+              >
+                <Video
+                  className={`size-7 cursor-pointer ${
+                    activeTab == "long" && "fill-white"
+                  } `}
+                />
+              </button>
+              <button
+                className={`pb-4 flex items-center justify-center ${
+                  activeTab === "likes"
+                    ? "border-b-2 border-primary font-medium"
+                    : "text-muted-foreground"
+                }`}
+                onClick={() => setActiveTab("likes")}
+              >
+                <HeartIcon
+                  className={`size-7 cursor-pointer ${
+                    activeTab == "likes" && "fill-white"
+                  }`}
+                />
+              </button>
+              <button
+                className={`pb-4 flex items-center justify-center ${
+                  activeTab === "saved"
+                    ? "border-b-2 border-primary font-medium"
+                    : "text-muted-foreground"
+                }`}
+                onClick={() => setActiveTab("saved")}
+              >
+                <BookmarkIcon
+                  className={`size-7 cursor-pointer ${
+                    activeTab == "saved" && "fill-white"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Tabs */}
       {isLoadingVideos ? (
         <div className="w-full h-96 flex items-center justify-center -mt-20 relative">
           <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="mt-6 border-b">
-          <div className="flex space-x-8 items-center justify-between">
-            <button
-              className={`pb-4 flex items-center justify-center ${
-                activeTab === "clips"
-                  ? "border-b-2 border-primary font-medium"
-                  : "text-muted-foreground"
-              }`}
-              onClick={() => setActiveTab("clips")}
-            >
-              <PlayIcon
-                className={`size-7 cursor-pointer ${
-                  activeTab == "clips" && "fill-white"
-                }`}
-              />
-            </button>
-            <button
-              className={`pb-4 flex items-center justify-center ${
-                activeTab === "long"
-                  ? "border-b-2 border-primary font-medium"
-                  : "text-muted-foreground"
-              }`}
-              onClick={() => setActiveTab("long")}
-            >
-              <Video
-                className={`size-7 cursor-pointer ${
-                  activeTab == "long" && "fill-white"
-                } `}
-              />
-            </button>
-            <button
-              className={`pb-4 flex items-center justify-center ${
-                activeTab === "likes"
-                  ? "border-b-2 border-primary font-medium"
-                  : "text-muted-foreground"
-              }`}
-              onClick={() => setActiveTab("likes")}
-            >
-              <HeartIcon
-                className={`size-7 cursor-pointer ${
-                  activeTab == "likes" && "fill-white"
-                }`}
-              />
-            </button>
-            <button
-              className={`pb-4 flex items-center justify-center ${
-                activeTab === "saved"
-                  ? "border-b-2 border-primary font-medium"
-                  : "text-muted-foreground"
-              }`}
-              onClick={() => setActiveTab("saved")}
-            >
-              <BookmarkIcon
-                className={`size-7 cursor-pointer ${
-                  activeTab == "saved" && "fill-white"
-                }`}
-              />
-            </button>
-          </div>
-        </div>
+        <>
+          {activeTab === "clips" ? (
+            <div className="flex flex-col gap-2 mt-4">
+              {videos.map((video) => (
+                <div
+                  key={video._id}
+                  className="w-full h-[100svh] sm:h-[90vh] relative rounded-lg overflow-hidden bg-black"
+                >
+                  {thumbnails[video._id] ? (
+                    <img
+                      src={thumbnails[video._id]}
+                      alt="video thumbnail"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white text-xs">
+                      Loading...
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {videos.map((video) => (
+                <div
+                  key={video._id}
+                  className="relative aspect-[9/16] rounded-lg overflow-hidden bg-black"
+                >
+                  {thumbnails[video._id] ? (
+                    <img
+                      src={thumbnails[video._id]}
+                      alt="video thumbnail"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white text-xs">
+                      Loading...
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

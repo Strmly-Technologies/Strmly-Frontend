@@ -12,7 +12,7 @@ export default function ClientLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { isLoggedIn } = useAuthStore()
+  const { isLoggedIn, user } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
   const [isLoading, setIsLoading] = useState(true)
@@ -27,7 +27,12 @@ export default function ClientLayout({
 
     if (isLoggedIn && pathname === "/login") {
       router.push("/")
-    } else if(!isLoggedIn && pathname !== "/signup"){
+    }
+    // else if(isLoggedIn && user?.isOnboarded === false){
+
+    //   router.push("/onboarding")
+    // } 
+    else if(!isLoggedIn && pathname !== "/signup"){
 
       router.push("/login")
     }

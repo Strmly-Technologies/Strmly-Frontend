@@ -64,19 +64,19 @@ export async function GET() {
   } catch (err: unknown) {
     console.error(' Error during community fetch:', err);
 
-    if (axios.isAxiosError(err)) {
-      const axiosErr = err as AxiosError<BackendErrorResponse>;
-      const status = axiosErr.response?.status || 500;
-      const backendMsg = axiosErr.response?.data?.message;
-      const fallbackMsg = axiosErr.message || 'Unexpected Axios error';
+    // if (axios.isAxiosError(err)) {
+    //   const axiosErr = err as AxiosError<BackendErrorResponse>;
+    //   const status = axiosErr.response?.status || 500;
+    //   const backendMsg = axiosErr.response?.data?.message;
+    //   const fallbackMsg = axiosErr.message || 'Unexpected Axios error';
 
-      console.error(' Axios error response:', axiosErr.response?.data);
+    //   console.error(' Axios error response:', axiosErr.response?.data);
 
-      return NextResponse.json<BackendErrorResponse>(
-        { message: backendMsg || fallbackMsg },
-        { status }
-      );
-    }
+    //   return NextResponse.json<BackendErrorResponse>(
+    //     { message: backendMsg || fallbackMsg },
+    //     { status }
+    //   );
+    // }
 
     if (err instanceof Error) {
       return NextResponse.json<BackendErrorResponse>(

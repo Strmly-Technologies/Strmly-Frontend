@@ -35,15 +35,15 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('Onboarding error:', error);
 
-    if (axios.isAxiosError(error)) {
-      return NextResponse.json(
-        { 
-          message: error.response?.data?.message || 'Backend request failed',
-          details: error.response?.data 
-        },
-        { status: error.response?.status || 500 }
-      );
-    }
+    // if (axios.isAxiosError(error)) {
+    //   return NextResponse.json(
+    //     { 
+    //       message: error.response?.data?.message || 'Backend request failed',
+    //       details: error.response?.data 
+    //     },
+    //     { status: error.response?.status || 500 }
+    //   );
+    // }
 
     return NextResponse.json(
       { message: 'Internal server error', error: error instanceof Error ? error.message : String(error) },
