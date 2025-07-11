@@ -61,6 +61,7 @@ export default function RootLayout({
               <Toaster
                 position="top-center"
                 richColors
+                duration={500}
               />
               <ClientLayout>{children}</ClientLayout>
             </ThemeProvider>

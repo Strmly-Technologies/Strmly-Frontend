@@ -30,11 +30,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
-interface ProfileFormProps {
-  defaultValues?: Partial<z.infer<typeof profileFormSchema>>;
-}
 
-const EditForm = ({ defaultValues }: ProfileFormProps) => {
+const EditForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, token, isLoggedIn } = useAuthStore();
@@ -43,15 +40,20 @@ const EditForm = ({ defaultValues }: ProfileFormProps) => {
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      username: defaultValues?.username || "",
-      bio: defaultValues?.bio || "",
-      dob: defaultValues?.dob ? new Date(defaultValues.dob) : null,
+      username: user?.username || "",
+      bio: user?.bio || "",
+      dob: user?.dob ? new Date(user.dob) : null,
     },
   });
 
   const [previewImage, setPreviewImage] = useState<string | null>(
-    defaultValues?.profile_photo || null
+    user?.image || null
   );
+
+  useEffect(()=>{
+    if(!isLoggedIn || !user || !token) router.push('/login');
+
+  }, [user, isLoggedIn, token]);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -106,14 +108,14 @@ const EditForm = ({ defaultValues }: ProfileFormProps) => {
 
   return (
     <div className="flex flex-col items-center justify-center space-y-20 my-10 mx-10">
-      <div className="flex relative items-center w-full justify-between">
+      <div className="flex relative font-poppins items-center w-full justify-between">
         <Image
           onClick={() => router.back()}
           width={16}
           height={16}
           src={"/assets/Back.png"}
           alt="arrow_back"
-          className="text-black"
+          className="text-card"
         />
         <h2 className="text-xl text-[#F1C40F] font-semibold">
           Update Your Profile
@@ -129,14 +131,14 @@ const EditForm = ({ defaultValues }: ProfileFormProps) => {
             <Avatar className="size-28">
               <AvatarImage src={previewImage || ""} />
               <AvatarFallback>
-                {defaultValues?.username?.charAt(0).toUpperCase()}
+                {user?.username?.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="relative -top-12 left-5 space-y-1">
               <Button
                 type="button"
                 variant="outline"
-                className="rounded-full"
+                className="rounded-full bg-card"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <PencilIcon />
@@ -243,7 +245,7 @@ const EditForm = ({ defaultValues }: ProfileFormProps) => {
           <Button
             type="submit"
             disabled={isLoading}
-            className="flex gap-2 w-full bg-[#F1C40F]"
+            className="flex gap-2 text-card font-poppins w-full bg-[#F1C40F]"
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Update profile

@@ -47,21 +47,23 @@ export default function LoginPage() {
       useAuthStore.getState().setUser(data.user);
 
       toast.success("Login successful");
-      if(data?.user?.isOnboarded){
-        router.push("/");
-      }
-      router.push("/onboarding");
+      setTimeout(()=>{
+          if(data?.user?.isOnboarded){
+          router.push("/");
+        }
+        router.push("/onboarding");
+      }, 500)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An unknown error occurred");
     }
   }
 
   return (
-    <div className="flex mt-32 justify-center">
-      <div className="w-full max-w-md p-8 space-y-10 rounded-lg">
-        <div className="flex items-center justify-center">
-          <h1 className="text-3xl text-[#F1C40F] font-bold font-serif [text-shadow:_0_5px_8px_var(--tw-shadow-color)] shadow-[#F1C40F]">
-            Strmly
+    <div className="flex flex-col space-y-20 mt-10 px-6">
+      <div className="w-full max-w-md space-y-16 rounded-lg">
+        <div className="flex items-center text-primary justify-center">
+          <h1 className="text-3xl text-center font-poppins font-semibold">
+            Login to Strmly
           </h1>
         </div>
 
@@ -93,7 +95,7 @@ export default function LoginPage() {
               )}
             />
 
-            <Button type="submit" className="w-full text-black bg-[#F1C40F]">
+            <Button type="submit" className="w-full font-poppins text-card bg-[#F1C40F]">
               Sign In
             </Button>
           </form>
@@ -101,12 +103,13 @@ export default function LoginPage() {
 
         <div className="relative">
             <hr className="w-full"/>
-            <div className="absolute -bottom-5 left-[45%] bg-white p-2 text-black rounded-full">
+            <div className="absolute -bottom-3 left-[47%] bg-[#1A1A1A] px-1 rounded-full">
                 <span className="tracking-wider">OR</span>
             </div>
         </div>
 
-        <div className="flex flex-col gap-5">
+        {/* Sign in with Google */}
+        {/* <div className="flex flex-col gap-5">
             <button type="button" className="w-full flex items-center justify-center gap-2">
                 <div className="">
                     <Image src={'/google.png'} alt="google-icon" width={30} height={30} className="size-6"/>
@@ -119,14 +122,15 @@ export default function LoginPage() {
                     Forgot password?
                 </Link>
             </div>
-        </div>
+        </div> */}
 
-        <div className="text-center text-sm">
-          Don't have an account?{" "}
-          <Link href="/signup" className="font-medium text-[#F1C40F] hover:underline">
-            Sign up
-          </Link>
-        </div>
+      </div>
+
+      <div className="text-center text-sm">
+        Don't have an account?{" "}
+        <Link href="/signup" className="font-medium text-[#F1C40F] hover:underline">
+          Sign up
+        </Link>
       </div>
     </div>
   );

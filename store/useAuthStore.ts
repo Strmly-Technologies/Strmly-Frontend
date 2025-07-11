@@ -11,6 +11,7 @@ type User = {
   providerAccountId?: string
   username?: string
   bio?: string
+  dob?: string
   isOnboarded?: boolean
   isVerified?: boolean
   location?: string

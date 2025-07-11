@@ -43,7 +43,7 @@ const ProfileTopbar = ({ hashtag, name }: ProfileTopbarProps) => {
   };
 
   return (
-    <div className="mx-4 relative top-6">
+    <div className="mx-4 relative font-poppins top-6">
       <div className="flex items-center justify-between">
         <Image
           onClick={() => router.back()}
@@ -73,7 +73,7 @@ const ProfileTopbar = ({ hashtag, name }: ProfileTopbarProps) => {
                 <div className="py-1" onClick={() => setShowDropdown(false)}>
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-end gap-2"
+                    className="w-full text-left font-poppins px-4 py-2 text-sm text-card flex items-center justify-end gap-2"
                   >
                     <LogOut size={16} />
                     Logout
