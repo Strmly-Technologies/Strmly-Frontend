@@ -3,25 +3,24 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 
-const Topbar = () => {
+const Topbar = ({content}: {content: string}) => {
   const router = useRouter();
   
   return (
-    <div className='mx-4 relative top-6'>
-        <div className='flex items-center justify-between'>
+    <div className='mx-4 relative top-2 font-poppins'>
+        <div className='flex items-center w-full justify-between'>
             <Image 
               onClick={()=> router.back()}
-              width={20} height={20} src={'/assets/Back.png'} alt='arrow_back' className='text-black' 
+              width={14} height={14} src={'/assets/Back.png'} alt='arrow_back' 
             />
 
             {/* Heading */}
             <div>
-                <span className='text-xl font-semibold'>Dashboard</span>
+                <span className='text-xl text-white'>{content}</span>
             </div>
 
-            <div className='flex items-center gap-2'>
-                <div className=''></div>
-            </div>
+            <div className=''></div>
+            
         </div>
     </div>
   )

@@ -29,12 +29,12 @@ export async function GET(req: Request) {
   } catch (error) {
     console.error('Profile fetch error:', error);
 
-    if (axios.isAxiosError(error)) {
-      return NextResponse.json(
-        { message: error.response?.data?.message || 'Backend request failed' },
-        { status: error.response?.status || 500 }
-      );
-    }
+    // if (axios.isAxiosError(error)) {
+    //   return NextResponse.json(
+    //     { message: error.response?.data?.message || 'Backend request failed' },
+    //     { status: error.response?.status || 500 }
+    //   );
+    // }
 
     return NextResponse.json(
       { message: 'Internal server error' },

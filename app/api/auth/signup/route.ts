@@ -34,23 +34,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json<ErrorResponse>(
-        { error: "Invalid email format" },
-        { status: 400 }
-      );
-    }
-
-    // Validate password strength
-    if (password.length < 8) {
-      return NextResponse.json<ErrorResponse>(
-        { error: "Password must be at least 8 characters" },
-        { status: 400 }
-      );
-    }
-
     // Call registration endpoint
     const { data } = await axios.post<AuthResponse | ErrorResponse>(
       `${process.env.BACKEND_URL}/auth/register`,
@@ -88,16 +71,16 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("❌ Signup error:", err);
 
-    if (axios.isAxiosError(err)) {
-      const status = err.response?.status || 500;
-      const errorMessage =
-        err.response?.data?.message || err.message || "Registration failed";
+    // if (axios.isAxiosError(err)) {
+    //   const status = err.response?.status || 500;
+    //   const errorMessage =
+    //     err.response?.data?.message || err.message || "Registration failed";
 
-      return NextResponse.json<ErrorResponse>(
-        { error: errorMessage },
-        { status }
-      );
-    }
+    //   return NextResponse.json<ErrorResponse>(
+    //     { error: errorMessage },
+    //     { status }
+    //   );
+    // }
 
     return NextResponse.json<ErrorResponse>(
       { error: "Internal server error" },

@@ -43,6 +43,7 @@ export default function ProfilePage() {
   const [userData, setUserData] = useState<any>(null);
   const [videos, setVideos] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState<string | null>(null);
   const [isLoadingVideos, setIsLoadingVideos] = useState(false);
   const { user, isLoggedIn, token, logout } = useAuthStore();
   const router = useRouter();
@@ -99,7 +100,6 @@ export default function ProfilePage() {
     if (token) {
       fetchUserVideos();
     }
-
   }, [isLoggedIn, router, token, activeTab]);
 
   useEffect(() => {
@@ -128,8 +128,10 @@ export default function ProfilePage() {
 
         console.log(data.user);
         setUserData(data.user);
+        setIsError(null);
       } catch (error) {
-        console.log(error);
+        console.log('error', error);
+        setIsError(JSON.stringify(error));
         toast.error(
           error instanceof Error ? error.message : "An unknown error occurred"
         );
@@ -142,7 +144,6 @@ export default function ProfilePage() {
       fetchUserData();
     }
   }, [isLoggedIn, router, token]);
-
 
   const profileData = {
     name: userData?.name || "User",
@@ -184,8 +185,8 @@ export default function ProfilePage() {
         <div className="w-full h-96 flex items-center justify-center -mt-20 relative">
           <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
         </div>
-      ) : (
-        <div className="max-w-4xl px-6 -mt-20 relative">
+      ) : !isError ? (
+        <div className="max-w-4xl px-6 -mt-28 relative">
           <div className="flex flex-col items-center md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4">
             <div className="relative">
               <Avatar className="size-24 border-4 border-background">
@@ -198,14 +199,14 @@ export default function ProfilePage() {
                 </AvatarFallback>
               </Avatar>
 
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-2 font-poppins items-center justify-center">
                 <p className="text-muted-foreground">
                   @{userData?.username || profileData.username}
                 </p>
                 {(userData?.creator_profile?.verification_status !=
                   "unverified" ||
                   profileData.isVerified) && (
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
                     Verified
                   </span>
                 )}
@@ -220,56 +221,58 @@ export default function ProfilePage() {
               onClick={() => router.push("/communities?type=followers")}
             >
               {/* <span className="font-bold text-lg">{profileData.followers}</span>{" "} */}
-              <span className="font-bold text-lg">
+              <span className="font-poppins text-lg">
                 {userData?.followers.length}M
               </span>{" "}
-              <span className="text-muted-foreground text-lg">Followers</span>
+              <span className="text-muted-foreground text-md">Followers</span>
             </div>
             <div
               className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
               onClick={() => router.push("/communities?type=community")}
             >
               {/* <span className="font-bold text-lg">{profileData.following}</span>{" "} */}
-              <span className="font-bold text-lg">
+              <span className="font-poppins text-lg">
                 {userData?.community.length}
               </span>{" "}
-              <span className="text-muted-foreground text-lg">Community</span>
+              <span className="text-muted-foreground text-md">Community</span>
             </div>
             <div
               className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
               onClick={() => router.push("/communities?type=following")}
             >
               {/* <span className="font-bold text-lg">{profileData.posts}</span>{" "} */}
-              <span className="font-bold text-lg">800</span>{" "}
-              <span className="text-muted-foreground text-lg">Followings</span>
+              <span className="text-lg font-poppins">800</span>{" "}
+              <span className="text-muted-foreground text-md">Followings</span>
             </div>
-
           </div>
 
-          <div className="flex w-full items-center justify-center gap-2 mt-5 md:mt-0">
+          <div className="flex w-full items-center font-poppins justify-center gap-2 mt-5 md:mt-0">
             <Button
               onClick={() => router.push("/communities")}
-              className="px-4 text-black bg-[#F1C40F] py-2 rounded-md"
+              className="px-4 text-card bg-[#F1C40F] py-2 rounded-md"
             >
               My Community
             </Button>
             <Button
               onClick={() => router.push("/profile/dashboard")}
-              className="px-4 text-black bg-[#F1C40F] py-2 rounded-md"
+              className="px-4 text-card bg-[#F1C40F] py-2 rounded-md"
             >
               Dashboard
             </Button>
           </div>
 
-          <div className="flex w-full items-center justify-center gap-2 mt-5 md:mt-0">
+          <div className="flex w-full items-center font-poppins justify-center gap-2 mt-5 md:mt-0">
             <Button
               onClick={() => router.push("/profile/edit")}
               variant={"outline"}
-              className="px-4 py-2 rounded-md"
+              className="px-4 py-2 border-muted-foreground rounded-md"
             >
               Edit Profile
             </Button>
-            <Button variant={"outline"} className="px-4 py-2 rounded-md">
+            <Button
+              variant={"outline"}
+              className="px-4 py-2 border-muted-foreground rounded-md"
+            >
               History
             </Button>
           </div>
@@ -304,75 +307,69 @@ export default function ProfilePage() {
               </span> */}
             </div>
           </div>
+
+          {/* Tabs */}
+          <div className="mt-8 border-b">
+                <div className="flex space-x-8 items-center justify-between">
+                    <button
+                        className={`pb-4 flex items-center justify-center ${activeTab === "clips"
+                                ? "border-b-2 border-primary font-medium"
+                                : "text-muted-foreground"
+                            }`}
+                        onClick={() => setActiveTab("clips")}
+                    >
+                        <PlayIcon
+                            className={`size-7 cursor-pointer ${activeTab == "posts" && "fill-white"
+                                }`}
+                        />
+                    </button>
+                    <button
+                        className={`pb-4 flex items-center justify-center ${activeTab === "long"
+                                ? "border-b-2 border-primary font-medium"
+                                : "text-muted-foreground"
+                            }`}
+                        onClick={() => setActiveTab("long")}
+                    >
+                        <Video
+                            className={`size-7 cursor-pointer ${activeTab == "long" && "fill-white"
+                                }`}
+                        />
+                    </button>
+                    <button
+                        className={`pb-4 flex items-center justify-center ${activeTab === "likes"
+                                ? "border-b-2 border-primary font-medium"
+                                : "text-muted-foreground"
+                            }`}
+                        onClick={() => setActiveTab("likes")}
+                    >
+                        <HeartIcon
+                            className={`size-7 cursor-pointer ${activeTab == "likes" && "fill-white"
+                                }`}
+                        />
+                    </button>
+                    <button
+                        className={`pb-4 flex items-center justify-center ${activeTab === "saved"
+                                ? "border-b-2 border-primary font-medium"
+                                : "text-muted-foreground"
+                            }`}
+                        onClick={() => setActiveTab("saved")}
+                    >
+                        <BookmarkIcon
+                            className={`size-7 cursor-pointer ${activeTab == "saved" && "fill-white"
+                                }`}
+                        />
+                    </button>
+                </div>
+            </div>
         </div>
-      )}
+      )
+      
+      :
 
-      {/* Tabs */}
-      <div className="mt-6 px-6">
-
-        <div className="flex space-x-8 items-center justify-between">
-          <button
-            className={`pb-4 flex items-center justify-center ${
-              activeTab === "clips"
-                ? "border-b-2 border-white font-medium"
-
-                : "text-muted-foreground"
-            }`}
-            onClick={() => setActiveTab("clips")}
-          >
-            <PlayIcon
-              className={`size-7 cursor-pointer ${
-                activeTab == "clips" && "fill-white"
-              }`}
-            />
-          </button>
-          <button
-            className={`pb-4 flex items-center justify-center ${
-              activeTab === "long"
-                ? "border-b-2 border-white font-medium"
-
-                : "text-muted-foreground"
-            }`}
-            onClick={() => setActiveTab("long")}
-          >
-            <Video
-              className={`size-7 cursor-pointer ${
-                activeTab == "long" && "fill-white"
-              } `}
-            />
-          </button>
-          <button
-            className={`pb-4 flex items-center justify-center ${
-              activeTab === "likes"
-                ? "border-b-2 border-white font-medium"
-
-                : "text-muted-foreground"
-            }`}
-            onClick={() => setActiveTab("likes")}
-          >
-            <HeartIcon
-              className={`size-7 cursor-pointer ${
-                activeTab == "likes" && "fill-white"
-              }`}
-            />
-          </button>
-          <button
-            className={`pb-4 flex items-center justify-center ${
-              activeTab === "saved"
-                ? "border-b-2 border-white font-medium"
-
-                : "text-muted-foreground"
-            }`}
-            onClick={() => setActiveTab("saved")}
-          >
-            <BookmarkIcon
-              className={`size-7 cursor-pointer ${
-                activeTab == "saved" && "fill-white"
-              }`}
-            />
-          </button>
-        </div>
+      <div className="flex items-center justify-center h-60">
+        Sorry it's looks like some error occurred!
       </div>
+    }
 
       {isLoadingVideos ? (
         <div className="w-full h-96 flex items-center justify-center -mt-20 relative">
@@ -386,7 +383,6 @@ export default function ProfilePage() {
                 <div
                   key={video._id}
                   className="w-full h-[100svh] sm:h-[90vh] relative rounded-lg overflow-hidden"
-
                 >
                   {thumbnails[video._id] ? (
                     <img
@@ -428,7 +424,6 @@ export default function ProfilePage() {
                   </div>
                 );
               })}
-
             </div>
           )}
         </>

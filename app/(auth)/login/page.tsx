@@ -13,9 +13,13 @@ import { loginSchema } from "@/lib/schemas/authSchemas";
 import { FaGoogle } from "react-icons/fa";
 import { useAuthStore } from "@/store/useAuthStore";
 import Image from "next/image";
+import { Loader2Icon } from "lucide-react";
+import { useState } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -25,6 +29,7 @@ export default function LoginPage() {
   });
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
+    setIsLoading(true);
     try {
       // Login API call
       const response = await fetch("/api/auth/login", {
@@ -46,22 +51,26 @@ export default function LoginPage() {
       useAuthStore.getState().login(data.token);
       useAuthStore.getState().setUser(data.user);
 
-      toast.success("Login successful");
-      if(data?.user?.isOnboarded){
-        router.push("/");
-      }
-      router.push("/onboarding");
+      toast.success("Login successful", {duration: 700});
+      setTimeout(()=>{
+          if(data?.user?.isOnboarded){
+          router.push("/");
+        }
+        router.push("/onboarding");
+      }, 700)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An unknown error occurred");
+    } finally{
+      setIsLoading(false);
     }
   }
 
   return (
-    <div className="flex mt-32 justify-center">
-      <div className="w-full max-w-md p-8 space-y-10 rounded-lg">
-        <div className="flex items-center justify-center">
-          <h1 className="text-3xl text-[#F1C40F] font-bold font-serif [text-shadow:_0_5px_8px_var(--tw-shadow-color)] shadow-[#F1C40F]">
-            Strmly
+    <div className="flex flex-col space-y-20 mt-10 px-6">
+      <div className="w-full max-w-md space-y-16 rounded-lg">
+        <div className="flex items-center text-white justify-center">
+          <h1 className="text-xl text-center font-poppins">
+            Login to Strmly
           </h1>
         </div>
 
@@ -93,7 +102,14 @@ export default function LoginPage() {
               )}
             />
 
-            <Button type="submit" className="w-full text-black bg-[#F1C40F]">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="flex gap-2 items-center w-full text-card bg-primary"
+            >
+              {isLoading && (
+                <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Sign In
             </Button>
           </form>
@@ -101,12 +117,13 @@ export default function LoginPage() {
 
         <div className="relative">
             <hr className="w-full"/>
-            <div className="absolute -bottom-5 left-[45%] bg-white p-2 text-black rounded-full">
+            <div className="absolute -bottom-3 left-[47%] bg-[#1A1A1A] px-1 rounded-full">
                 <span className="tracking-wider">OR</span>
             </div>
         </div>
 
-        <div className="flex flex-col gap-5">
+        {/* Sign in with Google */}
+        {/* <div className="flex flex-col gap-5">
             <button type="button" className="w-full flex items-center justify-center gap-2">
                 <div className="">
                     <Image src={'/google.png'} alt="google-icon" width={30} height={30} className="size-6"/>
@@ -119,14 +136,15 @@ export default function LoginPage() {
                     Forgot password?
                 </Link>
             </div>
-        </div>
+        </div> */}
 
-        <div className="text-center text-sm">
-          Don't have an account?{" "}
-          <Link href="/signup" className="font-medium text-[#F1C40F] hover:underline">
-            Sign up
-          </Link>
-        </div>
+      </div>
+
+      <div className="text-center text-sm">
+        Don't have an account?{" "}
+        <Link href="/signup" className="font-medium text-[#F1C40F] hover:underline">
+          Sign up
+        </Link>
       </div>
     </div>
   );

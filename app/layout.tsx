@@ -54,13 +54,14 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes"/>
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className={`${inter.variable} ${poppins.variable} antialiased`}>
+      <body className={`${inter.variable} ${poppins.variable} antialiased scrollbar-hide overflow-auto bg-background text-foreground`}>
         <AuthProvider>
             <Providers>
             <ThemeProvider defaultTheme="dark">
               <Toaster
                 position="top-center"
                 richColors
+                duration={1000}
               />
               <ClientLayout>{children}</ClientLayout>
             </ThemeProvider>

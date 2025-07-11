@@ -31,6 +31,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import BalanceHistoryPage from "./balanceHistory/page";
+import WalletHistoryPage from "./walletHistory/page"
+import Link from 'next/link';
 
 const mockTransactions = [
   
@@ -115,6 +118,7 @@ export default function WalletPage() {
    const router = useRouter();
 
   const totalEarnings = mockEarningsSources.reduce((sum, source) => sum + source.amount, 0)
+
 
   const getTransactionIcon = (transaction: any) => {
     switch (transaction.category) {
@@ -680,9 +684,9 @@ export default function WalletPage() {
     { /* Mobile version */ }
     </div>
     {/* mobile version */}
-<div className="md:hidden bg-black text-white h-screen flex flex-col">
+<div className="md:hidden bg-[#1A1A1A] text-white h-screen flex flex-col">
   {/*Top Section */}
-  <div className="sticky top-0 z-20 bg-black px-4 pt-4 pb-2 space-y-4">
+  <div className="sticky top-0 z-20 bg-[#1A1A1A] px-4 pt-4 pb-2 space-y-4">
     {/* Header */}
     <div className="relative flex items-center justify-center font-poppins">
       <div className="mr-auto">
@@ -692,17 +696,19 @@ export default function WalletPage() {
       </div>
       <h1 className="text-2xl absolute left-1/2 -translate-x-1/2 ">My Wallet</h1>
       <div className="ml-auto">
-        <button>
+        {/* <button>
           <MoreHorizontal size={22} />
-        </button>
+        </button> */}
       </div>
     </div>
 
     {/* Balance Card */}
-    <Card className="bg-black/80 backdrop-blur-md border border-gray-500/30 rounded-xl shadow">
+    <Card className="bg-[#1A1A1A] backdrop-blur-md border border-gray-500/80 rounded-xl shadow-lg">
   <CardContent className="pt-4">
     <div className="flex items-center justify-between">
+        <Link href="/wallet/balanceHistory">
       <p className="text-m text-gray-400">Total Balance</p>
+      </Link>
       {/* <select className="bg-black text-white text-sm border border-gray-600 rounded-lg px-4 py-1 focus:outline-none">
         <option>Last Week</option>
         <option>Last Month</option>
@@ -714,7 +720,7 @@ export default function WalletPage() {
 
     <div className="flex items-center justify-between mt-2">
       <div className="flex items-center space-x-2">
-        <h3 className="text-3xl font-bold text-white">{`₹${balance.toFixed(2)}`}</h3>
+        <h3 className="text-3xl text-white">{`₹0.0`}</h3>
         <button onClick={() => console.log("Watch clicked")} className="text-gray-400 hover:text-white">
           <Clock className="w-5 h-5" />
         </button>
@@ -724,15 +730,17 @@ export default function WalletPage() {
 </Card>
   <div className="flex items-center justify-between space-x-3">
   <div className="w-1/2">
-    <Card className="bg-black/80 backdrop-blur-md border border-gray-500/30 rounded-xl shadow">
-      <CardContent className="pt-4">
+    <Card className="bg-[#1A1A1A] backdrop-blur-md border border-gray-500/80 rounded-xl shadow-lg">
+      <CardContent className="pt-3 h-full">
         <div className="flex items-center justify-between">
+          <Link href="/wallet/walletHistory">
           <p className="text-m text-gray-400">Wallet Balance</p>
+          </Link>
         </div>
 
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex items-center justify-between mt-1">
           <div className="flex items-center space-x-2">
-            <h3 className="text-3xl font-bold text-white">{`₹${balance.toFixed(2)}`}</h3>
+            <h3 className="text-3xl  text-white">{`₹0.0`}</h3>
             <button onClick={() => console.log("Watch clicked")} className="text-gray-400 hover:text-white">
               <Clock className="w-5 h-5" />
             </button>
@@ -743,15 +751,15 @@ export default function WalletPage() {
   </div>
 
   <div className="w-1/2">
-    <Card className="bg-black/80 backdrop-blur-md border border-gray-500/30 rounded-xl shadow">
-      <CardContent className="pt-4">
+    <Card className="bg-[#1A1A1A] backdrop-blur-md border border-gray-500/80 rounded-xl shadow">
+      <CardContent className="pt-4 mt-2 h-full">
         <div className="flex items-center justify-between">
-          <p className="text-m text-gray-400">Revenue</p>
+          <p className="text-lg text-gray-400">Revenue</p>
         </div>
 
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center space-x-2">
-            <h3 className="text-3xl font-bold text-white">{`₹${balance.toFixed(2)}`}</h3>
+            <h3 className="text-3xl  text-white">{`₹0.0`}</h3>
             <button onClick={() => console.log("Watch clicked")} className="text-gray-400 hover:text-white">
               <Clock className="w-5 h-5" />
             </button>
@@ -805,7 +813,7 @@ export default function WalletPage() {
 
   {activeTab === "overview" && (
     <div className="fixed bottom-20 left-0 right-0 px-4 z-50">
-      <div className="flex flex-col gap-3 bg-black py-3 rounded-xl shadow-md">
+      <div className="flex flex-col gap-3 bg-[#1A1A1A] py-3 rounded-xl shadow-md">
         <Button
           className="w-full text-black font-medium h-11 rounded-xl"
           style={{ backgroundColor: "#F1C40F" }}

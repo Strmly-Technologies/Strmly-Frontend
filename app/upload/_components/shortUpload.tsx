@@ -11,7 +11,12 @@ import CameraTopbar from "./CameraTopbar";
 
 const MAX_LIMIT = 61;
 
-const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
+type ShortVideoUploadProps = {
+  switchVideo: boolean;
+  isShowBottom: (val: boolean) => void;
+};
+
+const ShortVideoUpload = ({ switchVideo, isShowBottom  }: ShortVideoUploadProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -27,6 +32,7 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
   const [showSlider, setShowSlider] = useState(false);
   const [showTracks, setShowTracks] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
+  const [flipCamera, setFlipCamera] = useState(false);
 
   const [showCountdownSlider, setShowCountdownSlider] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(3);
@@ -43,25 +49,29 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
     }
   }, [stream]);
 
-  const startCamera = async (mode: "user" | "environment" = "user") => {
-    try {
-      const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: mode },
-        audio: true,
-      });
+  const startCamera = useCallback(
+    async (mode: "user" | "environment" = "user") => {
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: mode },
+          audio: true,
+        });
 
-      stopCamera();
-      setStream(newStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = newStream;
+        stopCamera(); // Safe to call here since it's memoized
+        setStream(newStream);
+        if (videoRef.current) {
+          videoRef.current.srcObject = newStream;
+        }
+      } catch (error) {
+        console.error("Camera access error:", error);
       }
-    } catch (error) {
-      console.error("Camera access error:", error);
-    }
-  };
+    },
+    [stopCamera]
+  );
 
   const toggleCamera = () => {
     const newMode = facingMode === "user" ? "environment" : "user";
+    setFlipCamera(!flipCamera);
     stopCamera();
     setFacingMode(newMode);
     startCamera(newMode);
@@ -72,7 +82,7 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
     return () => {
       stopCamera();
     };
-  }, []);
+  }, [facingMode]);
 
   const startRecording = () => {
     if (!stream) return;
@@ -87,7 +97,9 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
     recorder.onstop = () => {
       const blob = new Blob(localChunks, { type: "video/webm" });
       const url = URL.createObjectURL(blob);
-      const file = new File([blob], "recorded-video.webm", { type: "video/webm" });
+      const file = new File([blob], "recorded-video.webm", {
+        type: "video/webm",
+      });
 
       setVideoURL(url);
       setVideoFile(file);
@@ -148,13 +160,21 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       const selectedFile = files[0];
-      const imageUrl = URL.createObjectURL(selectedFile);
-      setSelectedImage(imageUrl);
+
+      if (selectedFile.type !== "video/mp4") {
+        alert("Only MP4 videos are supported.");
+        return;
+      }
+
+      const videoUrl = URL.createObjectURL(selectedFile);
+      setVideoURL(videoUrl);
+      setVideoFile(selectedFile);
     }
   };
 
+
   return (
-    <div className="relative w-full h-[100dvh] bg-black overflow-hidden flex items-center justify-center">
+    <div className="relative w-full h-full bg-card overflow-hidden flex items-center justify-center">
       {!videoURL ? (
         <>
           <video
@@ -167,7 +187,10 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
 
           {countdown && (
             <div className="absolute z-20 text-white text-6xl font-bold animate-pulse">
-              <CountdownTimer seconds={countdownSeconds} onComplete={handleCountdownFinish} />
+              <CountdownTimer
+                seconds={countdownSeconds}
+                onComplete={handleCountdownFinish}
+              />
             </div>
           )}
 
@@ -185,14 +208,16 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
             />
           </div> */}
 
-          <div className="absolute top-16 w-full z-20">
+          <div className="absolute top-5 w-full z-20">
             <CameraTopbar
               duration={duration}
               setDuration={setDuration}
               isRecording={isRecording}
               countdown={countdown}
               maxLimit={MAX_LIMIT}
-              onToggleCountdownSlider={() => setShowCountdownSlider((prev) => !prev)}
+              onToggleCountdownSlider={() =>
+                setShowCountdownSlider((prev) => !prev)
+              }
               setShowTracks={setShowTracks}
               setShowEffects={setShowEffects}
               fileInputRef={fileInputRef}
@@ -202,12 +227,12 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
           </div>
 
           <button
-            className="absolute bottom-10 right-5 z-30 text-white bg-black/50 p-2 rounded-full"
+            className={`absolute flex items-center justify-center bottom-10 right-5 z-30 ${flipCamera ? "bg-[#B0B0B0]" : "bg-card"} rounded-full`}
             onClick={toggleCamera}
             disabled={isRecording}
             aria-label="Flip Camera"
           >
-            <CameraIcon className="w-6 h-6" />
+            <Image src={'/flip.png'} alt="camera-icon" width={20} height={20} />
           </button>
 
           <div className="absolute bottom-28 z-10 w-full flex flex-col items-center space-y-4">
@@ -259,7 +284,12 @@ const ShortVideoUpload = ({ switchVideo }: { switchVideo: boolean }) => {
         </>
       ) : (
         <div className="top-0 h-full">
-          <VideoPreview videoFile={videoFile} videoURL={videoURL} onReset={reset} />
+          <VideoPreview
+          isShowBottom={isShowBottom}
+            videoFile={videoFile}
+            videoURL={videoURL}
+            onReset={reset}
+          />
         </div>
       )}
     </div>

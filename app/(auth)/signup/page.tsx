@@ -38,20 +38,31 @@ export default function SignupPage() {
   async function onSubmit(values: z.infer<typeof signupSchema>) {
     setIsLoading(true);
     try {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(values.email)) {
+        throw new Error("Invalid email format");
+      }
+
+      // Validate password strength
+      if (values.password.length < 8) {
+        throw new Error("Password must be at least 8 characters");
+      }
+
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(values),
-        credentials: 'include'
+        credentials: "include",
       });
 
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          typeof data.message === 'string' ? data.message : "Signup failed"
+          typeof data.message === "string" ? data.message : "Signup failed"
         );
       }
 
@@ -60,35 +71,32 @@ export default function SignupPage() {
       useAuthStore.getState().login(data.token);
       useAuthStore.getState().setUser(data.user);
 
-      toast.success("Signup Successful successful");
-
-      setTimeout(()=> {
+      setTimeout(() => {
         router.push("/onboarding");
-      }, 500);
+      }, 510);
     } catch (error) {
       console.error("Signup error:", error);
       toast.error(
-        error instanceof Error 
-          ? error.message 
+        error instanceof Error
+          ? error.message
           : "An unknown error occurred during signup"
       );
-    } finally{
+    } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex mt-32 justify-center">
-      <div className="w-full max-w-md p-8 space-y-8 rounded-lg">
-      <div className="flex items-center justify-center">
-        <h1 className="text-3xl text-[#F1C40F] font-bold font-serif [text-shadow:_0_5px_8px_var(--tw-shadow-color)] shadow-[#F1C40F]">
-          Strmly
-        </h1>
-      </div>
+    <div className="flex flex-col mt-10 px-6 space-y-20">
+      <div className="w-full max-w-sm space-y-16 rounded-lg">
+        <div className="flex items-center text-white justify-center">
+          <h1 className="text-xl flex flex-col text-center font-poppins">
+            Create account to <span className="">Strmly</span>
+          </h1>
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-
             <FormField
               control={form.control}
               name="email"
@@ -119,27 +127,32 @@ export default function SignupPage() {
               )}
             />
 
-            <Button type="submit" disabled={isLoading} className="w-full text-black hover:shadow-md hover:shadow-[#F1C40F] bg-[#F1C40F]">
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <Loader2Icon className="size-4 animate-spin" />
-                Processing...
-              </div>
-            ) : (
-              "Create Account"
-            )}
-          </Button>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full text-card font-poppins bg-[#F1C40F]"
+            >
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2Icon className="size-4 animate-spin" />
+                  Processing...
+                </div>
+              ) : (
+                "Create Account"
+              )}
+            </Button>
           </form>
         </Form>
 
         <div className="relative">
           <hr className="w-full" />
-          <div className="absolute -bottom-5 left-[45%] p-2 rounded-full">
+          <div className="absolute -bottom-3 left-[47%] bg-[#1A1A1A] px-1 rounded-full">
             <span className="tracking-wider">OR</span>
           </div>
         </div>
 
-        <div className="flex flex-col gap-5">
+        {/* Google Signup */}
+        {/* <div className="flex flex-col gap-5">
           <button
             type="button"
             className="w-full flex items-center justify-center gap-2"
@@ -149,17 +162,17 @@ export default function SignupPage() {
             </div>
             <h2 className="text-muted-foreground">Signup with Google</h2>
           </button>
-        </div>
+        </div> */}
+      </div>
 
-        <div className="text-center text-sm">
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="font-medium text-[#F1C40F] hover:underline"
-          >
-            Sign in
-          </Link>
-        </div>
+      <div className="text-center text-sm">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="font-medium text-[#F1C40F] hover:underline"
+        >
+          Sign in
+        </Link>
       </div>
     </div>
   );

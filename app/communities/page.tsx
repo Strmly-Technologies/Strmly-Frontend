@@ -27,6 +27,13 @@ type Community = {
   followers?: any[];
 };
 
+type UserType = {
+  _id: string;
+  username: string;
+  profile_photo: string;
+};
+
+
 
 // Followers (users who follow you)
 const mockFollowers = [
@@ -341,6 +348,7 @@ export default function CommunitiesPage() {
   const [submittedQuery, setSubmittedQuery] = useState("")
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
+const [followers, setFollowers] = useState<UserType[]>([]);
   const categories = ["all", "Technology", "Business", "Education", "Entertainment", "Lifestyle"]
    function handleSearch(q: string) {
     setSubmittedQuery(q.trim())
@@ -384,10 +392,41 @@ useEffect(() => {
     }
   };
 
-  if (activeTab === 'community') {
+
+   const fetchFollowers = async () => {
+    setLoading(true);
+    try {
+      const stored = localStorage.getItem("auth-storage");
+      const token = stored ? JSON.parse(stored)?.state?.token : null;
+      console.log("na",token)
+
+      const res = await fetch("/api/auth/user", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("hhe",res);
+
+      const json = await res.json();
+      console.log("jsonnn",json)
+      if (json.status === "success") {
+        setFollowers(json.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch followers", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (activeTab === "followers") {
+    fetchFollowers();
+  }
+   if (activeTab === 'community') {
     fetchCommunities();
   }
 }, [activeTab]);
+
 
 
 if(isMobile){
@@ -464,7 +503,7 @@ if(isMobile){
             </div>
 
             <div className="flex items-center space-x-6">
-              <div className="text-right">
+              {/* <div className="text-right">
                 <p className="text-sm font-semibold text-white">
                   {community.creators?.toLocaleString?.() || "—"}
                 </p>
@@ -475,9 +514,9 @@ if(isMobile){
                   {community.followers?.toLocaleString?.() || "—"}
                 </p>
                 <p className="text-xs text-gray-400">Followers</p>
-              </div>
+              </div> */}
 
-              <button className="bg-yellow-500 text-black px-3 py-1 rounded-md text-sm font-semibold">
+              <button className="bg-yellow-500 text-black px-10 rounded-md text-sm font-semibold">
                 Edit
               </button>
             </div>
@@ -562,14 +601,14 @@ if(isMobile){
                 {/* Right: Creators and Followers */}
                 <div className="flex items-center space-x-6">
                   <div className="text-right">
-                    <p className="text-m font-semibold text-white">
-                      {community.creators?.toLocaleString?.() || '—'}
+                    <p className="text-m font-semibold text-white text-center">
+                      {community.creators?.length.toLocaleString?.() || '0'}
                     </p>
                     <p className="text-xs text-gray-400">Creators</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-m font-semibold text-white">
-                      {community.followers ? community.followers.length.toLocaleString() : '—'}
+                    <p className="text-m font-semibold text-white text-center">
+                      {community.followers ? community.followers.length.toLocaleString() : '0'}
                     </p>
                     <p className="text-xs text-gray-400">Followers</p>
                   </div>
@@ -619,34 +658,37 @@ if(isMobile){
 {activeTab === "followers" && (
   <div className="flex-1 flex flex-col px-2 pt-4 pb-6">
     <div className="space-y-3">
-      {mockFollowers
+      {followers
         .filter((user) =>
-          user.name.toLowerCase().includes(searchQuery.toLowerCase())
+          user.username.toLowerCase().includes(searchQuery.toLowerCase())
         )
         .map((user) => (
           <div
-            key={user.id}
+            key={user._id}
             className="flex items-center justify-between px-3 py-2"
           >
             <div className="flex items-center space-x-3">
               <Avatar className="w-10 h-10">
-                <AvatarImage src={user.avatar} />
-                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                <AvatarImage src={user.profile_photo || "/placeholder.svg"} />
+                <AvatarFallback>{user.username.charAt(0)}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
-                <p className="text-sm font-medium text-white">{user.name}</p>
-                <p className="text-xs text-white/70">@rahulsingh09</p>
+                <p className="text-sm font-medium text-white">
+                  {user.username}
+                </p>
+                <p className="text-xs text-white/70">@{user.username.toLowerCase()}</p>
               </div>
-              </div>
-                 <div className="flex flex-col items-end text-white/70 text-xs leading-tight">
-              <span className="text-base font-medium text-white">{user.followers}</span>
+            </div>
+            <div className="flex flex-col text-white/70 text-xs leading-tight">
+              <p className="text-base font-medium text-white text-center">1</p>
               <span>Followers</span>
             </div>
-            </div>
+          </div>
         ))}
     </div>
   </div>
 )}
+
       </div>
       </div>
     )
