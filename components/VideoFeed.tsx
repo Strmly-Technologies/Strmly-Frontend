@@ -67,7 +67,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
   const shareOptionsRef = useRef<HTMLDivElement>(null)
   const descriptionRef = useRef<HTMLDivElement>(null);
   const { user } = useAuthStore()
-
+  const [isFollowing, setisFollowing] = useState(false)
 
   useEffect(() => {
     const localRefs = [...videoRefs.current]; // clone it
@@ -517,7 +517,7 @@ if (action === "like") {
   return (
     <>
       {/* Increased padding-bottom to account for mobile nav */}
-      <div className={`h-screen overflow-y-scroll snap-y snap-mandatory ${isFullscreen ? "fullscreen-video" : ""} pt-14 pb-16`}>
+      <div className={`h-screen scrollbar-hide overflow-auto snap-y snap-mandatory ${isFullscreen ? "fullscreen-video" : ""} pb-16`}>
 
         {filteredVideos.map((video: Video, index) => (
           <div key={video._id} className="h-screen snap-start relative bg-black" ref={index === filteredVideos.length - 1 ? loadMoreRef : null}>
@@ -911,7 +911,7 @@ if (action === "like") {
                 )}
                 {/* Fullscreen button for long videos */}
                 {longVideoOnly && (
-                  <div className="flex flex-col items-right z-50 mt-auto">
+                  <div className="flex flex-col items-right mt-auto">
                     <Button
                       onClick={handleFullscreen}
                       className="bg-transparent text-white hover:text-primary rounded-full p-1"

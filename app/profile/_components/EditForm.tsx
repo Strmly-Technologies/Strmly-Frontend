@@ -29,6 +29,7 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import Topbar from "../dashboard/_components/Topbar";
 
 
 const EditForm = () => {
@@ -53,7 +54,7 @@ const EditForm = () => {
   useEffect(()=>{
     if(!isLoggedIn || !user || !token) router.push('/login');
 
-  }, [user, isLoggedIn, token]);
+  }, [user, isLoggedIn, token, router]);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -107,20 +108,9 @@ const EditForm = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-20 my-10 mx-10">
-      <div className="flex relative font-poppins items-center w-full justify-between">
-        <Image
-          onClick={() => router.back()}
-          width={16}
-          height={16}
-          src={"/assets/Back.png"}
-          alt="arrow_back"
-          className="text-card"
-        />
-        <h2 className="text-xl text-[#F1C40F] font-semibold">
-          Update Your Profile
-        </h2>
-        <div></div>
+    <div className="flex flex-col items-center justify-center space-y-20 mx-10">
+      <div className="w-full mt-4">
+        <Topbar content="Update Your Profile" />
       </div>
       <Form {...form}>
         <form

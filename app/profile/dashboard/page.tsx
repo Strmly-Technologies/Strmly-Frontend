@@ -106,7 +106,7 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 pb-20 md:pb-4 max-w-6xl">
-      <Topbar />
+      <Topbar content="Dashboard" />
 
       {/* Tab Navigation */}
       <div className="w-full grid grid-cols-2 font-poppins border-b mt-20">

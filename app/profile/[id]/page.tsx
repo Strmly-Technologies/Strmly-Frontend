@@ -171,7 +171,7 @@ export default function ProfileIdPage() {
           <div className="w-8 h-8 border-4 border-[#F1C40F] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="max-w-4xl -mt-20 relative">
+        <div className="max-w-4xl -mt-28 relative">
           <div className="flex flex-col items-center md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4">
             <div className="relative">
               <Avatar className="size-24 border-4 border-background">
@@ -200,7 +200,7 @@ export default function ProfileIdPage() {
           </div>
 
           {/* Stats */}
-          <div className="mt-6 grid grid-cols-3 gap-2 items-center">
+          <div className="mt-6 grid grid-cols-3 gap-1 items-center">
             <div
               className="cursor-pointer flex flex-col gap-1 items-center hover:text-primary"
               onClick={() => router.push("/communities?type=followers")}

@@ -25,6 +25,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/useAuthStore";
+import Topbar from "@/app/profile/dashboard/_components/Topbar";
 
 const formSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters"),
@@ -127,15 +128,12 @@ const ShortVideoForm = ({ videoFile, videoURL, onBack }: ShortVideoFormProps) =>
   };
 
   return (
-    <div className="w-full h-[100dvh] bg-black text-white p-4">
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <h2 className="text-xl font-bold">Video Details</h2>
+    <div className="w-full h-full z-90 p-4">
+      <div className="w-full">
+        <Topbar content="Video Details"/>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 mt-10 md:grid-cols-2 gap-6">
         {/* Video Preview */}
         <div className="h-64 md:h-96">
           <video
@@ -147,7 +145,7 @@ const ShortVideoForm = ({ videoFile, videoURL, onBack }: ShortVideoFormProps) =>
 
         {/* Form */}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 text-xs">
             {/* Description */}
             <FormField
               control={form.control}
@@ -159,7 +157,7 @@ const ShortVideoForm = ({ videoFile, videoURL, onBack }: ShortVideoFormProps) =>
                       placeholder="Enter video description (min 10 characters)"
                       rows={4}
                       {...field}
-                      className="rounded-xl bg-gray-900 border-gray-700 text-white"
+                      className="rounded-xl border-muted-foreground bg-card text-muted-foreground"
                     />
                   </FormControl>
                   <FormMessage />
@@ -179,11 +177,11 @@ const ShortVideoForm = ({ videoFile, videoURL, onBack }: ShortVideoFormProps) =>
                     value={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger className="rounded-xl bg-gray-900 border-gray-700 text-white">
+                      <SelectTrigger className="rounded-xl border-muted-foreground text-muted-foreground">
                         <SelectValue placeholder="Select community" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-gray-900 border-gray-700 text-white">
+                    <SelectContent className="border-muted-foreground text-muted-foreground">
                       <SelectItem value="general" className="hover:bg-gray-800">
                         Owned
                       </SelectItem>
@@ -212,7 +210,7 @@ const ShortVideoForm = ({ videoFile, videoURL, onBack }: ShortVideoFormProps) =>
                         <Input
                           placeholder="Community name"
                           {...field}
-                          className="rounded-xl bg-gray-900 border-gray-700 text-white"
+                          className="rounded-xl border-muted-foreground text-muted-foreground"
                         />
                       </FormControl>
                       <FormMessage />
@@ -229,7 +227,7 @@ const ShortVideoForm = ({ videoFile, videoURL, onBack }: ShortVideoFormProps) =>
                           placeholder="Community description (optional)"
                           rows={2}
                           {...field}
-                          className="rounded-xl bg-gray-900 border-gray-700 text-white"
+                          className="rounded-xl border-muted-foreground text-muted-foreground"
                         />
                       </FormControl>
                       <FormMessage />
@@ -249,7 +247,7 @@ const ShortVideoForm = ({ videoFile, videoURL, onBack }: ShortVideoFormProps) =>
                     <Input
                       placeholder="Add tags (comma separated, optional)"
                       {...field}
-                      className="rounded-xl bg-gray-900 border-gray-700 text-white"
+                      className="rounded-xl border-muted-foreground text-muted-foreground"
                     />
                   </FormControl>
                   <FormMessage />
@@ -259,7 +257,7 @@ const ShortVideoForm = ({ videoFile, videoURL, onBack }: ShortVideoFormProps) =>
 
             <Button
               type="submit"
-              className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-6 rounded-xl"
+              className="w-full bg-yellow-500 hover:bg-yellow-600 text-card font-poppins py-6 rounded-xl"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Uploading..." : 
