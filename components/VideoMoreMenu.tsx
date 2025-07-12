@@ -116,7 +116,7 @@ export default function VideoMoreMenu({ isOpen, onClose, videoId, videoRefs, set
           <Button
             variant="outline"
             onClick={saved? HandleUnSave : HandleSave}
-            className="w-full justify-start text-sm lg:text-base py-2 lg:py-3 font-poppins"
+            className="w-full justify-start text-sm lg:text-base py-2 lg:py-3 font-poppins hover:none"
           >
             <Bookmark size={14} className="mr-2 lg:w-4 lg:h-4 font-poppins" />
             {saved ? "Remove from Saved" : "Save Video"}

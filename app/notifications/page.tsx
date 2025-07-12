@@ -7,10 +7,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar"
 import { mockNotifications as debugNotifications } from "@/components/debugTools/NotificationGenerator"
 import { fetchAndTransformNotifications } from "@/lib/utils"
 import { useAuthStore } from "@/store/useAuthStore"
+import { ChevronLeft } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 const mockNotifications = debugNotifications
 
 export default function LongVideosPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("Non Revenue")
   const tabs = [
     { id: "Non Revenue", label: "Non Revenue" },
@@ -40,31 +43,24 @@ export default function LongVideosPage() {
   return (
     <div className="h-screen">
       <MobileBottomNav progress={0} />
+              
+      {/* Search Bar */}
+      <div className="flex items-centre relative">
+      {/* Back Icon */}
+      <ChevronLeft
+        className="text-white  mt-4 cursor-pointer"
+        size={37}
+        onClick={() => router.back()}
+      />
+
+  {/* Search Icon */}
+  <div className="relative flex-1">
       <div className="flex items-center justify-center p-3 lg:p-4 flex-col">
-        <h3 className="text-base text-[32px] pt-3 font-inter">Notifications</h3>
-      </div>
+        <h3 className="text-base text-[1.5em] pt-3 font-inter">Notifications</h3>
+      </div></div>
+    </div>
       {/* Tabs */}
       <div className="min-h-screen text-white pl-3">
-        {/* Custom Tab Buttons */}
-        <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
-          <div className="flex space-x-6 mb-4 border-b border-white/10 pb-2 min-w-max justify-around p-5">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative text-sm font-medium transition-colors duration-200 ${activeTab === tab.id ? 'text-white' : 'text-white'}`}
-              >
-                {tab.label}
-                {activeTab === tab.id && (
-                  <span className="absolute bottom-2 left-0 w-full h-[2px] bg-white rounded-full" />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-      {/* Tabs */}
-      <div className="bg-black min-h-screen text-white pl-3">
         {/* Custom Tab Buttons */}
         <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
           <div className="flex space-x-6 mb-4 border-b border-white/10 pb-2 min-w-max justify-around p-5">

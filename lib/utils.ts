@@ -17,8 +17,9 @@ export function cn(...inputs: ClassValue[]) {
 //videoType:Type of videos to fetch (short or long)
 //token:Authentication token for the API
 
-export const fetchAndTransformVideos = async (token: string, page: number, limit: number, videoType: string): Promise<Video[]> => {
+export const fetchAndTransformVideos = async (token: string, page: number, limit: number, videoType: string, userId:string): Promise<Video[]> => {
   const API_URL = process.env.NEXT_PUBLIC_API_URL
+  
   const response = await fetch(`${API_URL}/api/v1/videos/trending?page=${page}&limit=${limit}&type=${videoType}`, {
     method: "GET",
     credentials: "include",
@@ -39,32 +40,35 @@ export const fetchAndTransformVideos = async (token: string, page: number, limit
     const data = await response.json();
     console.log("Fetched raw data:", data);
     
-    
-    const transformedVideos: Video[] = data.data.map((video: any) => ({
-      _id: video._id,
-      title: video.name || "Untitled Video",
-      description: video.description || "",
-      videoUrl: video.videoUrl,
-      thumbnailUrl: video.thumbnailUrl || "",
-      type: video.type || "Free",
-      userid: video.created_by?._id,
-      user: {
-        id: video.created_by?._id,
-        name: video.created_by?.username || "Anonymous",
-        avatar: video.created_by?.profilePicture || "/placeholder.svg"
-      },
-      likes: video.likes || 0,
-      comments: video.comments?.length || 0,
-      shares: video.shares || 0,
-      views: video.views || 0,
-      earnings: video.earned_till_date || 0,
-      isLiked: false, // Default to false, will be updated later
-      tags: [video.genre, video.language].filter(Boolean),
-      createdAt: video.createdAt,
-      community: null,
-      series: video.series || null,
-      episodes: []
-    }));
+    const transformedVideos: Video[] = data.data.map((video: any) => {
+      const likedBy: string[] = video.liked_by || []
+      console.log(likedBy)
+        return {
+        _id: video._id,
+        title: video.name || "Untitled Video",
+        description: video.description || "",
+        videoUrl: video.videoUrl,
+        thumbnailUrl: video.thumbnailUrl || "",
+        type: video.type || "Free",
+        userid: video.created_by?._id,
+        user: {
+          id: video.created_by?._id,
+          name: video.created_by?.username || "Anonymous",
+          avatar: video.created_by?.profilePicture || "/placeholder.svg"
+        },
+        likes: video.likes || 0,
+        comments: video.comments?.length || 0,
+        shares: video.shares || 0,
+        views: video.views || 0,
+        earnings: video.earned_till_date || 0,
+        isLiked: Array.isArray(video.liked_by) ? video.liked_by.includes(userId) : false,
+        tags: [video.genre, video.language].filter(Boolean),
+        createdAt: video.createdAt,
+        community: null,
+        series: video.series || null,
+        episodes: []
+      }
+    });
 
     return transformedVideos;
 
@@ -85,7 +89,7 @@ export const getFollowingMap = async (
     videos.map(async (video) => {
       if (video.user.id === userId) return { id: video.user.id, isFollowing: false }
       const following = await getFollowStatus(userId, video.user.id)
-      return { id: video.user.id, isFollowing: following.following }
+      return { id: video.user.id, isFollowing: following.isFollowing }
     })
   )
 
@@ -131,7 +135,6 @@ export function useVideoActions(
 
   return { handleFollow,handleUnfollow, toggleFullDescription };
 }
-
 
 
 export const fetchAndTransformNotifications = async (token: string, activeTab: string): Promise<Notification[]> => {

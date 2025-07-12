@@ -1,14 +1,14 @@
-import { json } from "stream/consumers";
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function getFollowStatus(targetUserId: string, token: string) {
   const res = await fetch(`${API_URL}/api/v1/user/following`, {
-    method: "GET",
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json", 
-    }
+    },body: JSON.stringify({
+      targetUserId,
+    })
   });
   if (!res.ok) throw new Error("Failed to get follow status");
 
@@ -16,7 +16,7 @@ export async function getFollowStatus(targetUserId: string, token: string) {
 
   const isFollowing = data.following.some((user: any) => user._id === targetUserId);
 
-  return { following: isFollowing };
+  return { isFollowing };
 }
 
 export async function followUser(targetUserId: string, user: any, token: string) {

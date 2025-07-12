@@ -89,7 +89,7 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
   
 
   const loadMore = useCallback(async () => {
-    if (loading || !token || reachedEnd) return;
+    if (loading || !token || reachedEnd || !user) return;
     setLoading(true);
 
     try {
@@ -98,7 +98,8 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
         token,
         page,
         1,
-        longVideoOnly ? "long" : "short"
+        longVideoOnly ? "long" : "short",
+        user.id
       );
 
       if (newVideos.length === 0) {
@@ -155,14 +156,14 @@ export default function VideoFeed({ longVideoOnly = false, ChangeVideoProgress, 
 
   useEffect(() => {
     const fetchVideos = async () => {
-      if (!token) {
+      if (!token || !user) {
         console.error("No authentication token found");
         setInitialLoading(false); // still stop loading1
         return;
       }
 
       try {
-        const transformedVideos = await fetchAndTransformVideos(token, 1, 1, longVideoOnly ? "long" : "short");
+        const transformedVideos = await fetchAndTransformVideos(token, 1, 1, longVideoOnly ? "long" : "short", user.id);
 
         console.table(transformedVideos.map(video => ({
           id: video._id,
@@ -600,7 +601,7 @@ if (action === "like") {
                   }}
                   className="bg-transparent text-white hover:text-primary rounded-full hover:bg-transparent p-1 shadow-none"
                 >
-                  <img alt="icon" src='./assets/SidebarIcons/Share.svg' />
+                  <img alt="icon" src='./assets/SidebarIcons/share.svg' />
                 </Button>
                 <span className="text-white text-xs font-medium mt-1">{video.shares}</span>
               </div>

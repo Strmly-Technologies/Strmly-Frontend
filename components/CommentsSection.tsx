@@ -12,7 +12,6 @@ import { mockComments as DebugComments } from "./debugTools/CommentGenerator"
 
 const mockComments: Comment[] = DebugComments
 
-
 interface CommentsSectionProps {
   isOpen: boolean
   onClose: () => void
@@ -29,6 +28,7 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
   const [isLoading, setIsLoading] = useState(false)
   const token = useAuthStore((state) => state.token)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
+  const [replyTo, setReplyTo] = useState<{ commentId: string; username: string } | null>(null);
 
   // 👇 Wrap it in useCallback
   const fetchComments = useCallback(async () => {
@@ -114,7 +114,7 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
 
   const AddReply = async (commentID: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/videos/${videoId}/comments/${commentID}/replies`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/comments/reply`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -122,8 +122,10 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          "content": "This is a reply",
-          "videoType": longVideosOnly ? "long" : "short"
+          "reply": "This is a reply",
+          "videoType": longVideosOnly ? "long" : "short",
+          "commentId": commentID,
+          "videoId": videoId,
         }),
       })
 
@@ -171,7 +173,7 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
       setComments(prev =>
         prev.map(comment =>
           comment._id === commentID
-            ? { ...comment, upvotes: data.upvotes, downvotes: data.downvotes, downvoted:!comment.downvoted, upvoted: false}
+            ? { ...comment, upvotes: data.upvotes, downvotes: data.downvotes, downvoted: !comment.downvoted, upvoted: false }
             : comment
         )
       );
@@ -214,38 +216,50 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
   };
 
   const handleSendComment = async () => {
-    if (!token || !videoId || !comment.trim()) return
+    if (!token || !videoId || !comment.trim()) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
+
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/comment`, {
-        method: 'POST',
+      const body = replyTo
+        ? {
+          reply: comment,
+          videoType: longVideosOnly ? "long" : "short",
+          commentId: replyTo.commentId,
+          videoId: videoId,
+        }
+        : {
+          videoId,
+          videoType: longVideosOnly ? "long" : "short",
+          comment,
+        };
+
+      const endpoint = replyTo
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/comments/reply`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/v1/interaction/comment`;
+
+      const response = await fetch(endpoint, {
+        method: "POST",
         credentials: "include",
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          videoId,
-          "videoType": longVideosOnly ? "long" : "short",
-          "comment": comment
-        }),
-      })
+        body: JSON.stringify(body),
+      });
 
+      if (!response.ok) throw new Error("Failed to post");
 
-      if (!response.ok) {
-        throw new Error("Failed to post comment")
-      }
-      console.log(response)
-      const newComment = await response.json()
-      setComments(prev => [newComment, ...prev])
-      setComment("")
+      await fetchComments();
+      if (replyTo) await fetchReplies(replyTo.commentId); // Refresh replies
+      setComment("");
+      setReplyTo(null); // ✅ clear reply mode
     } catch (error) {
-      console.error("Error posting comment:", error)
+      console.error("Error posting:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const addEmoji = (emoji: string) => {
     setComment((prev) => prev + emoji)
@@ -259,7 +273,7 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
       {/* Header */}
       <div className="flex items-center justify-center p-3 lg:p-4 flex-col bg-[#1A1A1A] rounded-t-3xl">
         <div className="w-20 h-1 bg-white/80 rounded-full mx-auto my-2 hover:bg-white/60 transition-colors" />
-        <h3 className="text-base text-[24px] font-semibold ">Comments</h3>
+        <h3 className="text-base text-[24px] font-inter font-semibold ">Comments</h3>
       </div>
 
       {/* Comments List */}
@@ -269,35 +283,38 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
             {/* Main Comment */}
             {comment.videoId == videoId ?
               <div className="flex space-x-2 lg:space-x-3">
-                <Avatar className="w-8 h-8 lg:w-10 lg:h-10 flex-shrink-0">
+                <Avatar className="w-8 h-8 lg:w-10 lg:h-10 flex-shrink-0 mt-1">
                   <AvatarImage src={comment.user?.avatar || "/placeholder.svg"} />
-                  <AvatarFallback className="text-xs lg:text-sm">{comment.user?.name?.[0] || "U"}</AvatarFallback>
+                  <AvatarFallback className="text-xs lg:text-sm ">{comment.user?.name?.[0] || "U"}</AvatarFallback>
                 </Avatar>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-1 lg:space-x-2 mb-1">
-                    <span className="font-medium text-sm lg:text-base truncate font-poppins text-[#B0B0B0]">{comment.user?.name || "Anonymous User"}</span>
-                    <span className="text-xs text-muted-foreground flex-shrink-0">
+                    <span className="text-sm lg:text-base truncate font-inter text-[#B0B0B0]">{comment.user?.name || "Anonymous User"}</span>
+                    <span className="text-xs text-muted-foreground flex-shrink-0 font-inter">
                       {new Date(comment.timestamp).toLocaleDateString()}
                     </span>
                   </div>
 
-                  <p className="text-sm lg:text-base leading-relaxed">{comment.content}</p>
+                  <p className="text-sm lg:text-base leading-relaxed font-inter">{comment.content}</p>
 
                   <div className="flex">
                     <button onClick={() => fetchReplies(comment._id)} className="flex items-center" >
-                      <span className="text-xs text-muted-foreground ">
+                      <span className="text-xs text-muted-foreground font-inter ">
                         View replies ({comment.replies})</span>
                       <ChevronDown />
                     </button>
-                    {/*<button onClick={() => AddReply(comment._id)} className="flex items-center" >
+                    <button
+                      onClick={() => setReplyTo({ commentId: comment._id, username: comment.user?.name || "Anonymous" })}
+                      className="flex items-center"
+                    >
                       <ReplyIcon />
-                    </button>*/}
+                    </button>
                   </div>
                   {openReplies[comment._id] && (
                     <div className="ml-10 space-y-2 mt-2">
                       {(!Array.isArray(openReplies[comment._id])) ? (
-                        <p className="text-xs text-muted-foreground">No replies yet.</p>
+                        <p className="text-xs text-muted-foreground font-inter">No replies yet.</p>
                       ) : (
                         openReplies[comment._id].map(reply => (
                           <div key={reply._id} className="flex space-x-2">
@@ -306,13 +323,13 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
                               <AvatarFallback className="text-xs">{reply.user?.name?.[0] || "U"}</AvatarFallback>
                             </Avatar>
                             <div>
-                              <div className="flex items-center space-x-1 mb-1">
-                                <span className="font-medium text-xs">{reply.user.name}</span>
-                                <span className="text-[10px] text-muted-foreground">
+                              <div className="flex items-center space-x-1 mb-1 font-inter">
+                                <span className="font-medium text-xs font-inter">{reply.user.name}</span>
+                                <span className="text-[10px] text-muted-foreground font-inter">
                                   {new Date(reply.timestamp).toLocaleDateString()}
                                 </span>
                               </div>
-                              <p className="text-sm">{reply.content}</p>
+                              <p className="text-sm font-inter">{reply.content}</p>
                             </div>
                           </div>
                         ))
@@ -324,30 +341,36 @@ export default function CommentsSection({ isOpen, onClose, videoId, longVideosOn
                     <p className="text-xs text-muted-foreground ml-10">Loading replies...</p>
                   )}
                 </div>
-                <div className="flex">
-                  <button onClick={() => handleGiftComment(comment._id)} className="flex flex-col items-center pt-1">
+                <div className="flex gap-0">
+                  <button onClick={() => handleGiftComment(comment._id)} className="flex flex-col items-center pt-1 p-0 m-0">
                     <IndianRupee size={18} />{comment.donations}
                   </button>
-                  <button onClick={() => handleUpvote(comment._id)} className="flex flex-col items-center">
-                    {comment.upvoted ? <ArrowBigUp size={24} color="[#B0B0B0]" fill="#B0B0B0"/> : <ArrowBigUp size={24} color="#B0B0B0" />}{comment.upvotes}
+                  <button onClick={() => handleUpvote(comment._id)} className="flex flex-col items-center p-0 m-0">
+                    {comment.upvoted ? <ArrowBigUp size={24} color="[#B0B0B0]" fill="#B0B0B0" /> : <ArrowBigUp size={24} color="#B0B0B0" />}{comment.upvotes}
                   </button>
-                  <button onClick={() => handleDownvote(comment._id)} className="flex flex-col items-center">
-                    {comment.downvoted ? <ArrowBigDown size={24} color="[#B0B0B0]" fill="#B0B0B0"/> : <ArrowBigDown size={24} color="#B0B0B0" />}{comment.downvotes}
-                  </button>
-                </div>
-              </div> : ''}</div>
+                  <button onClick={() => handleDownvote(comment._id)} className="flex flex-col items-center p-0 m-0">
+                    {comment.downvoted ? <ArrowBigDown size={24} color="[#B0B0B0]" fill="#B0B0B0" /> : <ArrowBigDown size={24} color="#B0B0B0" />}{comment.downvotes}
+                  </button></div>
+              </div> : ''}
+          </div>
         ))}
       </div>
 
       {/* Comment Input */}
-      <div className="p-3 lg:p-4 border-t border-border bg-[#1A1A1A]">
+      <div className="p-0 border-none bg-[#1A1A1A]">
         <div className="flex space-x-2 lg:space-x-3">
           <div className="flex-1 relative">
+            {replyTo && (
+              <div className="text-xs text-muted-foreground mb-1 flex justify-between items-center px-1">
+                <span className="font-bold font-inter">Replying to <span className="font-light font-inter">@{replyTo.username}</span></span>
+                <button onClick={() => setReplyTo(null)} className="text-[10px] text-red-400 font-inter">Cancel</button>
+              </div>
+            )}
             <Textarea
               placeholder="Add a comment..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="min-h-[40px] lg:min-h-[40px] max-h-[120px] resize-none pr-16 lg:pr-20 text-sm lg:text-base"
+              className="min-h-[40px] lg:min-h-[40px] max-h-[120px] resize-none pr-16 lg:pr-20 text-sm lg:text-base rounded-none font-inter"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault()

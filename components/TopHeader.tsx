@@ -21,7 +21,7 @@ export default function TopHeader({Muted,setMuted}:HeaderProps) {
               <img alt="wallet-icon" src='./assets/HeaderIcons/Wallet.svg' className="relative w-8 h-8 mt-1 lg:w-8 lg:h-8" />
           </Link>
           <button onClick={() => setMuted(!Muted)}>
-            {Muted ? <VolumeOff size={28}/> : <Volume2Icon size={30}/>}
+            {Muted ? <VolumeOff size={26}/> : <Volume2Icon size={28}/>}
           </button>
           </div>
           <Link href='/notifications'>
